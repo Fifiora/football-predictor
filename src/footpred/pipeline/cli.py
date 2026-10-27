@@ -19,6 +19,7 @@ from footpred.ingest.historical import read_csv_text
 from footpred.ingest.teams import covered_leagues
 from footpred.pipeline.benchmark import run_benchmark
 from footpred.pipeline.tune import tune_league
+from footpred.ingest.odds import fetch_fixture_odds
 from footpred.pipeline.daily import run_daily
 from footpred.pipeline.european import run_european_retrain
 from footpred.pipeline.retrain import run_retrain
@@ -140,6 +141,7 @@ def _main(argv: list[str] | None = None) -> int:
         result = run_daily(
             args.data_dir, args.site_data_dir, client, today, registry_dir=args.registry_dir,
             updated_at=pd.Timestamp.now().floor("s"), european=True,
+            fetch_odds=fetch_fixture_odds,
         )
         note(f"daily: published={result.published} new_results={result.new_results} scored={result.scored_fixtures}")
         for w in result.warnings:

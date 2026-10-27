@@ -101,3 +101,26 @@ def test_meta_shows_the_real_refresh_time_not_midnight(world):
         updated_at=pd.Timestamp("2025-10-27 22:47:13"),
     )
     assert json.loads((world["site"] / "meta.json").read_text())["updated_at"] == "2025-10-27T22:47:13"
+
+
+def test_daily_attaches_bookmaker_odds_and_survives_their_failure(world):
+    seed_champion(world)
+    odds = {"E0-20251030-A-B": {"average": (0.5, 0.3, 0.2)}}
+    run_daily(world["data_dir"], world["site"], world["client"], TODAY, registry_dir=world["registry"],
+              aliases_path=world["aliases"], sleep=NO_SLEEP, fetch_odds=lambda: (odds, ["odds note"]))
+    fixtures = {f["match_id"]: f for f in json.loads((world["site"] / "fixtures.json").read_text())}
+    assert fixtures["E0-20251030-A-B"]["bookies"]["average"]["p_home"] == 0.5
+    assert "bookies" not in fixtures["E0-20251031-C-D"]
+
+
+
+def test_daily_publishes_even_when_the_odds_feed_fails(world):
+    seed_champion(world)
+
+    def boom():
+        raise OSError("down")
+
+    result = run_daily(world["data_dir"], world["site"], world["client"], TODAY, registry_dir=world["registry"],
+                       aliases_path=world["aliases"], sleep=NO_SLEEP, fetch_odds=boom)
+    assert result.published and any("bookmaker odds unavailable" in w for w in result.warnings)
+    assert all("bookies" not in f for f in json.loads((world["site"] / "fixtures.json").read_text()))

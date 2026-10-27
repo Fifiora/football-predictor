@@ -52,6 +52,7 @@ def run_daily(
     sleep: Callable[[float], None] = time.sleep,
     updated_at: pd.Timestamp | None = None,
     european: bool = False,
+    fetch_odds: Callable[[], tuple[dict, list[str]]] | None = None,
 ) -> DailyResult:
     """Refresh predictions. Any failure before the final export leaves ``site_data_dir`` untouched."""
     data_dir = Path(data_dir)
@@ -141,10 +142,18 @@ def run_daily(
     if len(graded):
         warnings += check_drift(graded, baseline_log_loss=baseline)
 
+    odds: dict = {}
+    if fetch_odds is not None:  # bookmaker odds are display-only extras; a failure only adds a warning
+        try:
+            odds, odds_warnings = fetch_odds()
+            warnings += odds_warnings
+        except Exception as err:  # noqa: BLE001
+            warnings.append(f"bookmaker odds unavailable: {type(err).__name__}: {err}")
+
     active = set(played.loc[played["date"] >= today - pd.Timedelta(days=400), ["home", "away"]].to_numpy().ravel())
     export_site_data(
         site_data_dir, scored, drivers, grids, graded,
         {t: r for t, r in ratings.items() if t in active}, updated_at if updated_at is not None else today,
-        model_version=version,
+        model_version=version, odds=odds,
     )
     return DailyResult(len(new) + (euro.new_results if euro is not None else 0), len(scored), True, warnings)

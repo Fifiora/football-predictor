@@ -117,3 +117,13 @@ def test_export_is_atomic(tmp_path, monkeypatch):
     with pytest.raises(OSError):
         run(out)
     assert {p.name: p.read_text() for p in out.iterdir()} == before
+
+
+def test_bookmaker_odds_are_exported_only_for_fixtures_that_have_them(tmp_path):
+    fixtures, drivers, grids, graded, ratings = make_inputs()
+    odds = {fixtures.match_id[0]: {"average": (0.5, 0.3, 0.2), "bet365": (0.52, 0.28, 0.2)}}
+    export_site_data(tmp_path / "s", fixtures, drivers, grids, graded, ratings, NOW, model_version="v1", odds=odds)
+    first, second = load(tmp_path / "s", "fixtures.json")
+    assert first["bookies"]["average"] == {"p_home": 0.5, "p_draw": 0.3, "p_away": 0.2}
+    assert set(first["bookies"]) == {"average", "bet365"}
+    assert "bookies" not in second

@@ -36,7 +36,7 @@ def _scoreline_fields(grid: np.ndarray) -> dict:
     }
 
 
-def _fixtures_payload(fixtures, drivers, dc_grids) -> list[dict]:
+def _fixtures_payload(fixtures, drivers, dc_grids, odds=None) -> list[dict]:
     out = []
     for row in fixtures.itertuples(index=False):
         probs = np.array([row.p_home, row.p_draw, row.p_away], dtype=float)
@@ -57,6 +57,10 @@ def _fixtures_payload(fixtures, drivers, dc_grids) -> list[dict]:
         }
         if getattr(row, "low_confidence", False) is True:  # a club the ratings do not know yet
             item["low_confidence"] = True
+        book = (odds or {}).get(row.match_id)
+        if book:  # bookmaker view, shown beside the model and never fed into it
+            item["bookies"] = {name: {"p_home": float(p[0]), "p_draw": float(p[1]), "p_away": float(p[2])}
+                               for name, p in book.items()}
         if row.match_id in dc_grids:
             item.update(_scoreline_fields(dc_grids[row.match_id]))
         out.append(item)
@@ -119,6 +123,7 @@ def export_site_data(
     ratings: dict[str, float],
     updated_at: pd.Timestamp,
     model_version: str = "unknown",
+    odds: dict | None = None,
 ) -> None:
     """Write fixtures/track_record/teams/meta JSON into ``out_dir``, replacing it atomically."""
     out_dir = Path(out_dir)
@@ -129,7 +134,7 @@ def export_site_data(
         shutil.rmtree(stale, ignore_errors=True)
     tmp.mkdir()
     try:
-        _write_json(tmp / "fixtures.json", _fixtures_payload(fixtures, drivers, dc_grids))
+        _write_json(tmp / "fixtures.json", _fixtures_payload(fixtures, drivers, dc_grids, odds))
         _write_json(tmp / "track_record.json", _track_record_payload(graded_log))
         _write_json(tmp / "teams.json", {team: round(float(r), 1) for team, r in sorted(ratings.items())})
         _write_json(tmp / "meta.json", {"updated_at": pd.Timestamp(updated_at).isoformat(), "model_version": model_version})
