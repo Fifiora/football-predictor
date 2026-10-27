@@ -50,7 +50,8 @@ Three name spellings must agree: football-data.org's, openfootball's, and our le
 One Elo system over the union of: the big-five league matches, and all European matches above, in date
 order. Cross-league games are what make ratings comparable across leagues.
 - Each club starts at an offset for its country group (E0, SP1, I1, D1, F1, and "rest of Europe"). The six
-  offsets are fitted by minimising log loss on cross-league matches, using development seasons only.
+  offsets are fitted by minimising the squared error between expected and actual score (a draw counts 0.5) on
+  cross-league matches, using development seasons only; Elo has no draw probability, so log loss is not defined for it.
 - Home advantage applies except in the final (neutral venue).
 - Same point-in-time guarantee as today: a match's ratings only reflect strictly earlier dates, checked by a
   leakage test.
@@ -87,8 +88,7 @@ The chip appears automatically from the data. CL cards carry the note "90-minute
 
 ## Risks
 
-- **Name matching** is the most likely source of silent errors; mitigated by warnings, a lists-unmatched
-  workflow and the low-confidence flag.
+- **Name matching** is the most likely source of silent errors; mitigated by warnings and the low-confidence flag.
 - **Small data:** roughly 2,000 Champions League matches (more with Europa and Conference). Expect modest
   gains over a plain Elo formula; the gate exists so we do not ship noise.
 - **Rating scale for clubs outside the big five** rests on few cross-league games; they start low-confidence.
