@@ -117,3 +117,9 @@ test("track record compares the model with the bookmakers honestly", () => {
   assert.match(html, /about 1\.4 points ahead/);
   assert.match(html, /We never use odds in our predictions/);
 });
+
+test("the bookmaker line keeps its own styling", () => {
+  const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
+  const css = readdirSync(join(dist, "_astro")).filter((n) => n.endsWith(".css")).map((n) => read(dist, `_astro/${n}`)).join("");
+  assert.match(css, /\.bookies/);
+});
