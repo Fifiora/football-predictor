@@ -95,11 +95,32 @@ def _calibration_table(df: pd.DataFrame, bins: int = 5) -> list[dict]:
     return table
 
 
+RECENT_LIMIT = 30
+_LETTERS = np.array(["H", "D", "A"])
+
+
+def _recent_picks(graded: pd.DataFrame) -> list[dict]:
+    """The latest graded predictions, newest first, each marked right or wrong."""
+    if graded.empty:
+        return []
+    probs = graded[_OUTCOME_COLS].to_numpy(dtype=float)
+    pick = probs.argmax(axis=1)
+    frame = graded.assign(pick_idx=pick, p_pick=probs.max(axis=1), date_ts=pd.to_datetime(graded["kickoff_date"]))
+    frame = frame.sort_values("date_ts", ascending=False, kind="stable").head(RECENT_LIMIT)
+    return [
+        {"match_id": r["match_id"], "league": r["league"], "home": r["home"], "away": r["away"],
+         "date": r["date_ts"].strftime("%Y-%m-%d"), "pick": str(_LETTERS[int(r["pick_idx"])]),
+         "result": str(_LETTERS[int(r["outcome"])]), "correct": bool(int(r["pick_idx"]) == int(r["outcome"])),
+         "p_pick": float(r["p_pick"])}
+        for r in frame.to_dict("records")
+    ]
+
+
 def _track_record_payload(graded_log: pd.DataFrame) -> dict:
     graded = graded_log.dropna(subset=["outcome"]) if len(graded_log) else graded_log
     if graded.empty:
         return {"n_graded": 0, "log_loss": None, "rps": None, "accuracy": None, "ece": None,
-                "calibration": [], "by_league": {}}
+                "calibration": [], "by_league": {}, "recent": []}
     graded = graded.assign(outcome=graded["outcome"].astype(int))
     overall = _metrics(graded)
     probs = graded[_OUTCOME_COLS].to_numpy(dtype=float)
@@ -111,6 +132,7 @@ def _track_record_payload(graded_log: pd.DataFrame) -> dict:
         "ece": float(expected_calibration_error(probs, graded["outcome"].to_numpy())),
         "calibration": _calibration_table(graded),
         "by_league": {league: _metrics(g) for league, g in graded.groupby("league")},
+        "recent": _recent_picks(graded),
     }
 
 

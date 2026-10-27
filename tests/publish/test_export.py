@@ -127,3 +127,14 @@ def test_bookmaker_odds_are_exported_only_for_fixtures_that_have_them(tmp_path):
     assert first["bookies"]["average"] == {"p_home": 0.5, "p_draw": 0.3, "p_away": 0.2}
     assert set(first["bookies"]) == {"average", "bet365"}
     assert "bookies" not in second
+
+
+def test_track_record_lists_recent_graded_picks_newest_first(tmp_path):
+    out = run(tmp_path / "s")
+    recent = load(out, "track_record.json")["recent"]
+    assert len(recent) == 3  # the ungraded row is left out
+    assert set(recent[0]) >= {"match_id", "league", "home", "away", "date", "pick", "result", "correct", "p_pick"}
+    by_id = {r["match_id"]: r for r in recent}
+    assert by_id["a"]["pick"] == "H" and by_id["a"]["result"] == "H" and by_id["a"]["correct"] is True
+    assert by_id["b"]["pick"] == "A" and by_id["b"]["correct"] is True
+    assert by_id["c"]["pick"] == "H" and by_id["c"]["result"] == "D" and by_id["c"]["correct"] is False
