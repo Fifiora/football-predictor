@@ -51,3 +51,20 @@ def test_list_team_names_handles_bom_and_latin1(tmp_path):
     (tmp_path / "SP1_a.csv").write_bytes(("﻿" + header + "SP1,Málaga,Betis\n").encode("utf-8"))
     (tmp_path / "SP1_b.csv").write_bytes((header + "SP1,Betis,Sevilla\n").encode("latin-1"))
     assert list_team_names(tmp_path)["SP1"] == ["Betis", "Málaga", "Sevilla"]
+
+
+def test_summarize_fixtures_lists_probabilities_and_reasons(tmp_path):
+    import json
+
+    from footpred.pipeline.cli import summarize_fixtures
+
+    (tmp_path / "fixtures.json").write_text(json.dumps([
+        {"date": "2026-10-31", "league": "E0", "home": "Aston Villa", "away": "Fulham",
+         "p_home": 0.49, "p_draw": 0.24, "p_away": 0.27,
+         "drivers": [{"text": "The model weighted X, which points to Aston Villa."}]},
+        {"date": "2026-11-01", "league": "D1", "home": "A", "away": "B", "p_home": 0.3, "p_draw": 0.3, "p_away": 0.4, "drivers": []},
+    ]))
+    lines = summarize_fixtures(tmp_path, limit=1)
+    assert lines[0] == "2026-10-31 E0 Aston Villa v Fulham: 49% / 24% / 27%"
+    assert lines[1] == "  - The model weighted X, which points to Aston Villa."
+    assert len(lines) == 2 and summarize_fixtures(tmp_path / "missing") == []

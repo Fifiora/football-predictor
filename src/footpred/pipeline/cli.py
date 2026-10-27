@@ -62,6 +62,23 @@ def list_team_names(raw_dir: Path) -> dict[str, list[str]]:
     return {league: sorted(found) for league, found in sorted(names.items())}
 
 
+def summarize_fixtures(site_data_dir: Path, limit: int = 8) -> list[str]:
+    """A few published predictions with their reasons, for the run summary."""
+    import json
+
+    path = Path(site_data_dir) / "fixtures.json"
+    if not path.exists():
+        return []
+    lines: list[str] = []
+    for f in json.loads(path.read_text())[:limit]:
+        lines.append(
+            f"{f['date']} {f['league']} {f['home']} v {f['away']}: "
+            f"{f['p_home']:.0%} / {f['p_draw']:.0%} / {f['p_away']:.0%}"
+        )
+        lines += [f"  - {d['text']}" for d in f.get("drivers", [])]
+    return lines
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         return _main(argv)
@@ -120,6 +137,9 @@ def _main(argv: list[str] | None = None) -> int:
         note(f"daily: published={result.published} new_results={result.new_results} scored={result.scored_fixtures}")
         for w in result.warnings:
             note(f"- warning: {w}")
+        sample = summarize_fixtures(args.site_data_dir)
+        if sample:
+            print("::notice title=predictions::" + "%0A".join(sample))
         return 0 if result.published else 3  # 3 = nothing new; the workflow skips deployment
     if args.command == "retrain":
         result = run_retrain(args.data_dir, args.registry_dir, today)
