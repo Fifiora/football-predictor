@@ -69,7 +69,7 @@ const nav = [
     <style is:global>
       :root {
         --paper: #eaf3ee; --surface: rgb(255 255 255 / 0.58); --field: rgb(255 255 255 / 0.7); --ink: #10201a; --muted: #43544a; --line: rgb(255 255 255 / 0.65);
-        --edge: rgb(16 32 26 / 0.12); --glass-blur: blur(18px) saturate(170%);
+        --edge: rgb(16 32 26 / 0.45); --rule: rgb(16 32 26 / 0.2); --on-warn: #ffffff; --glass-blur: blur(18px) saturate(170%);
         --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(95 207 151 / 0.45), transparent 60%),
           radial-gradient(50rem 36rem at 100% 0%, rgb(86 130 230 / 0.38), transparent 60%),
           radial-gradient(46rem 34rem at 60% 110%, rgb(240 190 90 / 0.34), transparent 60%);
@@ -84,7 +84,7 @@ const nav = [
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
           --paper: #07100c; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #eef5f0; --muted: #b3c4b8; --line: rgb(255 255 255 / 0.14);
-          --edge: rgb(255 255 255 / 0.1);
+          --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700;
           --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(63 174 119 / 0.38), transparent 60%),
             radial-gradient(50rem 36rem at 100% 0%, rgb(86 120 220 / 0.34), transparent 60%),
             radial-gradient(46rem 34rem at 60% 110%, rgb(224 176 74 / 0.2), transparent 60%);
@@ -97,7 +97,7 @@ const nav = [
       }
       :root[data-theme="dark"] {
         --paper: #07100c; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #eef5f0; --muted: #b3c4b8; --line: rgb(255 255 255 / 0.14);
-        --edge: rgb(255 255 255 / 0.1);
+        --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700;
         --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(63 174 119 / 0.38), transparent 60%),
           radial-gradient(50rem 36rem at 100% 0%, rgb(86 120 220 / 0.34), transparent 60%),
           radial-gradient(46rem 34rem at 60% 110%, rgb(224 176 74 / 0.2), transparent 60%);
@@ -113,7 +113,7 @@ const nav = [
         font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
       a { color: var(--brand); }
       :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
-      .skip { position: absolute; left: 8px; top: -60px; background: var(--surface); color: var(--ink);
+      .skip { position: absolute; left: 8px; top: -60px; background: var(--paper); color: var(--ink);
         padding: 10px 14px; border-radius: 8px; z-index: 50; }
       .skip:focus { top: 8px; }
       .topbar { background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-bottom: 1px solid var(--line); box-shadow: 0 1px 0 var(--edge); position: sticky; top: 0; z-index: 20; }
@@ -136,7 +136,7 @@ const nav = [
       .lede { color: var(--muted); margin: 0 0 18px; }
       footer { color: var(--muted); padding-top: 28px; padding-bottom: 44px; font-size: 0.9rem; }
       table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-      th, td { text-align: left; padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); }
+      th, td { text-align: left; padding: 10px 8px 10px 0; border-bottom: 1px solid var(--rule); }
       .field { display: grid; gap: 4px; }
       .lab { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
       .field input, .field select { min-height: 44px; border: 1px solid var(--edge); border-radius: 10px; padding: 0 12px;

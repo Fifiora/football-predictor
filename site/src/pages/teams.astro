@@ -71,11 +71,11 @@ const active = rows.filter((r) => r.league).length;
   @media (min-width: 720px) { .team-list { grid-template-columns: 1fr 1fr; } }
   .team-list li { max-width: none; }
   .team-list a { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; min-height: 56px; padding: 10px 14px;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; }
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; color: var(--ink); text-decoration: none; }
   .team-list a:hover { border-color: var(--brand); }
   .team-list .name { font-weight: 700; }
   .team-list .lg { grid-column: 1; color: var(--muted); font-size: 0.85rem; }
   .team-list .elo { grid-column: 2; grid-row: 1; font-variant-numeric: tabular-nums; font-weight: 700; }
-  .team-list .track { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin-top: 4px; }
+  .team-list .track { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--rule); overflow: hidden; margin-top: 4px; }
   .team-list .track span { display: block; height: 100%; background: var(--home); }
 </style>
