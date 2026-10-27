@@ -50,40 +50,47 @@ def run_elo(
     home_pre: list[float] = []
     away_pre: list[float] = []
 
-    for row in ordered.itertuples(index=False):
-        league = row.league
-        if season_of.get(league) != row.season:
-            if league in season_of:  # a season ended: regress toward the league mean
-                prev = season_teams[league]
-                mean = float(np.mean([ratings[t] for t in prev]))
-                for team in prev:
-                    ratings[team] -= params.season_regress * (ratings[team] - mean)
-                league_prior[league] = mean
-                for team in [t for t in ratings if team_league[t] == league and t not in prev]:
-                    del ratings[team]  # absent last season: restarts at the league prior if it returns
-            season_of[league] = row.season
-            season_teams[league] = set()
+    for _, day in ordered.groupby("date", sort=True):
+        # Pre-ratings for the whole day are recorded before any of the day's results are
+        # applied, so a rating only ever reflects matches from strictly earlier dates.
+        pending: list[tuple[str, str, float]] = []
+        for row in day.itertuples(index=False):
+            league = row.league
+            if season_of.get(league) != row.season:
+                if league in season_of:  # a season ended: regress toward the league mean
+                    prev = season_teams[league]
+                    mean = float(np.mean([ratings[t] for t in prev]))
+                    for team in prev:
+                        ratings[team] -= params.season_regress * (ratings[team] - mean)
+                    league_prior[league] = mean
+                    for team in [t for t in ratings if team_league[t] == league and t not in prev]:
+                        del ratings[team]  # absent last season: restarts at the league prior if it returns
+                season_of[league] = row.season
+                season_teams[league] = set()
 
-        start = league_prior.get(league, params.initial)
-        for team in (row.home, row.away):
-            ratings.setdefault(team, start)
-            team_league[team] = league
-            season_teams[league].add(team)
+            start = league_prior.get(league, params.initial)
+            for team in (row.home, row.away):
+                ratings.setdefault(team, start)
+                team_league[team] = league
+                season_teams[league].add(team)
 
-        r_home, r_away = ratings[row.home], ratings[row.away]
-        out_ids.append(row.match_id)
-        home_pre.append(r_home)
-        away_pre.append(r_away)
+            r_home, r_away = ratings[row.home], ratings[row.away]
+            out_ids.append(row.match_id)
+            home_pre.append(r_home)
+            away_pre.append(r_away)
 
-        if pd.isna(row.home_goals) or pd.isna(row.away_goals):
-            continue
+            if pd.isna(row.home_goals) or pd.isna(row.away_goals):
+                continue
 
-        goal_diff = int(row.home_goals) - int(row.away_goals)
-        score = 1.0 if goal_diff > 0 else 0.5 if goal_diff == 0 else 0.0
-        expected = expected_home_score(r_home, r_away, params.home_adv)
-        delta = params.k * _margin_multiplier(goal_diff) * (score - expected)
-        ratings[row.home] = r_home + delta
-        ratings[row.away] = r_away - delta
+            goal_diff = int(row.home_goals) - int(row.away_goals)
+            score = 1.0 if goal_diff > 0 else 0.5 if goal_diff == 0 else 0.0
+            expected = expected_home_score(r_home, r_away, params.home_adv)
+            delta = params.k * _margin_multiplier(goal_diff) * (score - expected)
+            pending.append((row.home, row.away, delta))
+
+        for home, away, delta in pending:
+            ratings[home] += delta
+            ratings[away] -= delta
 
     pre = pd.DataFrame(
         {"elo_home_pre": home_pre, "elo_away_pre": away_pre},

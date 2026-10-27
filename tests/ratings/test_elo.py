@@ -122,3 +122,16 @@ def test_unplayed_rows_get_pre_ratings_but_do_not_update():
     assert pre.loc[upcoming_id, "elo_home_pre"] == pytest.approx(final_played["A"])
     assert pre.loc[upcoming_id, "elo_away_pre"] == pytest.approx(final_played["B"])
     assert final == pytest.approx(final_played)
+
+
+def test_same_date_matches_do_not_see_each_other():
+    # A plays twice on one date: the second match's pre-rating must not reflect the first result.
+    both = make_matches([
+        ("2025-08-16", "2025-26", "E0", "A", "B", 4, 0),
+        ("2025-08-16", "2025-26", "E0", "A", "C", 0, 4),
+    ])
+    pre, final = run_elo(both)
+    initial = EloParams().initial
+    assert pre["elo_home_pre"].tolist() == [initial, initial]
+    assert pre["elo_away_pre"].tolist() == [initial, initial]
+    assert final["A"] != initial  # both results are still applied after the day

@@ -5,30 +5,7 @@ from scipy.optimize import check_grad
 
 from footpred.ratings import dixon_coles as dc
 
-TEAMS = ["A", "B", "C", "D", "E", "F"]
-
-
-def simulate_league(att, dfn, rounds, start="2025-08-01", seed=0, mu=0.15, hadv=0.25, league="E0"):
-    """Round-robin of ordered pairs; one round per week. att/dfn: dict team -> strength."""
-    rng = np.random.default_rng(seed)
-    rows = []
-    for r in range(rounds):
-        date = pd.Timestamp(start) + pd.Timedelta(days=7 * r)
-        for h in TEAMS:
-            for a in TEAMS:
-                if h == a:
-                    continue
-                lam = np.exp(mu + hadv + att[h] - dfn[a])
-                mu_away = np.exp(mu + att[a] - dfn[h])
-                rows.append((date, "2025-26", league, h, a, rng.poisson(lam), rng.poisson(mu_away)))
-    df = pd.DataFrame(
-        rows, columns=["date", "season", "league", "home", "away", "home_goals", "away_goals"]
-    )
-    df["match_id"] = [
-        f"{lg}-{d:%Y%m%d}-{h}-{a}"
-        for lg, d, h, a in zip(df["league"], df["date"], df["home"], df["away"])
-    ]
-    return df
+from sim import TEAMS, simulate_league
 
 
 NEUTRAL = {t: 0.0 for t in TEAMS}
