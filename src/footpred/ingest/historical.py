@@ -26,6 +26,14 @@ _RENAME = {
 _OPTIONAL = ["home_shots", "away_shots", "home_sot", "away_sot", "close_h", "close_d", "close_a"]
 
 
+def read_csv_text(path: Path, **kwargs) -> pd.DataFrame:
+    """Read a football-data.co.uk CSV: UTF-8 (with or without a BOM) first, then Latin-1."""
+    try:
+        return pd.read_csv(path, encoding="utf-8-sig", **kwargs)
+    except UnicodeDecodeError:
+        return pd.read_csv(path, encoding="latin-1", **kwargs)
+
+
 def season_label(date: pd.Timestamp) -> str:
     """European season label: July onward belongs to the season starting that year."""
     start = date.year if date.month >= 7 else date.year - 1
@@ -38,7 +46,7 @@ def load_historical(raw_dir: Path, aliases_path: Path | None = None) -> pd.DataF
     unknown: set[str] = set()
 
     for path in sorted(Path(raw_dir).glob("*.csv")):
-        raw = pd.read_csv(path)
+        raw = read_csv_text(path)
         raw = raw.dropna(subset=["HomeTeam", "AwayTeam", "Date"])
         df = raw.rename(columns=_RENAME)
         df["league"] = raw["Div"].astype(str).str.strip()

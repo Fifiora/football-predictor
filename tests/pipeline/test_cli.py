@@ -42,3 +42,12 @@ def test_list_team_names_reads_every_csv_per_league(tmp_path):
         "D1": ["Bayern Munich", "Dortmund"],
         "SP1": ["Ath Madrid", "Betis", "Girona", "Sevilla"],
     }
+
+
+def test_list_team_names_handles_bom_and_latin1(tmp_path):
+    from footpred.pipeline.cli import list_team_names
+
+    header = "Div,HomeTeam,AwayTeam\n"
+    (tmp_path / "SP1_a.csv").write_bytes(("﻿" + header + "SP1,Málaga,Betis\n").encode("utf-8"))
+    (tmp_path / "SP1_b.csv").write_bytes((header + "SP1,Betis,Sevilla\n").encode("latin-1"))
+    assert list_team_names(tmp_path)["SP1"] == ["Betis", "Málaga", "Sevilla"]

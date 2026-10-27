@@ -12,6 +12,7 @@ from typing import Callable
 import pandas as pd
 
 from footpred.ingest.fixtures import FootballDataOrgClient
+from footpred.ingest.historical import read_csv_text
 from footpred.ingest.teams import covered_leagues
 from footpred.pipeline.benchmark import run_benchmark
 from footpred.pipeline.daily import run_daily
@@ -54,7 +55,7 @@ def list_team_names(raw_dir: Path) -> dict[str, list[str]]:
     """Every team name that appears in the downloaded CSVs, per league (used to build the alias table)."""
     names: dict[str, set[str]] = {}
     for path in sorted(Path(raw_dir).glob("*.csv")):
-        frame = pd.read_csv(path, usecols=lambda c: c in {"Div", "HomeTeam", "AwayTeam"}, encoding="latin-1")
+        frame = read_csv_text(path, usecols=lambda c: c in {"Div", "HomeTeam", "AwayTeam"})
         frame = frame.dropna(subset=["Div", "HomeTeam", "AwayTeam"])
         for league, group in frame.groupby("Div"):
             names.setdefault(str(league).strip(), set()).update(group["HomeTeam"].str.strip(), group["AwayTeam"].str.strip())

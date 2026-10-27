@@ -56,3 +56,17 @@ def test_load_historical_lists_all_unknown_teams(tmp_path):
     with pytest.raises(UnknownTeamError) as exc:
         load_historical(tmp_path)
     assert "Ghost FC" in str(exc.value) and "Phantom Utd" in str(exc.value)
+
+
+def test_loader_handles_bom_and_latin1_files(tmp_path):
+    from footpred.ingest.historical import load_historical
+
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    aliases = tmp_path / "aliases.csv"
+    aliases.write_text("league,alias,canonical\nSP1,Málaga,Málaga\nSP1,Betis,Betis\n", encoding="utf-8")
+    header = "Div,Date,HomeTeam,AwayTeam,FTHG,FTAG,FTR\n"
+    (raw / "SP1_bom.csv").write_bytes(("﻿" + header + "SP1,17/08/2014,Málaga,Betis,1,0,H\n").encode("utf-8"))
+    (raw / "SP1_latin.csv").write_bytes((header + "SP1,24/08/2014,Betis,Málaga,2,2,D\n").encode("latin-1"))
+    out = load_historical(raw, aliases)
+    assert sorted(out["result"]) == ["D", "H"] and set(out["home"]) == {"Málaga", "Betis"}
