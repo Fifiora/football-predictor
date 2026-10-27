@@ -50,6 +50,17 @@ def download_history(
     return failed
 
 
+def list_team_names(raw_dir: Path) -> dict[str, list[str]]:
+    """Every team name that appears in the downloaded CSVs, per league (used to build the alias table)."""
+    names: dict[str, set[str]] = {}
+    for path in sorted(Path(raw_dir).glob("*.csv")):
+        frame = pd.read_csv(path, usecols=lambda c: c in {"Div", "HomeTeam", "AwayTeam"}, encoding="latin-1")
+        frame = frame.dropna(subset=["Div", "HomeTeam", "AwayTeam"])
+        for league, group in frame.groupby("Div"):
+            names.setdefault(str(league).strip(), set()).update(group["HomeTeam"].str.strip(), group["AwayTeam"].str.strip())
+    return {league: sorted(found) for league, found in sorted(names.items())}
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         return _main(argv)
@@ -64,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="footpred")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("download", "daily", "retrain", "benchmark"):
+    for name in ("download", "daily", "retrain", "benchmark", "teams"):
         p = sub.add_parser(name)
         p.add_argument("--data-dir", type=Path, default=Path("state/data"))
         p.add_argument("--registry-dir", type=Path, default=Path("state/registry"))
@@ -89,6 +100,15 @@ def _main(argv: list[str] | None = None) -> int:
         note(f"history download for {covered}: {len(failed)} files unavailable {failed[:5]}")
         if skipped:
             note(f"- warning: no team aliases yet for {skipped}; add them to data/team_aliases.csv to enable these leagues")
+        return 0
+    if args.command == "teams":
+        year = today.year if today.month >= 7 else today.year - 1
+        download_history(args.data_dir / "raw", args.first_year, year, leagues=LEAGUES)
+        client = FootballDataOrgClient(os.environ["FOOTBALL_DATA_TOKEN"])
+        for league, names in list_team_names(args.data_dir / "raw").items():
+            print(f"::notice title=csv names {league}::" + " | ".join(names))
+        for league in LEAGUES:
+            print(f"::notice title=api names {league}::" + " | ".join(client.get_team_names(league)))
         return 0
     if args.command == "daily":
         client = FootballDataOrgClient(os.environ["FOOTBALL_DATA_TOKEN"])

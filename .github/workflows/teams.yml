@@ -1,0 +1,14 @@
+name: teams
+on:
+  workflow_dispatch:
+jobs:
+  teams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e .
+      - name: List team names from the history files and the API
+        env: { FOOTBALL_DATA_TOKEN: "${{ secrets.FOOTBALL_DATA_TOKEN }}" }
+        run: python -m footpred.pipeline.cli teams

@@ -81,6 +81,21 @@ class FootballDataOrgClient:
             )
         return rows
 
+    def get_team_names(self, league: str) -> list[str]:
+        """Names of the teams in a competition's current season, as this provider spells them."""
+        if league not in _COMPETITION_CODES:
+            raise ValueError(f"unsupported league {league!r}")
+        status, payload = self._http_get(
+            f"{self._base_url}/v4/competitions/{_COMPETITION_CODES[league]}/teams", {"X-Auth-Token": self._token}, {}
+        )
+        if status != 200:
+            raise FixturesUnavailable(f"football-data.org answered HTTP {status} for {league} teams")
+        return _team_names_from(payload)
+
+
+def _team_names_from(payload: dict) -> list[str]:
+    return [t["name"] for t in payload.get("teams", [])]
+
 
 def _get_rows(
     client: FixturesClient,

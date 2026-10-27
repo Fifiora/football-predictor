@@ -143,3 +143,15 @@ def test_football_data_org_adapter_rejects_unknown_league_and_http_errors():
         client.get_fixtures("E0", date(2025, 10, 27), date(2025, 11, 10))
     with pytest.raises(ValueError):
         FootballDataOrgClient("t", http_get=lambda *a: (200, SAMPLE)).get_fixtures("ZZ9", date(2025, 10, 27), date(2025, 11, 10))
+
+
+def test_football_data_org_lists_competition_team_names():
+    seen = {}
+
+    def http_get(url, headers, params):
+        seen["url"] = url
+        return 200, {"teams": [{"name": "FC Barcelona"}, {"name": "Real Betis Balompié"}]}
+
+    client = FootballDataOrgClient("t", http_get=http_get)
+    assert client.get_team_names("SP1") == ["FC Barcelona", "Real Betis Balompié"]
+    assert seen["url"].endswith("/v4/competitions/PD/teams")
