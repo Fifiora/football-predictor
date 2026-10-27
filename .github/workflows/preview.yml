@@ -1,0 +1,44 @@
+name: preview
+on:
+  workflow_dispatch:
+  push:
+    paths: ["site/**", ".github/workflows/preview.yml"]
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Build, test, serve
+        run: |
+          cd site
+          set +e
+          (npm install && npm test && SITE_DATA_DIR=tests/preview-data SITE_NOW=2026-10-27T12:00:00Z npm run build) > ../site-build.log 2>&1
+          code=$?
+          if [ "$code" != "0" ]; then
+            echo "::error title=site build failed::$(grep -v '^$' ../site-build.log | tail -c 3500 | tr '\n' '|')"
+            exit "$code"
+          fi
+          (python3 -m http.server 4321 --directory dist >/dev/null 2>&1 &)
+      - name: Browser checks and screenshots
+        run: |
+          npm install --prefix /tmp/pw playwright@1.49.1
+          /tmp/pw/node_modules/.bin/playwright install --with-deps chromium
+          cd site
+          OUT_DIR=/tmp/shots node scripts/preview.mjs 2>&1 | tee /tmp/preview.log
+        continue-on-error: true
+      - name: Publish screenshots and log
+        if: always()
+        run: |
+          mkdir -p /tmp/shots
+          cp /tmp/preview.log /tmp/shots/preview.log || true
+          cp site-build.log /tmp/shots/build.log || true
+          cd /tmp/shots
+          git init -q
+          git checkout -q -B screenshots
+          git add -A
+          git -c user.name=footpred-bot -c user.email=bot@users.noreply.github.com commit -qm "screenshots $(date -u +%FT%TZ)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" screenshots

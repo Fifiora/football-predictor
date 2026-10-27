@@ -2,13 +2,184 @@
 import Base from "../layouts/Base.astro";
 import MatchCard from "../components/MatchCard.astro";
 import { fixtures, meta } from "../lib/data.mjs";
-import { formatUpdated } from "../lib/format.mjs";
-const sorted = [...fixtures].sort((a, b) => a.date.localeCompare(b.date) || a.match_id.localeCompare(b.match_id));
+import { formatDay, formatUpdated, leagueName } from "../lib/format.mjs";
+import { applyFilters, defaultState, leagueCounts } from "../lib/filters.mjs";
+const sorted = applyFilters(fixtures, defaultState(), "0000-00-00");
+const counts = leagueCounts(fixtures);
+const leagues = Object.keys(counts).sort((a, b) => leagueName(a).localeCompare(leagueName(b)));
+const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["week", "This week"]];
 ---
 <Base title="Fixtures">
   <h1>Upcoming matches</h1>
-  <p>Last updated {formatUpdated(meta.updated_at)}. Each bar shows the chance of a home win, draw and away win.</p>
+  <p class="lede">Chances of a home win, draw and away win for the big five leagues. Last updated {formatUpdated(meta.updated_at)}.</p>
   {sorted.length === 0
     ? <p>No fixtures are scheduled in the next two weeks. Check back after the next update.</p>
-    : sorted.map((f) => <MatchCard fixture={f} />)}
+    : (
+    <section id="fixtures" aria-label="Fixtures">
+      <div class="filters panel" id="filters" role="search" hidden>
+        <div class="row">
+          <label class="field grow">
+            <span class="lab">Team</span>
+            <input type="search" id="q" placeholder="Search a team, e.g. Inter" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span class="lab">Sort by</span>
+            <select id="sort">
+              <option value="date">Kick-off date</option>
+              <option value="confidence">Most confident</option>
+              <option value="close">Closest matches</option>
+            </select>
+          </label>
+        </div>
+        <div class="group" role="group" aria-label="League">
+          <span class="lab">League</span>
+          <div class="chips">
+            {leagues.map((l) => (
+              <button type="button" class="chip" data-league={l} aria-pressed="false">{leagueName(l)} <span class="n">{counts[l]}</span></button>
+            ))}
+          </div>
+        </div>
+        <div class="group" role="group" aria-label="When">
+          <span class="lab">When</span>
+          <div class="chips">
+            {ranges.map(([v, label]) => (
+              <button type="button" class="chip" data-range={v} aria-pressed={v === "all" ? "true" : "false"}>{label}</button>
+            ))}
+          </div>
+        </div>
+        <div class="row foot">
+          <label class="check"><input type="checkbox" id="confident" /> Confident picks only</label>
+          <p id="count" class="count" role="status" aria-live="polite"></p>
+          <button type="button" id="clear" class="clear" disabled>Clear filters</button>
+        </div>
+      </div>
+      <p id="empty" class="empty panel" hidden>
+        No matches fit these filters. <button type="button" class="linklike" id="empty-clear">Clear filters</button>
+      </p>
+      <ol id="list" class="list">
+        {sorted.map((f, i) => (
+          <>
+            {(i === 0 || sorted[i - 1].date !== f.date) && (
+              <li class="day"><h2 class="day-title">{formatDay(f.date)}</h2></li>
+            )}
+            <li class="item" data-id={f.match_id} data-league={f.league} data-date={f.date} data-home={f.home} data-away={f.away}
+              data-ph={f.p_home} data-pd={f.p_draw} data-pa={f.p_away}>
+              <MatchCard fixture={f} />
+            </li>
+          </>
+        ))}
+      </ol>
+    </section>
+  )}
+  <script>
+    import { applyFilters, defaultState, parseState, serializeState } from "../lib/filters.mjs";
+    import { formatDay } from "../lib/format.mjs";
+
+    const root = document.getElementById("fixtures");
+    if (root) {
+      const $ = (sel) => root.querySelector(sel);
+      const list = $("#list");
+      const items = [...list.querySelectorAll("li.item")];
+      const byId = new Map(items.map((li) => [li.dataset.id, li]));
+      const fixtures = items.map((li) => ({
+        match_id: li.dataset.id, league: li.dataset.league, date: li.dataset.date,
+        home: li.dataset.home, away: li.dataset.away,
+        p_home: Number(li.dataset.ph), p_draw: Number(li.dataset.pd), p_away: Number(li.dataset.pa),
+      }));
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      let state = parseState(location.search);
+      const q = $("#q"), sort = $("#sort"), confident = $("#confident"), clear = $("#clear");
+
+      function dayHeading(date) {
+        const li = document.createElement("li");
+        li.className = "day";
+        const h = document.createElement("h2");
+        h.className = "day-title";
+        h.textContent = formatDay(date);
+        li.append(h);
+        return li;
+      }
+
+      function render() {
+        const shown = applyFilters(fixtures, state, today);
+        const ids = new Set(shown.map((f) => f.match_id));
+        list.querySelectorAll("li.day").forEach((n) => n.remove());
+        const frag = document.createDocumentFragment();
+        let lastDay = null;
+        for (const f of shown) {
+          if (state.sort === "date" && f.date !== lastDay) { frag.append(dayHeading(f.date)); lastDay = f.date; }
+          const li = byId.get(f.match_id);
+          li.hidden = false;
+          frag.append(li);
+        }
+        for (const li of items) if (!ids.has(li.dataset.id)) { li.hidden = true; frag.append(li); }
+        list.append(frag);
+
+        root.querySelectorAll("[data-league]").forEach((b) => {
+          if (b.tagName === "BUTTON") b.setAttribute("aria-pressed", String(state.leagues.includes(b.dataset.league)));
+        });
+        root.querySelectorAll("[data-range]").forEach((b) => b.setAttribute("aria-pressed", String(state.range === b.dataset.range)));
+        if (q.value !== state.q) q.value = state.q;
+        sort.value = state.sort;
+        confident.checked = state.confidentOnly;
+        const total = fixtures.length;
+        $("#count").textContent = shown.length === total ? `${total} matches` : `${shown.length} of ${total} matches`;
+        $("#empty").hidden = shown.length > 0;
+        const isDefault = serializeState(state) === "";
+        clear.disabled = isDefault;
+        try { history.replaceState(null, "", location.pathname + serializeState(state)); } catch (e) {}
+      }
+
+      function update(patch) { state = { ...state, ...patch }; render(); }
+
+      root.querySelectorAll("button[data-league]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const l = b.dataset.league;
+          update({ leagues: state.leagues.includes(l) ? state.leagues.filter((x) => x !== l) : [...state.leagues, l] });
+        }));
+      root.querySelectorAll("button[data-range]").forEach((b) => b.addEventListener("click", () => update({ range: b.dataset.range })));
+      q.addEventListener("input", () => update({ q: q.value }));
+      sort.addEventListener("change", () => update({ sort: sort.value }));
+      confident.addEventListener("change", () => update({ confidentOnly: confident.checked }));
+      const reset = () => { state = defaultState(); render(); };
+      clear.addEventListener("click", reset);
+      $("#empty-clear").addEventListener("click", reset);
+
+      $("#filters").hidden = false;
+      render();
+    }
+  </script>
 </Base>
+<style is:global>
+  [hidden] { display: none !important; }
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  @media (min-width: 720px) { .list { grid-template-columns: 1fr 1fr; } .list .day { grid-column: 1 / -1; } }
+  .list .item { max-width: none; }
+  .day { max-width: none; }
+  .day-title { margin: 20px 0 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .filters { display: grid; gap: 14px; margin-bottom: 18px; }
+  .filters .row { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; }
+  .filters .grow { flex: 1 1 14rem; }
+  .field { display: grid; gap: 4px; }
+  .lab { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .field input, .field select { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px;
+    background: var(--paper); color: var(--ink); font: inherit; width: 100%; }
+  .group { display: grid; gap: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface);
+    color: var(--ink); font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background .15s, border-color .15s; }
+  .chip:hover { border-color: var(--brand); }
+  .chip[aria-pressed="true"] { background: var(--home); border-color: var(--home); color: var(--on-home); }
+  .chip .n { opacity: 0.75; font-weight: 500; font-variant-numeric: tabular-nums; margin-left: 4px; }
+  .foot { justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px solid var(--line); }
+  .check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
+  .check input { width: 22px; height: 22px; accent-color: var(--home); }
+  .count { margin: 0; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; flex: 1; text-align: center; }
+  .clear, .linklike { min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--line); background: transparent;
+    color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+  .clear:disabled { opacity: 0.45; cursor: default; }
+  .linklike { border: 0; color: var(--brand); text-decoration: underline; padding: 0 4px; }
+  .empty { text-align: center; color: var(--muted); }
+</style>

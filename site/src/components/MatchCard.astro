@@ -1,36 +1,64 @@
 ---
-import { leagueName, pct, slug, topDrivers } from "../lib/format.mjs";
-const { fixture: f } = Astro.props;
+import { formatDay, leagueName, pct, slug, topDrivers } from "../lib/format.mjs";
+import { confidenceLabel, pick } from "../lib/filters.mjs";
+const { fixture: f, open = false } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const drivers = topDrivers(f.drivers, 3);
+const top = pick(f);
+const level = confidenceLabel(f);
+const cls = level.toLowerCase().replace("-", "");
+const segs = [
+  { k: "h", p: f.p_home, label: f.home },
+  { k: "d", p: f.p_draw, label: "Draw" },
+  { k: "a", p: f.p_away, label: f.away },
+];
 ---
 <article class="card" data-match={f.match_id}>
-  <p class="when">{f.date}, {leagueName(f.league)}</p>
-  <h3><a href={`${base}/match/${slug(f.match_id)}/`}>{f.home} v {f.away}</a></h3>
+  <p class="meta"><span class="league">{leagueName(f.league)}</span><time datetime={f.date}>{formatDay(f.date)}</time></p>
+  <h3 class="teams"><a class="stretched" href={`${base}/match/${slug(f.match_id)}/`}>{f.home} <span class="vs">v</span> {f.away}</a></h3>
+  <p class="pick">
+    <span class={`badge ${cls}`}>{level}</span>
+    <span>Most likely: <b>{top.side === "draw" ? "a draw" : `${top.team} win`}</b> ({pct(top.p)})</span>
+  </p>
   <div class="bar" role="img" aria-label={`${f.home} ${pct(f.p_home)}, draw ${pct(f.p_draw)}, ${f.away} ${pct(f.p_away)}`}>
-    <span class="h" style={`flex:${f.p_home}`}></span>
-    <span class="d" style={`flex:${f.p_draw}`}></span>
-    <span class="a" style={`flex:${f.p_away}`}></span>
+    {segs.map((s) => <span class={s.k} style={`flex:${s.p}`}>{s.p >= 0.12 ? pct(s.p) : ""}</span>)}
   </div>
-  <ul class="odds">
-    <li><b>{pct(f.p_home)}</b> {f.home}</li>
-    <li><b>{pct(f.p_draw)}</b> Draw</li>
-    <li><b>{pct(f.p_away)}</b> {f.away}</li>
+  <ul class="legend" aria-hidden="true">
+    {segs.map((s) => <li class={s.k}><i></i>{s.label} <b>{pct(s.p)}</b></li>)}
   </ul>
   {drivers.length > 0 && (
-    <ul class="why">
-      {drivers.map((d) => <li data-driver>{d.text}</li>)}
-    </ul>
+    <details class="why" open={open}>
+      <summary>Why this pick</summary>
+      <ul>
+        {drivers.map((d) => <li data-driver>{d.text}</li>)}
+      </ul>
+    </details>
   )}
 </article>
 <style>
-  .card { border-top: 2px solid var(--ink); padding: 14px 0 18px; }
-  .when { margin: 0; color: var(--muted); font-size: 0.85rem; }
-  h3 { margin: 2px 0 10px; font-size: 1.15rem; }
-  .bar { display: flex; height: 14px; gap: 2px; border: 0; padding: 0; }
-  .bar span { display: block; min-width: 4px; }
-  .h { background: var(--home); } .d { background: var(--draw); } .a { background: var(--away); }
-  .odds { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 18px; }
-  .odds b { font-variant-numeric: tabular-nums; }
-  .why { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.92rem; }
+  .card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 14px 16px 12px; transition: transform .15s ease, box-shadow .15s ease; }
+  .card:hover { transform: translateY(-1px); }
+  .meta { margin: 0; display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+  .teams { margin: 4px 0 8px; font-size: 1.2rem; line-height: 1.25; letter-spacing: -0.01em; }
+  .teams a { color: var(--ink); text-decoration: none; }
+  .teams a:hover { text-decoration: underline; }
+  .stretched::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
+  .vs { color: var(--muted); font-weight: 500; font-size: 0.9em; }
+  .pick { margin: 0 0 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 0.95rem; max-width: none; }
+  .badge { font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1.5px solid currentColor; letter-spacing: .02em; }
+  .badge.confident { color: var(--good); } .badge.lean { color: var(--lean); } .badge.tossup { color: var(--toss); }
+  .bar { display: flex; height: 28px; gap: 2px; border-radius: 8px; overflow: hidden; }
+  .bar span { display: grid; place-items: center; min-width: 6px; font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bar .h { background: var(--home); color: var(--on-home); }
+  .bar .d { background: var(--draw); color: var(--on-draw); }
+  .bar .a { background: var(--away); color: var(--on-away); }
+  .legend { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 0.88rem; color: var(--muted); max-width: none; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+  .legend .h i { background: var(--home); } .legend .d i { background: var(--draw); } .legend .a i { background: var(--away); }
+  .legend b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .why { margin-top: 8px; position: relative; z-index: 1; }
+  .why summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--brand); }
+  .why ul { margin: 0 0 6px; padding-left: 20px; color: var(--muted); font-size: 0.94rem; }
+  .why li { margin: 4px 0; }
 </style>

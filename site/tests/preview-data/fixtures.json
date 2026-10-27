@@ -1,0 +1,502 @@
+[
+ {
+  "match_id": "I1-20261027-Roma-Cagliari",
+  "league": "I1",
+  "date": "2026-10-27",
+  "home": "Roma",
+  "away": "Cagliari",
+  "p_home": 0.74,
+  "p_draw": 0.18,
+  "p_away": 0.08,
+  "btts": 0.45,
+  "over_2_5": 0.5,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Roma being rated 150 Elo points above Cagliari, which points to Roma."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Roma to score 1.8 goals, which points to Roma."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Roma out-shooting opponents by 3.2 shots a match lately, which points to Roma."
+   }
+  ]
+ },
+ {
+  "match_id": "I1-20261027-Torino-Como",
+  "league": "I1",
+  "date": "2026-10-27",
+  "home": "Torino",
+  "away": "Como",
+  "p_home": 0.22,
+  "p_draw": 0.24,
+  "p_away": 0.54,
+  "btts": 0.55,
+  "over_2_5": 0.58,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Torino being rated 150 Elo points above Como, which points to Torino."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Torino to score 1.8 goals, which points to Torino."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Torino out-shooting opponents by 3.2 shots a match lately, which points to Torino."
+   }
+  ]
+ },
+ {
+  "match_id": "I1-20261028-Venezia-Inter",
+  "league": "I1",
+  "date": "2026-10-28",
+  "home": "Venezia",
+  "away": "Inter",
+  "p_home": 0.07,
+  "p_draw": 0.13,
+  "p_away": 0.8,
+  "btts": 0.42,
+  "over_2_5": 0.55,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Venezia being rated 150 Elo points above Inter, which points to Venezia."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Venezia to score 1.8 goals, which points to Venezia."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Venezia out-shooting opponents by 3.2 shots a match lately, which points to Venezia."
+   }
+  ]
+ },
+ {
+  "match_id": "I1-20261028-Parma-Udinese",
+  "league": "I1",
+  "date": "2026-10-28",
+  "home": "Parma",
+  "away": "Udinese",
+  "p_home": 0.36,
+  "p_draw": 0.29,
+  "p_away": 0.35,
+  "btts": 0.5,
+  "over_2_5": 0.42,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Parma being rated 150 Elo points above Udinese, which points to Parma."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Parma to score 1.8 goals, which points to Parma."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Parma out-shooting opponents by 3.2 shots a match lately, which points to Parma."
+   }
+  ]
+ },
+ {
+  "match_id": "E0-20261028-Arsenal-Chelsea",
+  "league": "E0",
+  "date": "2026-10-28",
+  "home": "Arsenal",
+  "away": "Chelsea",
+  "p_home": 0.52,
+  "p_draw": 0.26,
+  "p_away": 0.22,
+  "btts": 0.56,
+  "over_2_5": 0.6,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Arsenal being rated 150 Elo points above Chelsea, which points to Arsenal."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Arsenal to score 1.8 goals, which points to Arsenal."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Arsenal out-shooting opponents by 3.2 shots a match lately, which points to Arsenal."
+   }
+  ]
+ },
+ {
+  "match_id": "E0-20261029-Liverpool-Brighton",
+  "league": "E0",
+  "date": "2026-10-29",
+  "home": "Liverpool",
+  "away": "Brighton",
+  "p_home": 0.63,
+  "p_draw": 0.2,
+  "p_away": 0.17,
+  "btts": 0.6,
+  "over_2_5": 0.66,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Liverpool being rated 150 Elo points above Brighton, which points to Liverpool."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Liverpool to score 1.8 goals, which points to Liverpool."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Liverpool out-shooting opponents by 3.2 shots a match lately, which points to Liverpool."
+   }
+  ]
+ },
+ {
+  "match_id": "SP1-20261029-Sevilla-Valencia",
+  "league": "SP1",
+  "date": "2026-10-29",
+  "home": "Sevilla",
+  "away": "Valencia",
+  "p_home": 0.41,
+  "p_draw": 0.31,
+  "p_away": 0.28,
+  "btts": 0.48,
+  "over_2_5": 0.45,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Sevilla being rated 150 Elo points above Valencia, which points to Sevilla."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Sevilla to score 1.8 goals, which points to Sevilla."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Sevilla out-shooting opponents by 3.2 shots a match lately, which points to Sevilla."
+   }
+  ]
+ },
+ {
+  "match_id": "D1-20261031-Köln-Mainz",
+  "league": "D1",
+  "date": "2026-10-31",
+  "home": "Köln",
+  "away": "Mainz",
+  "p_home": 0.4,
+  "p_draw": 0.3,
+  "p_away": 0.3,
+  "btts": 0.52,
+  "over_2_5": 0.5,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Köln being rated 150 Elo points above Mainz, which points to Köln."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Köln to score 1.8 goals, which points to Köln."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Köln out-shooting opponents by 3.2 shots a match lately, which points to Köln."
+   }
+  ]
+ },
+ {
+  "match_id": "F1-20261101-Lille-Nice",
+  "league": "F1",
+  "date": "2026-11-01",
+  "home": "Lille",
+  "away": "Nice",
+  "p_home": 0.45,
+  "p_draw": 0.28,
+  "p_away": 0.27,
+  "btts": 0.5,
+  "over_2_5": 0.47,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Lille being rated 150 Elo points above Nice, which points to Lille."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Lille to score 1.8 goals, which points to Lille."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Lille out-shooting opponents by 3.2 shots a match lately, which points to Lille."
+   }
+  ]
+ },
+ {
+  "match_id": "D1-20261103-Bayern Munich-Dortmund",
+  "league": "D1",
+  "date": "2026-11-03",
+  "home": "Bayern Munich",
+  "away": "Dortmund",
+  "p_home": 0.58,
+  "p_draw": 0.21,
+  "p_away": 0.21,
+  "btts": 0.7,
+  "over_2_5": 0.72,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Bayern Munich being rated 150 Elo points above Dortmund, which points to Bayern Munich."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Bayern Munich to score 1.8 goals, which points to Bayern Munich."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Bayern Munich out-shooting opponents by 3.2 shots a match lately, which points to Bayern Munich."
+   }
+  ]
+ }
+]

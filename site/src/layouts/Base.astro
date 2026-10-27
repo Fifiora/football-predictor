@@ -2,50 +2,131 @@
 import StalenessBanner from "../components/StalenessBanner.astro";
 import { meta, now } from "../lib/data.mjs";
 import { formatUpdated } from "../lib/format.mjs";
-const { title } = Astro.props;
+const { title, wide = false } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const path = Astro.url.pathname.replace(base, "") || "/";
+const nav = [
+  { href: `${base}/`, label: "Fixtures", match: (p) => p === "/" || p.startsWith("/match") },
+  { href: `${base}/teams/`, label: "Teams", match: (p) => p.startsWith("/teams") || p.startsWith("/team/") },
+  { href: `${base}/track-record/`, label: "Track record", match: (p) => p.startsWith("/track-record") },
+  { href: `${base}/about/`, label: "How it works", match: (p) => p.startsWith("/about") },
+];
 ---
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>{title} | Match odds</title>
+    <script is:inline>
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
   </head>
   <body>
+    <a class="skip" href="#main">Skip to content</a>
     <StalenessBanner updatedAt={meta.updated_at} now={now.toISOString()} />
     <header class="topbar">
-      <a class="brand" href={`${base}/`}>Match odds</a>
-      <nav aria-label="Main">
-        <a href={`${base}/`}>Fixtures</a>
-        <a href={`${base}/track-record/`}>Track record</a>
-        <a href={`${base}/about/`}>How it works</a>
-      </nav>
+      <div class="topbar-inner">
+        <a class="brand" href={`${base}/`}>
+          <svg class="logo" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M12 6.5l4.2 3-1.6 5h-5.2l-1.6-5z" fill="currentColor" />
+          </svg>
+          <span>Match odds</span>
+        </a>
+        <nav aria-label="Main">
+          {nav.map((n) => (
+            <a href={n.href} aria-current={n.match(path) ? "page" : undefined}>{n.label}</a>
+          ))}
+        </nav>
+        <button type="button" class="theme" id="theme-toggle" aria-label="Switch between light and dark theme">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+            <path d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5z" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
     </header>
-    <main><slot /></main>
+    <main id="main" class={wide ? "wide" : undefined}><slot /></main>
     <footer>
-      <p>Last updated {formatUpdated(meta.updated_at)}. Model {meta.model_version}.</p>
+      <p>Last updated {formatUpdated(meta.updated_at)}. Model {meta.model_version}. Made for fans, not for betting.</p>
     </footer>
+    <script>
+      const btn = document.getElementById("theme-toggle");
+      btn?.addEventListener("click", () => {
+        const root = document.documentElement;
+        const dark =
+          root.dataset.theme === "dark" ||
+          (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+        const next = dark ? "light" : "dark";
+        root.dataset.theme = next;
+        try { localStorage.setItem("theme", next); } catch (e) {}
+      });
+    </script>
     <style is:global>
       :root {
-        --paper: #eef1ec; --ink: #16211b; --muted: #55635a; --line: #c9d3ca;
-        --home: #1f5c3a; --draw: #b8892b; --away: #3b4f7a; --warn: #8a2d1f;
+        --paper: #f3f6f2; --surface: #ffffff; --ink: #13221a; --muted: #4b5b51; --line: #d6ded7;
+        --brand: #17623d; --focus: #b87500;
+        --home: #1b6b43; --on-home: #ffffff;
+        --draw: #e3b04b; --on-draw: #2b1d00;
+        --away: #3556a0; --on-away: #ffffff;
+        --warn: #8a2d1f; --shadow: 0 1px 2px rgb(19 34 26 / 0.06), 0 4px 14px rgb(19 34 26 / 0.06);
+        --good: #17623d; --lean: #8a5a00; --toss: #4b5b51;
+        --radius: 14px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --paper: #0d1511; --surface: #15211b; --ink: #e9f0ea; --muted: #a6b6ab; --line: #27382d;
+          --brand: #5fcf97; --focus: #f0c060;
+          --home: #3fae77; --on-home: #06150d;
+          --draw: #e0b04a; --on-draw: #241900;
+          --away: #86a2e6; --on-away: #0b1430;
+          --shadow: 0 1px 2px rgb(0 0 0 / 0.4); --good: #6ad9a0; --lean: #f0c060; --toss: #a6b6ab;
+        }
+      }
+      :root[data-theme="dark"] {
+        --paper: #0d1511; --surface: #15211b; --ink: #e9f0ea; --muted: #a6b6ab; --line: #27382d;
+        --brand: #5fcf97; --focus: #f0c060;
+        --home: #3fae77; --on-home: #06150d;
+        --draw: #e0b04a; --on-draw: #241900;
+        --away: #86a2e6; --on-away: #0b1430;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.4); --good: #6ad9a0; --lean: #f0c060; --toss: #a6b6ab;
       }
       * { box-sizing: border-box; }
+      html { color-scheme: light dark; }
       body { margin: 0; background: var(--paper); color: var(--ink);
-        font: 17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
-      a { color: var(--home); }
-      a:focus-visible { outline: 3px solid var(--draw); outline-offset: 2px; }
-      main, .topbar, footer { max-width: 46rem; margin: 0 auto; padding: 0 16px; }
-      .topbar { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; padding-top: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
-      .brand { font-weight: 800; font-size: 1.25rem; color: var(--ink); text-decoration: none; letter-spacing: -0.01em; }
-      nav { display: flex; gap: 18px; flex-wrap: wrap; }
+        font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+      a { color: var(--brand); }
+      :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+      .skip { position: absolute; left: 8px; top: -60px; background: var(--surface); color: var(--ink);
+        padding: 10px 14px; border-radius: 8px; z-index: 50; }
+      .skip:focus { top: 8px; }
+      .topbar { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+      .topbar-inner { max-width: 60rem; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; }
+      .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.2rem; color: var(--ink);
+        text-decoration: none; letter-spacing: -0.01em; min-height: 44px; }
+      .logo { color: var(--brand); }
+      nav { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+      nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 999px;
+        color: var(--muted); text-decoration: none; font-weight: 600; font-size: 0.97rem; }
+      nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--line) 55%, transparent); }
+      nav a[aria-current="page"] { color: var(--on-home); background: var(--home); }
+      .theme { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line); background: transparent;
+        color: var(--ink); display: inline-grid; place-items: center; cursor: pointer; margin-left: auto; }
+      .theme:hover { background: color-mix(in srgb, var(--line) 55%, transparent); }
+      main, footer { max-width: 60rem; margin: 0 auto; padding: 0 16px; }
       h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.15; letter-spacing: -0.02em; margin: 28px 0 8px; }
-      h2 { font-size: 1.2rem; margin: 28px 0 8px; }
+      h2 { font-size: 1.25rem; margin: 32px 0 10px; letter-spacing: -0.01em; }
       p, li { max-width: 62ch; }
-      footer { color: var(--muted); padding-top: 24px; padding-bottom: 40px; font-size: 0.9rem; }
+      .lede { color: var(--muted); margin: 0 0 18px; }
+      footer { color: var(--muted); padding-top: 28px; padding-bottom: 44px; font-size: 0.9rem; }
       table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-      th, td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); }
+      th, td { text-align: left; padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); }
+      .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
     </style>
   </body>
 </html>

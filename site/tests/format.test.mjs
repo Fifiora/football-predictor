@@ -30,3 +30,10 @@ test("league codes show as names, unknown codes pass through", () => {
   assert.equal(leagueName("SP1"), "La Liga");
   assert.equal(leagueName("XX9"), "XX9");
 });
+
+test("day labels read like a fixture list", async () => {
+  const { formatDay } = await import("../src/lib/format.mjs");
+  assert.equal(formatDay("2026-10-28"), "Wed 28 Oct");
+  assert.equal(formatDay("2026-11-03"), "Tue 3 Nov");
+  assert.equal(formatDay("nonsense"), "nonsense");
+});

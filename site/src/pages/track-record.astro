@@ -1,32 +1,104 @@
 ---
 import Base from "../layouts/Base.astro";
 import { trackRecord as t } from "../lib/data.mjs";
-import { pct } from "../lib/format.mjs";
+import { leagueName, pct } from "../lib/format.mjs";
 const f = (x) => (x == null ? "n/a" : x.toFixed(3));
+const graded = t.n_graded > 0;
+const cal = graded ? t.calibration : [];
+const maxN = Math.max(...cal.map((c) => c.n), 1);
+// Chart geometry: 0-100% on both axes inside a 300x300 plot with a margin for labels.
+const S = 300, M = 36;
+const x = (p) => M + p * S;
+const y = (p) => M + (1 - p) * S;
+const ticks = [0, 0.25, 0.5, 0.75, 1];
+const leagues = graded ? Object.entries(t.by_league) : [];
 ---
 <Base title="Track record">
   <h1>How the predictions have done</h1>
-  {t.n_graded === 0
-    ? <p>No matches have been graded yet. Results appear here after the first predicted matches finish.</p>
+  {!graded
+    ? <section class="panel empty">
+        <h2>No matches graded yet</h2>
+        <p>Every prediction is saved before kickoff and is never edited afterwards. Results appear here after the first predicted matches finish: how often the top pick was right, and whether a "60%" really happens about 60% of the time.</p>
+      </section>
     : <>
-      <p>{t.n_graded} predicted matches graded. Every prediction was logged before kickoff and is never edited afterwards.</p>
-      <table>
-        <tbody>
-          <tr><th>Log loss (lower is better)</th><td>{f(t.log_loss)}</td></tr>
-          <tr><th>Ranked probability score (lower is better)</th><td>{f(t.rps)}</td></tr>
-          <tr><th>Picked the right result</th><td>{pct(t.accuracy)}</td></tr>
-        </tbody>
-      </table>
+      <p class="lede">{t.n_graded} predicted matches graded. Every prediction was logged before kickoff and is never edited afterwards.</p>
+      <div class="tiles">
+        <div class="panel tile"><span class="k">Right result</span><b>{pct(t.accuracy)}</b><span class="d">How often the most likely outcome happened. Always picking the home team gets about 44%.</span></div>
+        <div class="panel tile"><span class="k">Matches graded</span><b>{t.n_graded}</b><span class="d">Only matches predicted before kickoff count.</span></div>
+        <div class="panel tile"><span class="k">Log loss</span><b>{f(t.log_loss)}</b><span class="d">Lower is better. A model with no skill scores about 1.07.</span></div>
+        <div class="panel tile"><span class="k">Ranked score</span><b>{f(t.rps)}</b><span class="d">Lower is better. Counts a near miss as better than a far miss.</span></div>
+      </div>
+
       <h2>Are the percentages honest?</h2>
-      <p>When the model says 30%, that should happen about 30% of the time.</p>
-      <table>
-        <thead><tr><th>Said</th><th>Happened</th><th>Cases</th></tr></thead>
-        <tbody>{t.calibration.map((c) => <tr><td>{pct(c.predicted)}</td><td>{pct(c.observed)}</td><td>{c.n}</td></tr>)}</tbody>
-      </table>
-      <h2>By league</h2>
-      <table>
-        <thead><tr><th>League</th><th>Matches</th><th>Log loss</th><th>Right result</th></tr></thead>
-        <tbody>{Object.entries(t.by_league).map(([l, m]) => <tr><td>{l}</td><td>{m.n}</td><td>{f(m.log_loss)}</td><td>{pct(m.accuracy)}</td></tr>)}</tbody>
-      </table>
+      <p>When the model says 30%, that should happen about 30% of the time. Dots on the dashed line mean the model is honest. Bigger dots mean more matches.</p>
+      <figure class="panel chart">
+        <svg viewBox={`0 0 ${S + M * 2} ${S + M * 2}`} role="img" aria-label="Chart of predicted chance against how often it happened" >
+          {ticks.map((p) => (
+            <>
+              <line x1={x(0)} x2={x(1)} y1={y(p)} y2={y(p)} class="grid" />
+              <line y1={y(0)} y2={y(1)} x1={x(p)} x2={x(p)} class="grid" />
+              <text x={x(0) - 8} y={y(p) + 4} text-anchor="end" class="tick">{Math.round(p * 100)}%</text>
+              <text x={x(p)} y={y(0) + 20} text-anchor="middle" class="tick">{Math.round(p * 100)}%</text>
+            </>
+          ))}
+          <line x1={x(0)} y1={y(0)} x2={x(1)} y2={y(1)} class="diag" />
+          {cal.map((c) => (
+            <circle cx={x(c.predicted)} cy={y(c.observed)} r={5 + 9 * Math.sqrt(c.n / maxN)} class="dot">
+              <title>Said {pct(c.predicted)}, happened {pct(c.observed)} ({c.n} cases)</title>
+            </circle>
+          ))}
+          <text x={x(0.5)} y={S + M * 2 - 4} text-anchor="middle" class="axis">What the model said</text>
+          <text x="12" y={y(0.5)} text-anchor="middle" class="axis" transform={`rotate(-90 12 ${y(0.5)})`}>How often it happened</text>
+        </svg>
+        <details>
+          <summary>See the numbers</summary>
+          <table>
+            <thead><tr><th>Said</th><th>Happened</th><th>Cases</th></tr></thead>
+            <tbody>{cal.map((c) => <tr><td>{pct(c.predicted)}</td><td>{pct(c.observed)}</td><td>{c.n}</td></tr>)}</tbody>
+          </table>
+        </details>
+      </figure>
+
+      {leagues.length > 0 && (
+        <>
+          <h2>By league</h2>
+          <div class="panel">
+            <ul class="lg">
+              {leagues.map(([l, m]) => (
+                <li>
+                  <div class="top"><span>{leagueName(l)}</span><span><b>{pct(m.accuracy)}</b> right <span class="n">({m.n} matches, log loss {f(m.log_loss)})</span></span></div>
+                  <div class="track" aria-hidden="true"><span style={`width:${Math.round(m.accuracy * 100)}%`}></span></div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
     </>}
+
+  <h2>Back-test on past seasons</h2>
+  <p>Before going live, the model was tested the way it is used: predicting each match using only earlier matches. On 5,330 matches from the three seasons before 2025-26 it picked the right result 53% of the time, against 44% for always picking the home team. Football keeps most models in the 50 to 55% range. These live results are the stricter test, and this page will fill in as matches finish.</p>
 </Base>
+<style>
+  .empty { max-width: 40rem; }
+  .empty h2 { margin-top: 0; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 12px; }
+  .tile { display: grid; gap: 4px; align-content: start; }
+  .k { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .tile b { font-size: 2.2rem; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--brand); }
+  .d { color: var(--muted); font-size: 0.9rem; }
+  .chart { margin: 0; max-width: 34rem; }
+  .chart svg { width: 100%; height: auto; display: block; }
+  .grid { stroke: var(--line); stroke-width: 1; }
+  .diag { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 5; }
+  .dot { fill: var(--home); fill-opacity: 0.85; stroke: var(--surface); stroke-width: 2; }
+  .tick { fill: var(--muted); font-size: 11px; }
+  .axis { fill: var(--ink); font-size: 12px; font-weight: 600; }
+  details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--brand); }
+  .lg { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+  .lg li { max-width: none; }
+  .top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-weight: 600; margin-bottom: 4px; }
+  .n { color: var(--muted); font-weight: 400; font-size: 0.88rem; }
+  .track { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .track span { display: block; height: 100%; background: var(--home); }
+</style>

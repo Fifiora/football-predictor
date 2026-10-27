@@ -22,7 +22,7 @@ const read = (dist, p) => readFileSync(join(dist, p), "utf8");
 
 test("build succeeds and emits all page types", () => {
   const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
-  for (const p of ["index.html", "track-record/index.html", "about/index.html"]) {
+  for (const p of ["index.html", "teams/index.html", "track-record/index.html", "about/index.html"]) {
     assert.ok(existsSync(join(dist, p)), p);
   }
   assert.ok(readdirSync(join(dist, "match")).length >= 1);
@@ -50,4 +50,38 @@ test("staleness banner appears after 48 hours and is absent when fresh", () => {
 test("about page says probabilities, not certainties, are the product", () => {
   const about = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "about/index.html");
   assert.match(about, /Football is noisy, so probabilities, not certainties, are the product/);
+});
+
+test("fixtures page has filters, league chips with counts, and date headings", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "index.html");
+  assert.match(html, /id="filters"/);
+  assert.match(html, /data-league="E0"/);
+  assert.match(html, /data-range="3d"/);
+  assert.match(html, /id="confident"/);
+  assert.match(html, /Thu 30 Oct/);
+  assert.match(html, /Why this pick/);
+  assert.match(html, /Most likely: <b[^>]*>Arsenal win<\/b>/);
+  assert.match(html, /aria-current="page"/);
+});
+
+test("teams page lists rated teams and links to team pages", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "teams/index.html");
+  assert.match(html, /id="tq"/);
+  assert.match(html, /data-name="Arsenal"/);
+});
+
+test("match page shows goal meters and reason bars", () => {
+  const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
+  const id = readdirSync(join(dist, "match")).find((n) => n.includes("arsenal"));
+  const html = read(dist, `match/${id}/index.html`);
+  assert.match(html, /Both teams score/);
+  assert.match(html, /Most likely scores/);
+  assert.match(html, /What the model weighed/);
+});
+
+test("track record shows tiles and a calibration chart once matches are graded", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "track-record/index.html");
+  assert.match(html, /Right result/);
+  assert.match(html, /<svg[^>]*role="img"/);
+  assert.match(html, /Back-test on past seasons/);
 });

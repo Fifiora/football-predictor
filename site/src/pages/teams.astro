@@ -1,0 +1,78 @@
+---
+import Base from "../layouts/Base.astro";
+import { fixtures, teams } from "../lib/data.mjs";
+import { leagueName, slug } from "../lib/format.mjs";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const leagueOf = {};
+for (const f of fixtures) { leagueOf[f.home] = f.league; leagueOf[f.away] = f.league; }
+const rows = Object.entries(teams)
+  .map(([name, elo]) => ({ name, elo, league: leagueOf[name] ?? null }))
+  .sort((a, b) => b.elo - a.elo);
+const lo = Math.min(...rows.map((r) => r.elo));
+const hi = Math.max(...rows.map((r) => r.elo));
+const width = (elo) => (hi === lo ? 100 : Math.round(8 + ((elo - lo) / (hi - lo)) * 92));
+const active = rows.filter((r) => r.league).length;
+---
+<Base title="Teams">
+  <h1>Teams</h1>
+  <p class="lede">Every team has a rating that moves after each match. 1500 is an average side. Higher is stronger.</p>
+  <section id="teams" aria-label="Teams">
+    <div class="panel tools">
+      <label class="field">
+        <span class="lab">Search a team</span>
+        <input type="search" id="tq" placeholder="e.g. Napoli" autocomplete="off" />
+      </label>
+      <label class="check"><input type="checkbox" id="all" /> Include teams with no match soon</label>
+      <p id="tcount" class="count" role="status" aria-live="polite">{active} teams with a match soon</p>
+    </div>
+    <ul class="team-list">
+      {rows.map((r) => (
+        <li data-name={r.name} data-active={r.league ? "1" : "0"} hidden={!r.league}>
+          <a href={`${base}/team/${slug(r.name)}/`}>
+            <span class="name">{r.name}</span>
+            <span class="lg">{r.league ? leagueName(r.league) : ""}</span>
+            <span class="elo">{r.elo.toFixed(0)}</span>
+            <span class="track" aria-hidden="true"><span style={`width:${width(r.elo)}%`}></span></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p id="tempty" class="panel" hidden>No team matches that search.</p>
+  </section>
+  <script>
+    import { fold } from "../lib/filters.mjs";
+    const root = document.getElementById("teams");
+    if (root) {
+      const items = [...root.querySelectorAll(".team-list li")];
+      const q = root.querySelector("#tq"), all = root.querySelector("#all");
+      const run = () => {
+        const term = fold(q.value);
+        let n = 0;
+        for (const li of items) {
+          const ok = (all.checked || li.dataset.active === "1") && (!term || fold(li.dataset.name).includes(term));
+          li.hidden = !ok;
+          if (ok) n += 1;
+        }
+        root.querySelector("#tcount").textContent = `${n} team${n === 1 ? "" : "s"} shown`;
+        root.querySelector("#tempty").hidden = n > 0;
+      };
+      q.addEventListener("input", run);
+      all.addEventListener("change", run);
+    }
+  </script>
+</Base>
+<style is:global>
+  .tools { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end; margin-bottom: 16px; }
+  .tools .field { flex: 1 1 14rem; }
+  .team-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  @media (min-width: 720px) { .team-list { grid-template-columns: 1fr 1fr; } }
+  .team-list li { max-width: none; }
+  .team-list a { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; min-height: 56px; padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; }
+  .team-list a:hover { border-color: var(--brand); }
+  .team-list .name { font-weight: 700; }
+  .team-list .lg { grid-column: 1; color: var(--muted); font-size: 0.85rem; }
+  .team-list .elo { grid-column: 2; grid-row: 1; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .team-list .track { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin-top: 4px; }
+  .team-list .track span { display: block; height: 100%; background: var(--home); }
+</style>

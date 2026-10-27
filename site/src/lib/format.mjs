@@ -40,3 +40,12 @@ const LEAGUES = {
 export function leagueName(code) {
   return LEAGUES[code] ?? code;
 }
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatDay(isoDate) {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return String(isoDate);
+  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
+}

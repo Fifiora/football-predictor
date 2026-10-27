@@ -2,16 +2,40 @@
 import Base from "../../layouts/Base.astro";
 import MatchCard from "../../components/MatchCard.astro";
 import { fixtures, teams } from "../../lib/data.mjs";
-import { slug } from "../../lib/format.mjs";
+import { leagueName, slug } from "../../lib/format.mjs";
 export function getStaticPaths() {
   return Object.keys(teams).map((name) => ({ params: { name: slug(name) }, props: { name } }));
 }
 const { name } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const games = fixtures.filter((f) => f.home === name || f.away === name);
+const elo = teams[name];
+const ranked = Object.entries(teams).sort((a, b) => b[1] - a[1]);
+const rank = ranked.findIndex(([n]) => n === name) + 1;
+const diff = Math.round(elo - 1500);
+const league = games[0]?.league;
 ---
 <Base title={name}>
+  <p class="crumb"><a href={`${base}/teams/`}>&larr; All teams</a></p>
   <h1>{name}</h1>
-  <p>Current Elo rating: {teams[name].toFixed(0)}. A team at 1500 is average for its league.</p>
+  <div class="stats">
+    <div class="panel stat"><span class="k">Rating</span><b>{elo.toFixed(0)}</b><span class="d">{diff === 0 ? "exactly average" : `${Math.abs(diff)} ${diff > 0 ? "above" : "below"} average (1500)`}</span></div>
+    <div class="panel stat"><span class="k">Rank</span><b>#{rank}</b><span class="d">of {ranked.length} rated teams</span></div>
+    {league && <div class="panel stat"><span class="k">League</span><b class="sm">{leagueName(league)}</b><span class="d">{games.length} match{games.length === 1 ? "" : "es"} soon</span></div>}
+  </div>
   <h2>Upcoming</h2>
-  {games.length === 0 ? <p>No scheduled matches in the next two weeks.</p> : games.map((f) => <MatchCard fixture={f} />)}
+  {games.length === 0
+    ? <p>No scheduled matches in the next two weeks.</p>
+    : <div class="grid">{games.map((f) => <MatchCard fixture={f} />)}</div>}
 </Base>
+<style>
+  .crumb { margin: 18px 0 0; }
+  .crumb a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; text-decoration: none; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 12px; max-width: 40rem; }
+  .stat { display: grid; gap: 2px; }
+  .k { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .stat b { font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat b.sm { font-size: 1.25rem; line-height: 1.6; }
+  .d { color: var(--muted); font-size: 0.9rem; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); }
+</style>
