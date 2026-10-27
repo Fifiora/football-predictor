@@ -23,12 +23,24 @@ test("pct and slug", () => {
   assert.equal(slug("Atlético Madrid"), "atletico-madrid");
 });
 
-import { leagueName } from "../src/lib/format.mjs";
+import { isExperimental, leagueName } from "../src/lib/format.mjs";
 
 test("league codes show as names, unknown codes pass through", () => {
   assert.equal(leagueName("E0"), "Premier League");
   assert.equal(leagueName("SP1"), "La Liga");
   assert.equal(leagueName("XX9"), "XX9");
+  assert.equal(leagueName("CL"), "Champions League");
+});
+
+test("the Champions League is experimental until 30 of its predictions are graded", () => {
+  const record = (n) => ({ by_league: { CL: { n } } });
+  assert.equal(isExperimental(record(29), "CL"), true);
+  assert.equal(isExperimental(record(30), "CL"), false);
+  assert.equal(isExperimental(record(500), "CL"), false);
+  assert.equal(isExperimental({ by_league: {} }, "CL"), true);
+  assert.equal(isExperimental({}, "CL"), true);
+  assert.equal(isExperimental(undefined, "CL"), true);
+  assert.equal(isExperimental(record(0), "E0"), false);
 });
 
 test("day labels read like a fixture list", async () => {

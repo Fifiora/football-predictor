@@ -25,22 +25,31 @@ const visible = (page) => page.locator("li.item:not([hidden])").count();
 // Fixtures: desktop and mobile
 let p = await open("/", { width: 1280, height: 900 });
 await shot(p, "fixtures-desktop");
-check((await visible(p)) === 10, "all 10 matches shown by default");
-check((await p.textContent("#count")).trim() === "10 matches", "count reads 10 matches");
+check((await visible(p)) === 11, "all 11 matches shown by default");
+check((await p.textContent("#count")).trim() === "11 matches", "count reads 11 matches");
 
 await p.click('button[data-league="I1"]');
 check((await visible(p)) === 4, "Serie A chip leaves 4 matches");
-check((await p.textContent("#count")).trim() === "4 of 10 matches", "count reads 4 of 10");
+check((await p.textContent("#count")).trim() === "4 of 11 matches", "count reads 4 of 11");
 check(p.url().includes("league=I1"), "filter is saved in the URL");
+await p.click('button[data-league="I1"]');  // toggle Serie A off again
+await p.click('button[data-league="CL"]');
+check((await visible(p)) === 1, "Champions League chip narrows the list to its one match");
+const cl = p.locator('li.item:not([hidden]) article');
+check((await cl.textContent()).includes("90-minute result"), "the Champions League card says it is a 90-minute result");
+check((await cl.textContent()).includes("Experimental"), "the Champions League card carries the Experimental tag");
+await shot(p, "fixtures-champions-league");
+await p.click('button[data-league="CL"]');
+await p.click('button[data-league="I1"]');
 await p.fill("#q", "inter");
 check((await visible(p)) === 1, "team search 'inter' leaves 1 match");
 await p.fill("#q", "zzzz");
 check(await p.locator("#empty").isVisible(), "empty state shows when nothing matches");
 await p.click("#empty-clear");
-check((await visible(p)) === 10, "clearing restores all matches");
+check((await visible(p)) === 11, "clearing restores all matches");
 await p.check("#confident");
 const n = await visible(p);
-check(n > 0 && n < 10, `confident-only narrows the list (${n})`);
+check(n > 0 && n < 11, `confident-only narrows the list (${n})`);
 await p.selectOption("#sort", "close");
 check((await p.locator("li.day").count()) === 0, "no date headings when sorted by closeness");
 await p.close();

@@ -1,8 +1,8 @@
 ---
 import Base from "../../layouts/Base.astro";
 import MatchCard from "../../components/MatchCard.astro";
-import { fixtures, teams } from "../../lib/data.mjs";
-import { pct, slug, topDrivers } from "../../lib/format.mjs";
+import { fixtures, teams, trackRecord } from "../../lib/data.mjs";
+import { isExperimental, pct, slug, topDrivers } from "../../lib/format.mjs";
 export function getStaticPaths() {
   return fixtures.map((f) => ({ params: { id: slug(f.match_id) }, props: { f } }));
 }
@@ -18,7 +18,7 @@ const links = [f.home, f.away].filter((t) => t in teams);
 <Base title={`${f.home} v ${f.away}`}>
   <p class="crumb"><a href={`${base}/`}>&larr; All fixtures</a></p>
   <h1>{f.home} v {f.away}</h1>
-  <div class="match-card"><MatchCard fixture={f} /></div>
+  <div class="match-card"><MatchCard fixture={f} experimental={isExperimental(trackRecord, f.league)} /></div>
 
   {hasGoals && (
     <section class="panel block">

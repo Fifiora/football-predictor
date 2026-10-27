@@ -1,13 +1,79 @@
 [
-  {"match_id": "E0-20251030-Arsenal-Chelsea", "league": "E0", "date": "2025-10-30", "home": "Arsenal", "away": "Chelsea",
-   "p_home": 0.5, "p_draw": 0.3, "p_away": 0.2, "btts": 0.5, "over_2_5": 0.4,
-   "top_scorelines": [{"score": "1-1", "p": 0.3}, {"score": "2-1", "p": 0.2}],
-   "drivers": [
-     {"feature": "elo_diff", "direction": "home", "strength": 0.3, "text": "The model weighted a big Elo gap in favour of Arsenal."},
-     {"feature": "form_goals_for_home", "direction": "home", "strength": 0.2, "text": "The model weighted Arsenal's recent scoring in favour of Arsenal."},
-     {"feature": "rest_days_away", "direction": "home", "strength": 0.1, "text": "The model weighted Chelsea's short rest in favour of Arsenal."},
-     {"feature": "dc_exp_home", "direction": "home", "strength": 0.05, "text": "The model weighted expected goals in favour of Arsenal."}
-   ]},
-  {"match_id": "E0-20251031-Fulham-Everton", "league": "E0", "date": "2025-10-31", "home": "Fulham", "away": "Everton",
-   "p_home": 0.3, "p_draw": 0.3, "p_away": 0.4, "drivers": []}
+ {
+  "match_id": "E0-20251030-Arsenal-Chelsea",
+  "league": "E0",
+  "date": "2025-10-30",
+  "home": "Arsenal",
+  "away": "Chelsea",
+  "p_home": 0.5,
+  "p_draw": 0.3,
+  "p_away": 0.2,
+  "btts": 0.5,
+  "over_2_5": 0.4,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.3
+   },
+   {
+    "score": "2-1",
+    "p": 0.2
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted a big Elo gap in favour of Arsenal."
+   },
+   {
+    "feature": "form_goals_for_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted Arsenal's recent scoring in favour of Arsenal."
+   },
+   {
+    "feature": "rest_days_away",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Chelsea's short rest in favour of Arsenal."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.05,
+    "text": "The model weighted expected goals in favour of Arsenal."
+   }
+  ]
+ },
+ {
+  "match_id": "E0-20251031-Fulham-Everton",
+  "league": "E0",
+  "date": "2025-10-31",
+  "home": "Fulham",
+  "away": "Everton",
+  "p_home": 0.3,
+  "p_draw": 0.3,
+  "p_away": 0.4,
+  "drivers": []
+ },
+ {
+  "match_id": "CL-20251029-Arsenal-Inter",
+  "league": "CL",
+  "date": "2025-10-29",
+  "home": "Arsenal",
+  "away": "Inter",
+  "p_home": 0.46,
+  "p_draw": 0.27,
+  "p_away": 0.27,
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted a big Elo gap in favour of Arsenal."
+   }
+  ]
+ }
 ]

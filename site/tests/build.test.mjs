@@ -64,6 +64,16 @@ test("fixtures page has filters, league chips with counts, and date headings", (
   assert.match(html, /aria-current="page"/);
 });
 
+test("Champions League fixtures get their own chip, a 90-minute note and an experimental tag", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "index.html");
+  assert.match(html, /data-league="CL"/);
+  assert.match(html, /Champions League/);
+  assert.match(html, /90-minute result/);
+  assert.match(html, /Experimental/);
+  const league = html.split('data-match="E0-20251030-Arsenal-Chelsea"')[1].split("</article>")[0];
+  assert.doesNotMatch(league, /90-minute result|Experimental/);  // league cards stay as they were
+});
+
 test("teams page lists rated teams and links to team pages", () => {
   const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "teams/index.html");
   assert.match(html, /id="tq"/);

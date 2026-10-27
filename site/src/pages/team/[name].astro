@@ -1,8 +1,8 @@
 ---
 import Base from "../../layouts/Base.astro";
 import MatchCard from "../../components/MatchCard.astro";
-import { fixtures, teams } from "../../lib/data.mjs";
-import { leagueName, slug } from "../../lib/format.mjs";
+import { fixtures, teams, trackRecord } from "../../lib/data.mjs";
+import { isExperimental, leagueName, slug } from "../../lib/format.mjs";
 export function getStaticPaths() {
   return Object.keys(teams).map((name) => ({ params: { name: slug(name) }, props: { name } }));
 }
@@ -13,7 +13,7 @@ const elo = teams[name];
 const ranked = Object.entries(teams).sort((a, b) => b[1] - a[1]);
 const rank = ranked.findIndex(([n]) => n === name) + 1;
 const diff = Math.round(elo - 1500);
-const league = games[0]?.league;
+const league = games.find((g) => g.league !== "CL")?.league ?? games[0]?.league; // the home league, not the cup
 ---
 <Base title={name}>
   <p class="crumb"><a href={`${base}/teams/`}>&larr; All teams</a></p>
@@ -26,7 +26,7 @@ const league = games[0]?.league;
   <h2>Upcoming</h2>
   {games.length === 0
     ? <p>No scheduled matches in the next two weeks.</p>
-    : <div class="grid">{games.map((f) => <MatchCard fixture={f} />)}</div>}
+    : <div class="grid">{games.map((f) => <MatchCard fixture={f} experimental={isExperimental(trackRecord, f.league)} />)}</div>}
 </Base>
 <style>
   .crumb { margin: 18px 0 0; }

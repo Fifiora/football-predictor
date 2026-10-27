@@ -4,7 +4,10 @@ import { fixtures, teams } from "../lib/data.mjs";
 import { leagueName, slug } from "../lib/format.mjs";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const leagueOf = {};
-for (const f of fixtures) { leagueOf[f.home] = f.league; leagueOf[f.away] = f.league; }
+for (const f of fixtures) {
+  if (f.league === "CL") continue; // a club's league is its domestic one
+  leagueOf[f.home] = f.league; leagueOf[f.away] = f.league;
+}
 const rows = Object.entries(teams)
   .map(([name, elo]) => ({ name, elo, league: leagueOf[name] ?? null }))
   .sort((a, b) => b.elo - a.elo);

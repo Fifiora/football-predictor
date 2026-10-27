@@ -1,8 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
 import MatchCard from "../components/MatchCard.astro";
-import { fixtures, meta } from "../lib/data.mjs";
-import { formatDay, formatUpdated, leagueName } from "../lib/format.mjs";
+import { fixtures, meta, trackRecord } from "../lib/data.mjs";
+import { formatDay, formatUpdated, isExperimental, leagueName } from "../lib/format.mjs";
 import { applyFilters, defaultState, leagueCounts } from "../lib/filters.mjs";
 const sorted = applyFilters(fixtures, defaultState(), "0000-00-00");
 const counts = leagueCounts(fixtures);
@@ -11,7 +11,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
 ---
 <Base title="Fixtures">
   <h1>Upcoming matches</h1>
-  <p class="lede">Chances of a home win, draw and away win for the big five leagues. Last updated {formatUpdated(meta.updated_at)}.</p>
+  <p class="lede">Chances of a home win, draw and away win for the big five leagues and the Champions League. Last updated {formatUpdated(meta.updated_at)}.</p>
   {sorted.length === 0
     ? <p>No fixtures are scheduled in the next two weeks. Check back after the next update.</p>
     : (
@@ -64,7 +64,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
             )}
             <li class="item" data-id={f.match_id} data-league={f.league} data-date={f.date} data-home={f.home} data-away={f.away}
               data-ph={f.p_home} data-pd={f.p_draw} data-pa={f.p_away}>
-              <MatchCard fixture={f} />
+              <MatchCard fixture={f} experimental={isExperimental(trackRecord, f.league)} />
             </li>
           </>
         ))}

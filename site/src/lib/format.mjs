@@ -35,10 +35,19 @@ const LEAGUES = {
   I1: "Serie A",
   D1: "Bundesliga",
   F1: "Ligue 1",
+  CL: "Champions League",
 };
 
 export function leagueName(code) {
   return LEAGUES[code] ?? code;
+}
+
+export const EXPERIMENTAL_UNTIL = 30;
+
+/** Champions League predictions are labelled experimental until enough of them have been graded. */
+export function isExperimental(trackRecord, league) {
+  if (league !== "CL") return false;
+  return (trackRecord?.by_league?.CL?.n ?? 0) < EXPERIMENTAL_UNTIL;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

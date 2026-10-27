@@ -1,7 +1,8 @@
 ---
 import { formatDay, leagueName, pct, slug, topDrivers } from "../lib/format.mjs";
 import { confidenceLabel, pick } from "../lib/filters.mjs";
-const { fixture: f, open = false } = Astro.props;
+const { fixture: f, open = false, experimental = false } = Astro.props;
+const european = f.league === "CL";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const drivers = topDrivers(f.drivers, 3);
 const top = pick(f);
@@ -14,12 +15,13 @@ const segs = [
 ];
 ---
 <article class="card" data-match={f.match_id}>
-  <p class="meta"><span class="league">{leagueName(f.league)}</span><time datetime={f.date}>{formatDay(f.date)}</time></p>
+  <p class="meta"><span class="league">{leagueName(f.league)}{experimental && <span class="tag">Experimental</span>}</span><time datetime={f.date}>{formatDay(f.date)}</time></p>
   <h3 class="teams"><a class="stretched" href={`${base}/match/${slug(f.match_id)}/`}>{f.home} <span class="vs">v</span> {f.away}</a></h3>
   <p class="pick">
     <span class={`badge ${cls}`}>{level}</span>
     <span>Most likely: <b>{top.side === "draw" ? "a draw" : `${top.team} win`}</b> ({pct(top.p)})</span>
   </p>
+  {european && <p class="note">90-minute result: extra time and penalties are not counted.</p>}
   <div class="bar" role="img" aria-label={`${f.home} ${pct(f.p_home)}, draw ${pct(f.p_draw)}, ${f.away} ${pct(f.p_away)}`}>
     {segs.map((s) => <span class={s.k} style={`flex:${s.p}`}>{s.p >= 0.12 ? pct(s.p) : ""}</span>)}
   </div>
@@ -40,6 +42,8 @@ const segs = [
     box-shadow: var(--shadow); padding: 14px 16px 12px; transition: transform .15s ease, box-shadow .15s ease; }
   .card:hover { transform: translateY(-1px); }
   .meta { margin: 0; display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+  .tag { margin-left: 8px; font-size: 0.72rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1.5px solid var(--lean); color: var(--lean); letter-spacing: .02em; text-transform: uppercase; }
+  .note { margin: 0 0 8px; font-size: 0.86rem; color: var(--muted); max-width: none; }
   .teams { margin: 4px 0 8px; font-size: 1.2rem; line-height: 1.25; letter-spacing: -0.01em; }
   .teams a { color: var(--ink); text-decoration: none; }
   .teams a:hover { text-decoration: underline; }

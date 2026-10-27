@@ -498,5 +498,23 @@
     "text": "The model weighted Bayern Munich out-shooting opponents by 3.2 shots a match lately, which points to Bayern Munich."
    }
   ]
+ },
+ {
+  "match_id": "CL-20261028-Roma-Benfica",
+  "league": "CL",
+  "date": "2026-10-28",
+  "home": "Roma",
+  "away": "Benfica",
+  "p_home": 0.52,
+  "p_draw": 0.26,
+  "p_away": 0.22,
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.21,
+    "text": "The model weighted a big Elo gap in favour of Roma, which points to Roma."
+   }
+  ]
  }
 ]
