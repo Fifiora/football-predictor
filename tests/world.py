@@ -36,3 +36,33 @@ def write_world(root):
     aliases = root / "aliases.csv"
     aliases.write_text("\n".join(rows) + "\n")
     return raw, aliases
+
+
+STRONG = ["A", "B", "C", "D", "E", "F"]
+OTHERS = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]
+SEASONS = [2021, 2022, 2023, 2024, 2025]
+
+
+def write_openfootball(root, spread=1.2, seed=3, seasons=SEASONS):
+    """Five seasons of synthetic Champions League results with real strength differences."""
+    rng = np.random.default_rng(seed)
+    strength = {t: float(rng.normal(0, spread)) for t in STRONG + OTHERS}
+    country = {**{t: "ENG" for t in STRONG}, **{t: "POR" for t in OTHERS}}
+    for year in seasons:
+        lines = [f"= UEFA Champions League {year}/{str(year + 1)[-2:]}", "", "▪ League, Matchday 1"]
+        def play(count, first_day, step, home_edge):
+            for i in range(count):
+                home, away = rng.choice(STRONG + OTHERS, size=2, replace=False)
+                gap = strength[home] - strength[away] + home_edge
+                hg = int(rng.poisson(np.exp(0.2 + 0.4 * gap)))
+                ag = int(rng.poisson(np.exp(0.2 - 0.4 * gap)))
+                date = first_day + pd.Timedelta(days=int(i * step))
+                lines.append(f"  {date:%a %b} {date.day} {date.year}")
+                lines.append(f"    21:00  {home} ({country[home]})  v {away} ({country[away]})  {hg}-{ag} (0-0)")
+
+        play(160, pd.Timestamp(f"{year}-09-10"), 250 / 160, 0.3)
+        lines.append("▪ Finals, Round of 16")  # knockout home edge is much larger: a signal only the stage flag can carry
+        play(60, pd.Timestamp(f"{year + 1}-03-01"), 1.0, 1.6)
+        folder = root / "openfootball" / f"{year}-{str(year + 1)[-2:]}"
+        folder.mkdir(parents=True)
+        (folder / "cl.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")

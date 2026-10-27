@@ -18,6 +18,7 @@ from footpred.ingest.historical import read_csv_text
 from footpred.ingest.teams import covered_leagues
 from footpred.pipeline.benchmark import run_benchmark
 from footpred.pipeline.daily import run_daily
+from footpred.pipeline.european import run_european_retrain
 from footpred.pipeline.retrain import run_retrain
 
 LEAGUES = ["E0", "SP1", "I1", "D1", "F1"]
@@ -136,7 +137,7 @@ def _main(argv: list[str] | None = None) -> int:
         client = FootballDataOrgClient(os.environ["FOOTBALL_DATA_TOKEN"])
         result = run_daily(
             args.data_dir, args.site_data_dir, client, today, registry_dir=args.registry_dir,
-            updated_at=pd.Timestamp.now().floor("s"),
+            updated_at=pd.Timestamp.now().floor("s"), european=True,
         )
         note(f"daily: published={result.published} new_results={result.new_results} scored={result.scored_fixtures}")
         for w in result.warnings:
@@ -148,6 +149,11 @@ def _main(argv: list[str] | None = None) -> int:
     if args.command == "retrain":
         result = run_retrain(args.data_dir, args.registry_dir, today)
         note(f"retrain: promoted={result.promote} ({result.reason})")
+        try:  # the Champions League track must never fail the league retrain that already succeeded
+            euro = run_european_retrain(args.data_dir, args.registry_dir, today)
+            note(f"european retrain: promoted={euro.promote} ({euro.reason})")
+        except Exception as err:  # noqa: BLE001
+            print(f"::warning title=european retrain::{type(err).__name__}: {err}")
         return 0
     if args.command == "benchmark-european":
         result = run_european_benchmark(args.data_dir, args.out, today=today)

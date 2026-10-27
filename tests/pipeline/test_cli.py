@@ -94,3 +94,39 @@ def test_benchmark_european_command_writes_the_report_and_prints_the_gate(tmp_pa
     out = capsys.readouterr().out
     assert code == 0 and seen["out"] == tmp_path / "e.md"
     assert "publish gate" in out and "model 1.0 vs base 0.9" in out
+
+
+def test_daily_command_turns_the_european_track_on(tmp_path, monkeypatch):
+    from footpred.pipeline import cli
+    from footpred.pipeline.daily import DailyResult
+
+    seen = {}
+    monkeypatch.setenv("FOOTBALL_DATA_TOKEN", "x")
+    monkeypatch.setattr(cli, "run_daily", lambda *a, **k: seen.update(k) or DailyResult(0, 0, False, []))
+    assert cli.main(["daily", "--data-dir", str(tmp_path), "--site-data-dir", str(tmp_path / "s")]) == 3
+    assert seen["european"] is True
+
+
+def test_retrain_command_survives_a_european_failure(tmp_path, monkeypatch, capsys):
+    from footpred.evaluate.gate import GateResult
+    from footpred.pipeline import cli
+
+    monkeypatch.setattr(cli, "run_retrain", lambda *a, **k: GateResult(True, "ok", 1.0, 0.9, 0.2, 0.19))
+
+    def boom(*a, **k):
+        raise ValueError("not enough European history")
+
+    monkeypatch.setattr(cli, "run_european_retrain", boom)
+    code = cli.main(["retrain", "--data-dir", str(tmp_path), "--registry-dir", str(tmp_path / "r")])
+    out = capsys.readouterr().out
+    assert code == 0 and "::warning title=european retrain" in out and "not enough European history" in out
+
+
+def test_retrain_command_prints_the_european_result(tmp_path, monkeypatch, capsys):
+    from footpred.evaluate.gate import GateResult
+    from footpred.pipeline import cli
+
+    monkeypatch.setattr(cli, "run_retrain", lambda *a, **k: GateResult(True, "ok", 1.0, 0.9, 0.2, 0.19))
+    monkeypatch.setattr(cli, "run_european_retrain", lambda *a, **k: GateResult(False, "publish gate failed: x", 1.0, 0.9, 0.2, 0.19))
+    assert cli.main(["retrain", "--data-dir", str(tmp_path), "--registry-dir", str(tmp_path / "r")]) == 0
+    assert "european retrain: promoted=False (publish gate failed: x)" in capsys.readouterr().out

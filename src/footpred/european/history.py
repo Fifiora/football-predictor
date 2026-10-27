@@ -52,7 +52,7 @@ def load_european_history(openfootball_dir: Path, names: EuropeanNames) -> pd.Da
     return _with_ids(pd.concat(frames, ignore_index=True)).sort_values(["date", "match_id"]).reset_index(drop=True)
 
 
-def _read_results(data_dir: Path) -> pd.DataFrame:
+def read_european_results(data_dir: Path) -> pd.DataFrame:
     path = Path(data_dir) / RESULTS_FILE
     if not path.exists():
         return _empty()
@@ -64,7 +64,7 @@ def append_european_results(data_dir: Path, new: pd.DataFrame) -> None:
     """Add rows to ``european_results.csv`` (atomic; rows with a known ``match_id`` are ignored)."""
     data_dir = Path(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
-    existing = _read_results(data_dir)
+    existing = read_european_results(data_dir)
     merged = pd.concat([existing, new.reindex(columns=EURO_COLUMNS)], ignore_index=True)
     merged = merged.drop_duplicates("match_id", keep="first").sort_values(["date", "match_id"])
     path = data_dir / RESULTS_FILE
@@ -77,7 +77,7 @@ def load_european_matches(data_dir: Path, names: EuropeanNames) -> pd.DataFrame:
     """History plus feed results; a feed row that the history already holds (same competition and
     clubs within a few days; feed dates are UTC) is dropped."""
     history = load_european_history(Path(data_dir) / "openfootball", names)
-    feed = _read_results(data_dir)
+    feed = read_european_results(data_dir)
     if feed.empty:
         return history
     if not history.empty:

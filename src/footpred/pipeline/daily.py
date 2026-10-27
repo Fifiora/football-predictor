@@ -17,6 +17,7 @@ from footpred.ingest.fixtures import FixturesClient, fetch_latest_results, fetch
 from footpred.ingest.historical import season_label
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.models.registry import load_champion
+from footpred.pipeline.european import score_european
 from footpred.pipeline.common import PLAYED, append_api_results, load_all_matches, played_before
 from footpred.predictions.log import grade_predictions, log_predictions
 from footpred.publish.export import export_site_data
@@ -50,6 +51,7 @@ def run_daily(
     aliases_path: Path | None = None,
     sleep: Callable[[float], None] = time.sleep,
     updated_at: pd.Timestamp | None = None,
+    european: bool = False,
 ) -> DailyResult:
     """Refresh predictions. Any failure before the final export leaves ``site_data_dir`` untouched."""
     data_dir = Path(data_dir)
@@ -68,7 +70,14 @@ def run_daily(
     warnings = warnings + result_warnings
 
     new = results[~results["match_id"].isin(matches["match_id"])]
-    if new.empty and upcoming.empty:
+    euro = None
+    if european:  # never raises for feed or model problems: those come back as warnings
+        euro = score_european(
+            data_dir, client, today, registry_dir, aliases_path=aliases_path, sleep=sleep,
+            league_matches=matches if new.empty else pd.concat([matches, new], ignore_index=True),
+        )
+        warnings = warnings + euro.warnings
+    if new.empty and upcoming.empty and (euro is None or euro.nothing_new):
         return DailyResult(0, 0, False, warnings)  # nothing changed: keep the last good site
     if not new.empty:
         append_api_results(data_dir, new)
@@ -105,12 +114,23 @@ def run_daily(
         for row in scored.itertuples(index=False):
             drivers[row.match_id] = top_drivers(model, X.loc[row.match_id], home=row.home, away=row.away)
 
+    european_results = None
+    if euro is not None:
+        european_results = euro.results
+        if not euro.fixtures.empty:  # the league columns already in `scored` are untouched
+            scored = pd.concat([scored, euro.fixtures], ignore_index=True)
+            drivers.update(euro.drivers)
+            grids.update(euro.grids)
+    if not scored.empty:
         future = scored[scored["date"] > today].assign(kickoff_date=lambda df: df["date"])
         if len(future) < len(scored):
             warnings.append(f"{len(scored) - len(future)} same-day fixtures shown but not logged (no kickoff times)")
         log_predictions(data_dir / "prediction_log.csv", future, version, logged_at=today)
 
-    graded = grade_predictions(data_dir / "prediction_log.csv", played[played["result"].isin(PLAYED)])
+    graded_inputs = played[played["result"].isin(PLAYED)]
+    if european_results is not None and len(european_results):
+        graded_inputs = pd.concat([graded_inputs[["match_id", "result"]], european_results[["match_id", "result"]]], ignore_index=True)
+    graded = grade_predictions(data_dir / "prediction_log.csv", graded_inputs)
     metadata_path = registry_dir / version / "metadata.json"
     baseline = json.loads(metadata_path.read_text()).get("metrics", {}).get("log_loss") if metadata_path.exists() else None
     if len(graded):
@@ -122,4 +142,4 @@ def run_daily(
         {t: r for t, r in ratings.items() if t in active}, updated_at if updated_at is not None else today,
         model_version=version,
     )
-    return DailyResult(len(new), len(scored), True, warnings)
+    return DailyResult(len(new) + (euro.new_results if euro is not None else 0), len(scored), True, warnings)
