@@ -32,4 +32,12 @@ def test_benchmark_compares_hybrid_variants_and_reports_the_chosen_one(world, tm
     text = (tmp_path / "out.md").read_text()
     assert "Hybrid (logistic)" in text or "hybrid_logistic" in text
     if res["holdout"] is not None:  # only the chosen variant is evaluated on the held-out season
-        assert set(res["holdout"]) == {"base_rate", "elo", "dixon_coles", "hybrid"}
+        assert set(res["holdout"]) == {"base_rate", "elo", "dixon_coles", "blend", "hybrid"}
+
+
+def test_benchmark_reports_blend_and_supports_feature_subsets(world, tmp_path):
+    lean = {"backend": "logistic", "C": 0.1, "features": ["elo_diff", "dc_p_home", "dc_p_draw", "dc_p_away"]}
+    res = run_benchmark(world["data_dir"], tmp_path / "out.md", aliases_path=world["aliases"], today=TODAY,
+                        variants={"hybrid_lean": lean}, test_seasons=3)
+    assert {"blend", "hybrid_lean"} <= set(res["development"])
+    assert "Blend" in (tmp_path / "out.md").read_text()

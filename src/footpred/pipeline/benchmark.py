@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from footpred.evaluate.backtest import backtest
-from footpred.evaluate.baselines import baseline_base_rate, baseline_dixon_coles, baseline_elo
+from footpred.evaluate.baselines import baseline_base_rate, baseline_blend, baseline_dixon_coles, baseline_elo
 from footpred.evaluate.metrics import expected_calibration_error, log_loss, rps
 from footpred.features.builder import FEATURE_COLUMNS
 from footpred.models.calibration import Calibrator
@@ -20,8 +20,9 @@ from footpred.models.meta_model import MetaModel
 from footpred.pipeline.common import load_all_matches, per_league_log_loss, played_before, training_frame
 
 CAL_FRACTION = 0.15
-MODELS = {"base_rate": "Base rate", "elo": "Elo only", "dixon_coles": "Dixon-Coles only", "hybrid": "Hybrid"}
-VARIANT_LABELS = {"hybrid_logistic": "Hybrid (logistic)", "hybrid_regularized": "Hybrid (regularized trees)"}
+MODELS = {"base_rate": "Base rate", "elo": "Elo only", "dixon_coles": "Dixon-Coles only",
+          "blend": "Blend (Elo + Dixon-Coles)", "hybrid": "Hybrid"}
+VARIANT_LABELS = {"hybrid_lean": "Hybrid (logistic, core inputs only)", "hybrid_logistic": "Hybrid (logistic)", "hybrid_regularized": "Hybrid (regularized trees)"}
 
 
 def default_variants() -> dict[str, dict | None]:
@@ -34,6 +35,7 @@ def default_variants() -> dict[str, dict | None]:
         "hybrid": None,
         "hybrid_regularized": regularized,
         "hybrid_logistic": {"backend": "logistic", "C": 0.1},
+        "hybrid_lean": {"backend": "logistic", "C": 0.1, "features": ["elo_diff", "dc_p_home", "dc_p_draw", "dc_p_away"]},
     }
 
 
@@ -55,9 +57,10 @@ def _hybrid_fit_predict(dates: pd.Series, params: dict | None = None):
         train = train.loc[order]
         cut = int(len(train) * (1 - CAL_FRACTION))
         fit, cal = train.iloc[:cut], train.iloc[cut:]
-        model = MetaModel(params).fit(fit[FEATURE_COLUMNS], fit["outcome"].to_numpy())
-        calibrator = Calibrator().fit(model.predict_proba(cal[FEATURE_COLUMNS]), cal["outcome"].to_numpy())
-        return calibrator.transform(model.predict_proba(test[FEATURE_COLUMNS]))
+        columns = (params or {}).get("features") or FEATURE_COLUMNS  # optional restriction to core inputs
+        model = MetaModel(params).fit(fit[columns], fit["outcome"].to_numpy())
+        calibrator = Calibrator().fit(model.predict_proba(cal[columns]), cal["outcome"].to_numpy())
+        return calibrator.transform(model.predict_proba(test[columns]))
 
     return fit_predict
 
@@ -115,7 +118,7 @@ def run_benchmark(
 
     variants = variants if variants is not None else default_variants()
     fit_predicts = {"base_rate": baseline_base_rate, "elo": baseline_elo, "dixon_coles": baseline_dixon_coles,
-                    **{name: _hybrid_fit_predict(dates, params) for name, params in variants.items()}}
+                    "blend": baseline_blend, **{name: _hybrid_fit_predict(dates, params) for name, params in variants.items()}}
     dev_features = features.loc[dev_ids]
     development = {
         name: _summarize(backtest(fp, dev_features, dev_matches, first_test, step_days=step_days))
@@ -135,7 +138,7 @@ def run_benchmark(
         leagues = meta["league"].reindex(test_ids).to_numpy()
         held_out = {}
         final = {"base_rate": baseline_base_rate, "elo": baseline_elo, "dixon_coles": baseline_dixon_coles,
-                 "hybrid": fit_predicts[chosen]}  # only the chosen variant is evaluated on the held-out season
+                 "blend": baseline_blend, "hybrid": fit_predicts[chosen]}  # only the chosen variant is evaluated on the held-out season
         for name, fp in final.items():
             p = np.asarray(fp(train, test), dtype=float)
             held_out[name] = _summarize(pd.DataFrame(

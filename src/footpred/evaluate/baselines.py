@@ -41,6 +41,11 @@ def baseline_dixon_coles(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
     return probs
 
 
+def baseline_blend(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
+    """Equal-weight average of the Elo logistic and Dixon-Coles probabilities."""
+    return (baseline_elo(train, test) + baseline_dixon_coles(train, test)) / 2
+
+
 def benchmark_closing_odds(matches: pd.DataFrame) -> np.ndarray:
     """De-vigged closing-odds probabilities (proportional normalization); NaN without odds."""
     implied = 1.0 / matches[["close_h", "close_d", "close_a"]].to_numpy(dtype=float)
