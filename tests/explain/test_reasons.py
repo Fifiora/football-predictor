@@ -70,8 +70,37 @@ def test_text_has_no_causal_wording():
 
 def test_text_mentions_the_favoured_team_and_value():
     text = driver_text("elo_diff", "home", 85.0, "Arsenal", "Chelsea")
-    assert "Arsenal" in text and "Chelsea" not in text
-    assert "+85" in text and "Elo" in text
+    assert text.endswith("which points to Arsenal.")
+    assert "85 Elo points" in text
+
+
+@pytest.mark.parametrize(
+    "feature, direction, value, expected",
+    [
+        ("elo_diff", "home", 76.0,
+         "The model weighted Aston Villa being rated 76 Elo points above Fulham, which points to Aston Villa."),
+        ("elo_diff", "away", -40.0,
+         "The model weighted Aston Villa being rated 40 Elo points below Fulham, which points to Fulham."),
+        ("form_shots_diff_away", "home", -1.4,
+         "The model weighted Fulham being out-shot by 1.4 shots a match lately, which points to Aston Villa."),
+        ("form_shots_diff_home", "home", 5.4,
+         "The model weighted Aston Villa out-shooting opponents by 5.4 shots a match lately, which points to Aston Villa."),
+        ("rest_days_home", "away", 6.0,
+         "The model weighted Aston Villa having had 6 days of rest, which points to Fulham."),
+        ("dc_p_away", "away", 0.28,
+         "The model weighted the goals model giving Fulham a 28% chance of winning, which points to Fulham."),
+        ("form_goals_for_home", "home", 1.84,
+         "The model weighted Aston Villa scoring 1.8 goals a match lately, which points to Aston Villa."),
+    ],
+)
+def test_text_reads_naturally(feature, direction, value, expected):
+    assert driver_text(feature, direction, value, "Aston Villa", "Fulham") == expected
+
+
+def test_no_signed_numbers_in_text():
+    for feature in TEMPLATES:
+        text = driver_text(feature, "home", -2.5, "Arsenal", "Chelsea")
+        assert "-2.5" not in text and "+" not in text, (feature, text)
 
 
 def test_every_published_feature_has_a_template():

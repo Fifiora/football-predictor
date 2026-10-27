@@ -49,6 +49,7 @@ def run_daily(
     registry_dir: Path | None = None,
     aliases_path: Path | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    updated_at: pd.Timestamp | None = None,
 ) -> DailyResult:
     """Refresh predictions. Any failure before the final export leaves ``site_data_dir`` untouched."""
     data_dir = Path(data_dir)
@@ -118,6 +119,7 @@ def run_daily(
     active = set(played.loc[played["date"] >= today - pd.Timedelta(days=400), ["home", "away"]].to_numpy().ravel())
     export_site_data(
         site_data_dir, scored, drivers, grids, graded,
-        {t: r for t, r in ratings.items() if t in active}, today, model_version=version,
+        {t: r for t, r in ratings.items() if t in active}, updated_at if updated_at is not None else today,
+        model_version=version,
     )
     return DailyResult(len(new), len(scored), True, warnings)

@@ -90,3 +90,13 @@ def test_retrain_keeps_champion_when_challenger_not_better(world):
     versions = [p.name for p in world["registry"].iterdir() if p.is_dir()]
     assert len(versions) == 2  # the rejected challenger is kept, with its model card
     assert all((world["registry"] / v / "model_card.md").exists() for v in versions)
+
+
+def test_meta_shows_the_real_refresh_time_not_midnight(world):
+    seed_champion(world)
+    run_daily(
+        world["data_dir"], world["site"], world["client"], TODAY,
+        registry_dir=world["registry"], aliases_path=world["aliases"], sleep=NO_SLEEP,
+        updated_at=pd.Timestamp("2025-10-27 22:47:13"),
+    )
+    assert json.loads((world["site"] / "meta.json").read_text())["updated_at"] == "2025-10-27T22:47:13"

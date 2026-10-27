@@ -28,3 +28,15 @@ export function formatUpdated(updatedAt) {
   if (Number.isNaN(d.getTime())) return "unknown";
   return d.toISOString().replace("T", " ").slice(0, 16) + " UTC";
 }
+
+const LEAGUES = {
+  E0: "Premier League",
+  SP1: "La Liga",
+  I1: "Serie A",
+  D1: "Bundesliga",
+  F1: "Ligue 1",
+};
+
+export function leagueName(code) {
+  return LEAGUES[code] ?? code;
+}

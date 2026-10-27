@@ -19,9 +19,9 @@ class Driver:
 
 
 def driver_text(feature: str, direction: str, value: float, home: str, away: str) -> str:
-    phrase = TEMPLATES[feature][0].format(value=value, home=home, away=away)
+    phrase = TEMPLATES[feature][0](value, home, away)
     team = home if direction == "home" else away
-    return f"The model weighted {phrase} in favour of {team}."
+    return f"The model weighted {phrase}, which points to {team}."
 
 
 def _shap_scores(model: MetaModel, x_row: pd.Series) -> np.ndarray | None:

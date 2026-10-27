@@ -92,7 +92,10 @@ def _main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "daily":
         client = FootballDataOrgClient(os.environ["FOOTBALL_DATA_TOKEN"])
-        result = run_daily(args.data_dir, args.site_data_dir, client, today, registry_dir=args.registry_dir)
+        result = run_daily(
+            args.data_dir, args.site_data_dir, client, today, registry_dir=args.registry_dir,
+            updated_at=pd.Timestamp.now().floor("s"),
+        )
         note(f"daily: published={result.published} new_results={result.new_results} scored={result.scored_fixtures}")
         for w in result.warnings:
             note(f"- warning: {w}")

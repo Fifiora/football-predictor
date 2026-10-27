@@ -22,3 +22,11 @@ test("pct and slug", () => {
   assert.equal(pct(0.456), "46%");
   assert.equal(slug("Atlético Madrid"), "atletico-madrid");
 });
+
+import { leagueName } from "../src/lib/format.mjs";
+
+test("league codes show as names, unknown codes pass through", () => {
+  assert.equal(leagueName("E0"), "Premier League");
+  assert.equal(leagueName("SP1"), "La Liga");
+  assert.equal(leagueName("XX9"), "XX9");
+});

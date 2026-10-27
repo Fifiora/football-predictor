@@ -31,7 +31,7 @@ def make_inputs():
     grid[3, 0] = 0.2   # 3-0  (over 2.5, clean sheet)
     grid[0, 1] = 0.1   # 0-1
     grids = {fixtures.match_id[0]: grid, fixtures.match_id[1]: grid}
-    drivers = {fixtures.match_id[0]: [Driver("elo_diff", "home", 0.3, "The model weighted a big Elo gap in favour of Arsenal.")]}
+    drivers = {fixtures.match_id[0]: [Driver("elo_diff", "home", 0.3, "The model weighted a big Elo gap which points to Arsenal.")]}
     graded = pd.DataFrame(
         {
             "match_id": ["a", "b", "c", "d"],

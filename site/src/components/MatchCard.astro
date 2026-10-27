@@ -1,11 +1,11 @@
 ---
-import { pct, slug, topDrivers } from "../lib/format.mjs";
+import { leagueName, pct, slug, topDrivers } from "../lib/format.mjs";
 const { fixture: f } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const drivers = topDrivers(f.drivers, 3);
 ---
 <article class="card" data-match={f.match_id}>
-  <p class="when">{f.date} · {f.league}</p>
+  <p class="when">{f.date}, {leagueName(f.league)}</p>
   <h3><a href={`${base}/match/${slug(f.match_id)}/`}>{f.home} v {f.away}</a></h3>
   <div class="bar" role="img" aria-label={`${f.home} ${pct(f.p_home)}, draw ${pct(f.p_draw)}, ${f.away} ${pct(f.p_away)}`}>
     <span class="h" style={`flex:${f.p_home}`}></span>
