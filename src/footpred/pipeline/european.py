@@ -187,6 +187,7 @@ def score_european(
         warnings.append(f"Champions League feed unavailable, skipped this run: {err}")
         return EuropeanScores(_empty_fixtures(), {}, {}, read_european_results(data_dir), warnings)
     warnings += w_up + w_res
+    warnings.append(f"Champions League feed: {len(upcoming)} upcoming, {len(got)} finished since {since:%Y-%m-%d}")
 
     if not got.empty:
         append_european_results(data_dir, _feed_rows(got))
