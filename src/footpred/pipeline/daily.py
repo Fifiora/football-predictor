@@ -151,7 +151,9 @@ def run_daily(
             league_fixtures = scored[(scored["league"] != "CL") & (scored["date"] <= today + pd.Timedelta(days=3))] if len(scored) else scored
             have = sum(1 for m in league_fixtures["match_id"] if m in odds) if len(league_fixtures) else 0
             if len(league_fixtures) and have < len(league_fixtures):
-                warnings.append(f"bookmaker odds found for {have} of {len(league_fixtures)} league fixtures")
+                missing = league_fixtures[~league_fixtures["match_id"].isin(odds)]
+                names = "; ".join(f"{d:%d %b} {h} v {a}" for d, h, a in zip(missing["date"], missing["home"], missing["away"]))
+                warnings.append(f"bookmaker odds found for {have} of {len(league_fixtures)} league fixtures; none for: {names}")
         except Exception as err:  # noqa: BLE001
             warnings.append(f"bookmaker odds unavailable: {type(err).__name__}: {err}")
 
