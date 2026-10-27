@@ -15,6 +15,9 @@ _MATCH = re.compile(
     r"^\s*(?:\d{1,2}:\d{2}\s+)?(?P<home>.+?)\s+\((?P<hc>[A-Z]{2,4})\)\s+v\s+"
     r"(?P<away>.+?)\s+\((?P<ac>[A-Z]{2,4})\)\s+(?P<tail>.*?)\s*$"
 )
+_RANGE = re.compile(
+    r"^#\s*Date\s+\w{3}\s+([A-Z][a-z]{2})\s+(\d{1,2})(?:\s+(\d{4}))?\s*-\s*\w{3}\s+([A-Z][a-z]{2})\s+(\d{1,2})\s+(\d{4})", re.M
+)
 _SCORE = re.compile(r"(\d+)-(\d+)")
 
 
@@ -58,12 +61,36 @@ def _ninety_minute_score(tail: str) -> tuple[int, int] | None:
     return (int(full_time.group(1)), int(full_time.group(2))) if full_time else None
 
 
+def _date_window(text: str) -> tuple[pd.Timestamp, pd.Timestamp] | None:
+    """The first and last day of the file, from its ``# Date`` line (with a week of slack)."""
+    m = _RANGE.search(text)
+    if not m:
+        return None
+    end_year = int(m.group(6))
+    start_month, end_month = _MONTHS[m.group(1)], _MONTHS[m.group(4)]
+    start_year = int(m.group(3)) if m.group(3) else (end_year if start_month <= end_month else end_year - 1)
+    slack = pd.Timedelta(days=7)
+    return (pd.Timestamp(year=start_year, month=start_month, day=int(m.group(2))) - slack,
+            pd.Timestamp(year=end_year, month=end_month, day=int(m.group(5))) + slack)
+
+
+def _year_for(month: int, day: int, season: str, window: tuple[pd.Timestamp, pd.Timestamp] | None) -> int:
+    """Year of a date written without one: the calendar year that puts it inside the file's date range,
+    else the season's convention (July to December is its first year, January to June the next)."""
+    start = int(season[:4])
+    if window is not None:
+        fits = [y for y in (window[0].year, window[1].year)
+                if window[0] <= pd.Timestamp(year=y, month=month, day=day) <= window[1]]
+        if len(set(fits)) == 1:
+            return fits[0]
+    return start if month >= 7 else start + 1
+
+
 def parse_openfootball(text: str, competition: str, season: str) -> pd.DataFrame:
     rows: list[dict] = []
     stage: str | None = None
-    year: int | None = None
-    month = 0
     date: pd.Timestamp | None = None
+    window = _date_window(text)
     for line in text.splitlines():
         if line.startswith("▪"):
             stage = _stage(line.lstrip("▪").strip(), competition)
@@ -73,11 +100,8 @@ def parse_openfootball(text: str, competition: str, season: str) -> pd.DataFrame
             mon = _MONTHS[day.group(1)]
             if day.group(3):
                 year = int(day.group(3))
-            elif year is None:
-                raise ValueError(f"date without a year before any dated line: {line!r}")
-            elif mon < month:
-                year += 1
-            month = mon
+            else:
+                year = _year_for(mon, int(day.group(2)), season, window)
             date = pd.Timestamp(year=year, month=mon, day=int(day.group(2)))
             continue
         m = _MATCH.match(line)

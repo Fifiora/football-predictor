@@ -130,3 +130,29 @@ def test_unknown_header_in_a_main_competition_raises():
 
 def test_competition_table():
     assert COMPETITIONS == {"cl": "CL", "clq": "CLQ", "el": "EL", "elq": "ELQ", "conf": "CONF", "confq": "CONFQ"}
+
+
+def test_year_comes_from_the_season_even_when_dates_are_listed_out_of_order():
+    body = """▪ League, Matchday 7
+  Wed Jan 29
+    21:00  C FC (ITA) v D FC (FRA)  1-0 (0-0)
+  Tue Sep 17
+    21:00  A FC (ENG) v B FC (ESP)  2-0 (1-0)
+  Wed May 28
+    21:00  E FC (ENG) v F FC (ESP)  0-0 (0-0)
+"""
+    df = parse(body)  # season 2024-25: July to December is 2024, January to June is 2025
+    assert df["date"].dt.strftime("%Y-%m-%d").tolist() == ["2025-01-29", "2024-09-17", "2025-05-28"]
+
+
+def test_a_season_that_runs_into_august_keeps_its_second_year():
+    header = "= UEFA Champions League 2019/20\n\n# Date       Tue Sep 17 2019 - Sun Aug 23 2020 (341d)\n\n"
+    body = """▪ League, Matchday 1
+  Wed Mar 11
+    21:00  A FC (ENG) v B FC (ESP)  1-0 (0-0)
+▪ Finals, Quarterfinals
+  Fri Aug 7
+    21:00  C FC (ITA) v D FC (FRA)  1-0 (0-0)
+"""
+    df = parse_openfootball(header + body, "CL", "2019-20")
+    assert df["date"].dt.strftime("%Y-%m-%d").tolist() == ["2020-03-11", "2020-08-07"]
