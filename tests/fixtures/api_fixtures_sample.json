@@ -1,0 +1,26 @@
+{
+  "filters": {"dateFrom": "2025-10-27", "dateTo": "2025-11-10"},
+  "matches": [
+    {
+      "utcDate": "2025-10-30T19:00:00Z",
+      "status": "TIMED",
+      "homeTeam": {"name": "Arsenal FC"},
+      "awayTeam": {"name": "Chelsea FC"},
+      "score": {"fullTime": {"home": null, "away": null}}
+    },
+    {
+      "utcDate": "2025-10-25T14:00:00Z",
+      "status": "FINISHED",
+      "homeTeam": {"name": "Liverpool FC"},
+      "awayTeam": {"name": "Manchester United FC"},
+      "score": {"fullTime": {"home": 3, "away": 1}}
+    },
+    {
+      "utcDate": "2025-10-31T19:00:00Z",
+      "status": "POSTPONED",
+      "homeTeam": {"name": "Fulham FC"},
+      "awayTeam": {"name": "Everton FC"},
+      "score": {"fullTime": {"home": null, "away": null}}
+    }
+  ]
+}
