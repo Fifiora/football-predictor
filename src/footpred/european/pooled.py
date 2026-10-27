@@ -36,18 +36,29 @@ def run_pooled_elo(
     clubs seen last season regress toward their group's mean.
     """
     ordered = matches.sort_values(["date", "match_id"], kind="stable")
+    ids = ordered["match_id"].to_numpy()
+    dates = ordered["date"].to_numpy()
+    seasons = ordered["season"].to_numpy()
+    homes = ordered["home"].to_numpy()
+    aways = ordered["away"].to_numpy()
+    home_goals = ordered["home_goals"].to_numpy(dtype=float)
+    away_goals = ordered["away_goals"].to_numpy(dtype=float)
+    neutral = ordered["neutral"].to_numpy(dtype=bool)
+    n = len(ordered)
+    starts = np.flatnonzero(np.r_[True, dates[1:] != dates[:-1]]) if n else np.array([], dtype=int)
+    ends = np.r_[starts[1:], n] if n else starts
+
     ratings: dict[str, float] = {}
     seen: set[str] = set()
-    season: str | None = None
-    out_ids: list[str] = []
-    home_pre: list[float] = []
-    away_pre: list[float] = []
+    season = None
+    home_pre = np.empty(n)
+    away_pre = np.empty(n)
 
     def start(team: str) -> float:
         return params.initial + params.offsets.get(team_group.get(team, "OTHER"), 0.0)
 
-    for _, day in ordered.groupby("date", sort=True):
-        day_season = day["season"].iloc[0]
+    for lo, hi in zip(starts, ends):
+        day_season = seasons[lo]
         if season is not None and day_season != season and seen:
             by_group: dict[str, list[str]] = {}
             for team in seen:
@@ -60,27 +71,26 @@ def run_pooled_elo(
         season = day_season
 
         pending: list[tuple[str, str, float]] = []
-        for row in day.itertuples(index=False):
-            for team in (row.home, row.away):
+        for i in range(lo, hi):
+            home, away = homes[i], aways[i]
+            for team in (home, away):
                 ratings.setdefault(team, start(team))
                 seen.add(team)
-            r_home, r_away = ratings[row.home], ratings[row.away]
-            out_ids.append(row.match_id)
-            home_pre.append(r_home)
-            away_pre.append(r_away)
-            if pd.isna(row.home_goals) or pd.isna(row.away_goals):
+            r_home, r_away = ratings[home], ratings[away]
+            home_pre[i], away_pre[i] = r_home, r_away
+            if np.isnan(home_goals[i]) or np.isnan(away_goals[i]):
                 continue
-            goal_diff = int(row.home_goals) - int(row.away_goals)
+            goal_diff = int(home_goals[i]) - int(away_goals[i])
             score = 1.0 if goal_diff > 0 else 0.5 if goal_diff == 0 else 0.0
-            adv = 0.0 if bool(row.neutral) else params.home_adv
+            adv = 0.0 if neutral[i] else params.home_adv
             delta = params.k * _margin_multiplier(goal_diff) * (score - expected_home_score(r_home, r_away, adv))
-            pending.append((row.home, row.away, delta))
+            pending.append((home, away, delta))
         for home, away, delta in pending:
             ratings[home] += delta
             ratings[away] -= delta
 
     pre = pd.DataFrame(
-        {"elo_home_pre": home_pre, "elo_away_pre": away_pre}, index=pd.Index(out_ids, name="match_id")
+        {"elo_home_pre": home_pre, "elo_away_pre": away_pre}, index=pd.Index(ids, name="match_id")
     )
     return pre, dict(ratings)
 

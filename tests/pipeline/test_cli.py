@@ -78,3 +78,19 @@ def test_download_command_survives_a_failed_openfootball_clone(tmp_path, monkeyp
     code = cli.main(["download", "--data-dir", str(tmp_path)])
     out = capsys.readouterr().out
     assert code == 0 and "::warning title=openfootball" in out
+
+
+def test_benchmark_european_command_writes_the_report_and_prints_the_gate(tmp_path, monkeypatch, capsys):
+    from footpred.pipeline import cli
+
+    seen = {}
+
+    def fake(data_dir, out_path, **kw):
+        seen.update(data_dir=data_dir, out=out_path)
+        return {"publish_ok": False, "reason": "model 1.0 vs base 0.9"}
+
+    monkeypatch.setattr(cli, "run_european_benchmark", fake)
+    code = cli.main(["benchmark-european", "--data-dir", str(tmp_path), "--out", str(tmp_path / "e.md")])
+    out = capsys.readouterr().out
+    assert code == 0 and seen["out"] == tmp_path / "e.md"
+    assert "publish gate" in out and "model 1.0 vs base 0.9" in out

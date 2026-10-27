@@ -11,6 +11,7 @@ from typing import Callable
 
 import pandas as pd
 
+from footpred.european.benchmark import run_european_benchmark
 from footpred.european.history import download_openfootball
 from footpred.ingest.fixtures import FootballDataOrgClient
 from footpred.ingest.historical import read_csv_text
@@ -94,7 +95,7 @@ def main(argv: list[str] | None = None) -> int:
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="footpred")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("download", "daily", "retrain", "benchmark", "teams"):
+    for name in ("download", "daily", "retrain", "benchmark", "benchmark-european", "teams"):
         p = sub.add_parser(name)
         p.add_argument("--data-dir", type=Path, default=Path("state/data"))
         p.add_argument("--registry-dir", type=Path, default=Path("state/registry"))
@@ -147,6 +148,10 @@ def _main(argv: list[str] | None = None) -> int:
     if args.command == "retrain":
         result = run_retrain(args.data_dir, args.registry_dir, today)
         note(f"retrain: promoted={result.promote} ({result.reason})")
+        return 0
+    if args.command == "benchmark-european":
+        result = run_european_benchmark(args.data_dir, args.out, today=today)
+        note(f"european benchmark written to {args.out}; publish gate: {'pass' if result['publish_ok'] else 'fail'} ({result['reason']})")
         return 0
     run_benchmark(args.data_dir, args.out, today=today)
     note(f"benchmark written to {args.out}")

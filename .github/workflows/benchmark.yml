@@ -14,12 +14,14 @@ jobs:
       - run: python -m footpred.pipeline.cli download
       - name: Run baseline-versus-hybrid benchmark
         run: python -m footpred.pipeline.cli benchmark --out docs/baseline-results.md
+      - name: Run the Champions League benchmark
+        run: python -m footpred.pipeline.cli benchmark-european --out docs/european-results.md
       - name: Show results in the run summary
-        run: cat docs/baseline-results.md >> "$GITHUB_STEP_SUMMARY"
+        run: cat docs/baseline-results.md docs/european-results.md >> "$GITHUB_STEP_SUMMARY"
       - name: Commit the results
         run: |
           git config user.name footpred-bot
           git config user.email bot@users.noreply.github.com
-          git add docs/baseline-results.md
+          git add docs/baseline-results.md docs/european-results.md
           git commit -m "Update baseline results from a real-data benchmark" || echo "no change"
           git push origin HEAD:main
