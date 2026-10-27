@@ -22,7 +22,7 @@ from footpred.pipeline.common import load_all_matches, per_league_log_loss, play
 CAL_FRACTION = 0.15
 MODELS = {"base_rate": "Base rate", "elo": "Elo only", "dixon_coles": "Dixon-Coles only",
           "blend": "Blend (Elo + Dixon-Coles)", "hybrid": "Hybrid"}
-VARIANT_LABELS = {"hybrid_lean": "Hybrid (logistic, core inputs only)", "hybrid_logistic": "Hybrid (logistic)", "hybrid_regularized": "Hybrid (regularized trees)"}
+VARIANT_LABELS = {"hybrid_blend": "Hybrid (blend backend, calibrated)", "hybrid_lean": "Hybrid (logistic, core inputs only)", "hybrid_logistic": "Hybrid (logistic)", "hybrid_regularized": "Hybrid (regularized trees)"}
 
 
 def default_variants() -> dict[str, dict | None]:
@@ -35,6 +35,7 @@ def default_variants() -> dict[str, dict | None]:
         "hybrid": None,
         "hybrid_regularized": regularized,
         "hybrid_logistic": {"backend": "logistic", "C": 0.1},
+        "hybrid_blend": {"backend": "blend"},
         "hybrid_lean": {"backend": "logistic", "C": 0.1, "features": ["elo_diff", "dc_p_home", "dc_p_draw", "dc_p_away"]},
     }
 

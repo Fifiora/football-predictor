@@ -41,13 +41,38 @@ def _lightgbm_available() -> bool:
     return True
 
 
+BLEND_FEATURES = ["elo_diff", "dc_p_home", "dc_p_draw", "dc_p_away"]
+
+
+class _BlendEstimator:
+    """Equal-weight average of an Elo-gap logistic regression and the Dixon-Coles probabilities.
+
+    Where the goals model has no prediction (new league or too little history) it uses Elo alone.
+    """
+
+    def fit(self, X: pd.DataFrame, y: np.ndarray) -> "_BlendEstimator":
+        from sklearn.linear_model import LogisticRegression
+
+        self._elo = LogisticRegression(max_iter=1000).fit(X[["elo_diff"]].to_numpy(), np.asarray(y, dtype=int))
+        self.classes_ = np.arange(3)
+        return self
+
+    def predict_proba(self, X: pd.DataFrame) -> np.ndarray:
+        elo = np.zeros((len(X), 3))
+        elo[:, self._elo.classes_] = self._elo.predict_proba(X[["elo_diff"]].to_numpy())
+        dc = X[["dc_p_home", "dc_p_draw", "dc_p_away"]].to_numpy(dtype=float)
+        missing = np.isnan(dc).any(axis=1)
+        out = (elo + np.where(missing[:, None], elo, dc)) / 2
+        return out / out.sum(axis=1, keepdims=True)
+
+
 class MetaModel:
     """Predicts [home, draw, away] probabilities from a feature frame."""
 
     def __init__(self, params: dict | None = None):
         self.params = params
-        if params and params.get("backend") == "logistic":
-            self.backend = "logistic"  # regularised multinomial logistic regression, hard to overfit
+        if params and params.get("backend") in ("logistic", "blend"):
+            self.backend = params["backend"]  # "logistic": regularised linear model; "blend": Elo + goals model average
         else:
             self.backend = "lightgbm" if _lightgbm_available() else "sklearn"
         self.estimator = None
@@ -55,6 +80,8 @@ class MetaModel:
         self.baseline: pd.Series | None = None  # per-feature training median, used by explanations
 
     def _new_estimator(self):
+        if self.backend == "blend":
+            return _BlendEstimator()
         if self.backend == "logistic":
             from sklearn.impute import SimpleImputer
             from sklearn.linear_model import LogisticRegression
@@ -74,7 +101,7 @@ class MetaModel:
         return HistGradientBoostingClassifier(**{**DEFAULT_SKLEARN_PARAMS, **(self.params or {})})
 
     def fit(self, X: pd.DataFrame, y: np.ndarray) -> "MetaModel":
-        self.feature_names = list(X.columns)
+        self.feature_names = list(BLEND_FEATURES) if self.backend == "blend" else list(X.columns)
         self.baseline = X[self.feature_names].median()
         self.estimator = self._new_estimator()
         self.estimator.fit(X[self.feature_names], np.asarray(y, dtype=int))

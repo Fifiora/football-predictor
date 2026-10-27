@@ -16,6 +16,8 @@ from footpred.models.model_card import write_model_card
 from footpred.models.registry import load_champion, save_model, set_champion
 from footpred.pipeline.common import code_version, load_all_matches, per_league_log_loss, played_before, training_frame
 
+# Production model: chosen on development seasons of the real five-league benchmark (docs/baseline-results.md).
+PRODUCTION_PARAMS = {"backend": "blend"}
 EVAL_FRACTION = 0.20  # newest matches, used only to compare champion and challenger
 CAL_FRACTION = 0.15   # block just before it, used only to calibrate
 
@@ -52,7 +54,8 @@ def run_retrain(
 
     X = features[FEATURE_COLUMNS]
     y = outcome.reindex(features.index).to_numpy()
-    model = MetaModel(challenger_params).fit(X[train_m], y[train_m])
+    params = PRODUCTION_PARAMS if challenger_params is None else challenger_params
+    model = MetaModel(params).fit(X[train_m], y[train_m])
     calibrator = Calibrator().fit(model.predict_proba(X[cal_m]), y[cal_m])
 
     X_eval, y_eval = X[eval_m], y[eval_m.to_numpy()]
@@ -73,7 +76,7 @@ def run_retrain(
     target = save_model(
         registry_dir, version, model, calibrator,
         {"data_snapshot": str(played["date"].max().date()), "code_version": code_version(),
-         "params": challenger_params or {}, "metrics": metrics, "trained_on": int(train_m.sum())},
+         "params": params, "metrics": metrics, "trained_on": int(train_m.sum())},
     )
 
     try:

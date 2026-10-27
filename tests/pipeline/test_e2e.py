@@ -80,7 +80,8 @@ def test_daily_schema_failure_keeps_last_good_site(world):
 
 
 def test_retrain_keeps_champion_when_challenger_not_better(world):
-    first = seed_champion(world)
+    # Seed with the default tree model ({} = no overrides) so the degraded challenger is clearly worse.
+    run_retrain(world["data_dir"], world["registry"], TODAY, challenger_params={}, aliases_path=world["aliases"])
     champion_before = load_champion(world["registry"])[0]
     weak = {"max_iter": 1, "learning_rate": 0.001} if MetaModel().backend == "sklearn" else {"n_estimators": 1, "learning_rate": 0.001}
 

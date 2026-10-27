@@ -97,3 +97,46 @@ def test_logistic_backend_gives_valid_probabilities_with_missing_values():
     assert model.backend == "logistic"
     assert np.allclose(probs.sum(axis=1), 1) and (probs >= 0).all()
     assert probs[X["elo_diff"].idxmax(), 0] > probs[X["elo_diff"].idxmin(), 0]
+
+
+def _blend_data(n=800, seed=0):
+    import numpy as np
+    import pandas as pd
+
+    rng = np.random.default_rng(seed)
+    elo = rng.normal(0, 120, n)
+    raw = np.column_stack([1 / (1 + np.exp(-elo / 60)) * 0.7, np.full(n, 0.25), 1 / (1 + np.exp(elo / 60)) * 0.7])
+    p = raw / raw.sum(axis=1, keepdims=True)
+    y = np.array([rng.choice(3, p=row) for row in p])
+    X = pd.DataFrame({"elo_diff": elo, "dc_p_home": p[:, 0], "dc_p_draw": p[:, 1], "dc_p_away": p[:, 2],
+                      "rest_days_home": rng.integers(2, 9, n).astype(float)})
+    return X, y
+
+
+def test_blend_backend_averages_elo_logistic_and_goals_model():
+    import numpy as np
+
+    from footpred.evaluate.baselines import baseline_elo
+    from footpred.models.meta_model import MetaModel
+
+    X, y = _blend_data()
+    model = MetaModel({"backend": "blend"}).fit(X, y)
+    probs = model.predict_proba(X)
+    expected = (baseline_elo(X.assign(outcome=y), X) + X[["dc_p_home", "dc_p_draw", "dc_p_away"]].to_numpy()) / 2
+    assert model.backend == "blend"
+    assert model.feature_names == ["elo_diff", "dc_p_home", "dc_p_draw", "dc_p_away"]  # other columns are ignored
+    assert np.allclose(probs, expected) and np.allclose(probs.sum(axis=1), 1)
+
+
+def test_blend_backend_falls_back_to_elo_when_goals_model_is_missing():
+    import numpy as np
+
+    from footpred.models.meta_model import MetaModel
+
+    X, y = _blend_data()
+    model = MetaModel({"backend": "blend"}).fit(X, y)
+    missing = X.iloc[:10].copy()
+    missing[["dc_p_home", "dc_p_draw", "dc_p_away"]] = np.nan
+    probs = model.predict_proba(missing)
+    assert np.isfinite(probs).all() and np.allclose(probs.sum(axis=1), 1)
+    assert probs[X["elo_diff"].iloc[:10].idxmax(), 0] > probs[X["elo_diff"].iloc[:10].idxmin(), 0]
