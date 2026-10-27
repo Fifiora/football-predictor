@@ -17,9 +17,9 @@ from footpred.ratings.elo import _margin_multiplier, expected_home_score
 
 @dataclass(frozen=True)
 class PooledParams:
-    k: float = 20.0
-    home_adv: float = 60.0
-    season_regress: float = 0.25
+    k: float = 25.0
+    home_adv: float = 50.0
+    season_regress: float = 0.15
     initial: float = 1500.0
     offsets: Mapping[str, float] = field(default_factory=lambda: {g: 0.0 for g in GROUPS})
 

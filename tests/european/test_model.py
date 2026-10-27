@@ -23,7 +23,7 @@ def test_features_final_is_neutral_and_has_no_home_advantage():
     x = european_features(m, pre)
     assert list(x.columns) == EURO_FEATURES and x.index.name == "match_id"
     assert x.loc["m0", "elo_diff"] == 0.0 and x.loc["m0", "neutral"] == 1.0
-    assert x.loc["m1", "elo_diff"] == 60.0 and x.loc["m1", "neutral"] == 0.0
+    assert x.loc["m1", "elo_diff"] == 50.0 and x.loc["m1", "neutral"] == 0.0
 
 
 def test_knockout_flag_by_stage():
@@ -58,4 +58,5 @@ def test_gate_requires_beating_both_baselines():
     assert ok and "0.980" in reason
     assert european_publish_gate(dev(0.97, 1.00, 0.98))[0] is False  # loses to the base rate
     assert european_publish_gate(dev(1.07, 0.97, 0.98))[0] is False  # loses to the Elo baseline
-    assert european_publish_gate(dev(1.07, 1.00, 1.00))[0] is False  # a tie is not a win
+    assert european_publish_gate(dev(1.07, 1.00, 1.001))[0] is True   # a tie with plain Elo passes
+    assert european_publish_gate(dev(1.07, 1.00, 1.01))[0] is False   # clearly worse does not

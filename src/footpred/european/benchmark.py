@@ -55,7 +55,7 @@ def pooled_matches(league: pd.DataFrame, euro: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([lg[columns], eu[columns]], ignore_index=True)
 
 
-def _model_fit_predict(dates: pd.Series, params: dict | None = None, calibrate: bool = True, features: list[str] | None = None):
+def _model_fit_predict(dates: pd.Series, params: dict | None = None, calibrate: bool = False, features: list[str] | None = None):
     def fit_predict(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
         order = dates.reindex(train.index).sort_values(kind="stable").index
         train = train.loc[order]
