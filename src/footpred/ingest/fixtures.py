@@ -22,9 +22,13 @@ from footpred.ingest.historical import season_label
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.ingest.teams import UnknownTeamError, canonical_team
 
-UPCOMING_COLUMNS = ["match_id", "league", "date", "home", "away"]
+UPCOMING_COLUMNS = ["match_id", "league", "date", "home", "away", "stage"]
 _UPCOMING_STATUSES = {"SCHEDULED", "TIMED"}
-_COMPETITION_CODES = {"E0": "PL", "SP1": "PD", "I1": "SA", "D1": "BL1", "F1": "FL1"}
+_COMPETITION_CODES = {"E0": "PL", "SP1": "PD", "I1": "SA", "D1": "BL1", "F1": "FL1", "CL": "CL"}
+_STAGES = {
+    "LEAGUE_STAGE": "LEAGUE_STAGE", "GROUP_STAGE": "LEAGUE_STAGE", "PLAYOFFS": "PLAYOFFS", "LAST_32": "PLAYOFFS",
+    "LAST_16": "LAST_16", "QUARTER_FINALS": "QUARTER_FINALS", "SEMI_FINALS": "SEMI_FINALS", "FINAL": "FINAL",
+}
 
 
 class FixturesUnavailable(RuntimeError):
@@ -68,7 +72,10 @@ class FootballDataOrgClient:
             raise FixturesUnavailable(f"football-data.org answered HTTP {status} for {league}")
         rows = []
         for match in payload.get("matches", []):
-            full_time = match.get("score", {}).get("fullTime", {})
+            score = match.get("score", {})
+            # fullTime can include extra time and penalties; we predict the 90-minute result.
+            long_match = score.get("duration") in ("EXTRA_TIME", "PENALTY_SHOOTOUT") and score.get("regularTime")
+            full_time = score["regularTime"] if long_match else score.get("fullTime", {})
             rows.append(
                 {
                     "date": match["utcDate"][:10],
@@ -77,6 +84,7 @@ class FootballDataOrgClient:
                     "status": match["status"],
                     "home_goals": full_time.get("home"),
                     "away_goals": full_time.get("away"),
+                    "stage": _STAGES.get(match.get("stage")),
                 }
             )
         return rows
@@ -129,7 +137,11 @@ def _get_rows(
     return rows
 
 
-def _canonical_pair(row: dict, league: str, aliases_path: Path | None = None) -> tuple[str, str]:
+def _canonical_pair(
+    row: dict, league: str, aliases_path: Path | None = None, canonical: Callable[[str, str], str] | None = None
+) -> tuple[str, str]:
+    if canonical is not None:
+        return canonical(row["home"], league), canonical(row["away"], league)
     return canonical_team(row["home"], league, aliases_path), canonical_team(row["away"], league, aliases_path)
 
 
@@ -143,11 +155,12 @@ def fetch_upcoming(
     attempts: int = 3,
     sleep: Callable[[float], None] = time.sleep,
     aliases_path: Path | None = None,
+    canonical: Callable[[str, str], str] | None = None,
 ) -> tuple[pd.DataFrame, list[str]]:
     """Scheduled fixtures from today through ``horizon_days`` ahead, plus warnings.
 
     A fixture with a team that cannot be mapped to a canonical name is skipped and reported;
-    the rest are unaffected. An empty provider response gives an empty frame, not an error.
+    the rest are unaffected (unless a ``canonical`` hook is given, which decides what an unknown name becomes). An empty provider response gives an empty frame, not an error.
     """
     now = pd.Timestamp.now() if today is None else pd.Timestamp(today)
     start = now.date()
@@ -160,12 +173,12 @@ def fetch_upcoming(
             if row["status"] not in _UPCOMING_STATUSES:
                 continue
             try:
-                home, away = _canonical_pair(row, league, aliases_path)
+                home, away = _canonical_pair(row, league, aliases_path, canonical)
             except UnknownTeamError as err:
                 warnings.append(f"{err}; skipped fixture {row['home']} v {row['away']} on {row['date']}")
                 continue
             day = pd.Timestamp(row["date"])
-            rows_out.append((f"{league}-{day:%Y%m%d}-{home}-{away}", league, day, home, away))
+            rows_out.append((f"{league}-{day:%Y%m%d}-{home}-{away}", league, day, home, away, row.get("stage")))
 
     df = pd.DataFrame(rows_out, columns=UPCOMING_COLUMNS)
     return df.sort_values(["date", "match_id"]).reset_index(drop=True), warnings
@@ -181,6 +194,7 @@ def fetch_latest_results(
     attempts: int = 3,
     sleep: Callable[[float], None] = time.sleep,
     aliases_path: Path | None = None,
+    canonical: Callable[[str, str], str] | None = None,
 ) -> tuple[pd.DataFrame, list[str]]:
     """Finished matches from ``since`` to today in the canonical match schema, plus warnings.
 
@@ -196,7 +210,7 @@ def fetch_latest_results(
             if row["status"] != "FINISHED" or row["home_goals"] is None or row["away_goals"] is None:
                 continue
             try:
-                home, away = _canonical_pair(row, league, aliases_path)
+                home, away = _canonical_pair(row, league, aliases_path, canonical)
             except UnknownTeamError as err:
                 warnings.append(f"{err}; skipped result {row['home']} v {row['away']} on {row['date']}")
                 continue
