@@ -114,8 +114,8 @@ def _get_rows(
     return rows
 
 
-def _canonical_pair(row: dict, league: str) -> tuple[str, str]:
-    return canonical_team(row["home"], league), canonical_team(row["away"], league)
+def _canonical_pair(row: dict, league: str, aliases_path: Path | None = None) -> tuple[str, str]:
+    return canonical_team(row["home"], league, aliases_path), canonical_team(row["away"], league, aliases_path)
 
 
 def fetch_upcoming(
@@ -127,6 +127,7 @@ def fetch_upcoming(
     cache_ttl: timedelta = timedelta(hours=1),
     attempts: int = 3,
     sleep: Callable[[float], None] = time.sleep,
+    aliases_path: Path | None = None,
 ) -> tuple[pd.DataFrame, list[str]]:
     """Scheduled fixtures from today through ``horizon_days`` ahead, plus warnings.
 
@@ -144,7 +145,7 @@ def fetch_upcoming(
             if row["status"] not in _UPCOMING_STATUSES:
                 continue
             try:
-                home, away = _canonical_pair(row, league)
+                home, away = _canonical_pair(row, league, aliases_path)
             except UnknownTeamError as err:
                 warnings.append(f"{err}; skipped fixture {row['home']} v {row['away']} on {row['date']}")
                 continue
@@ -164,6 +165,7 @@ def fetch_latest_results(
     cache_ttl: timedelta = timedelta(hours=1),
     attempts: int = 3,
     sleep: Callable[[float], None] = time.sleep,
+    aliases_path: Path | None = None,
 ) -> tuple[pd.DataFrame, list[str]]:
     """Finished matches from ``since`` to today in the canonical match schema, plus warnings.
 
@@ -179,7 +181,7 @@ def fetch_latest_results(
             if row["status"] != "FINISHED" or row["home_goals"] is None or row["away_goals"] is None:
                 continue
             try:
-                home, away = _canonical_pair(row, league)
+                home, away = _canonical_pair(row, league, aliases_path)
             except UnknownTeamError as err:
                 warnings.append(f"{err}; skipped result {row['home']} v {row['away']} on {row['date']}")
                 continue

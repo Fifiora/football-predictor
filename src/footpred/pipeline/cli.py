@@ -1,0 +1,83 @@
+"""Command line entry points used by the GitHub Actions workflows."""
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+import pandas as pd
+
+from footpred.ingest.fixtures import FootballDataOrgClient
+from footpred.pipeline.benchmark import run_benchmark
+from footpred.pipeline.daily import run_daily
+from footpred.pipeline.retrain import run_retrain
+
+LEAGUES = ["E0", "SP1", "I1", "D1", "F1"]
+HISTORY_URL = "https://www.football-data.co.uk/mmz4281/{season}/{league}.csv"
+
+
+def download_history(raw_dir: Path, first_start_year: int, last_start_year: int) -> list[str]:
+    """Fetch season CSVs that are not on disk yet; returns the names that failed (e.g. not published yet)."""
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    failed = []
+    for year in range(first_start_year, last_start_year + 1):
+        season = f"{year % 100:02d}{(year + 1) % 100:02d}"
+        for league in LEAGUES:
+            target = raw_dir / f"{league}_{season}.csv"
+            current = year == last_start_year
+            if target.exists() and not current:
+                continue
+            try:
+                with urllib.request.urlopen(HISTORY_URL.format(season=season, league=league), timeout=60) as r:
+                    target.write_bytes(r.read())
+            except (urllib.error.URLError, OSError):
+                failed.append(target.name)
+    return failed
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="footpred")
+    sub = parser.add_subparsers(dest="command", required=True)
+    for name in ("download", "daily", "retrain", "benchmark"):
+        p = sub.add_parser(name)
+        p.add_argument("--data-dir", type=Path, default=Path("state/data"))
+        p.add_argument("--registry-dir", type=Path, default=Path("state/registry"))
+        p.add_argument("--site-data-dir", type=Path, default=Path("site/data"))
+        p.add_argument("--out", type=Path, default=Path("docs/baseline-results.md"))
+        p.add_argument("--first-year", type=int, default=2014)
+    args = parser.parse_args(argv)
+    today = pd.Timestamp.now().normalize()
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+
+    def note(text: str) -> None:
+        print(text)
+        if summary:
+            with open(summary, "a") as f:
+                f.write(text + "\n")
+
+    if args.command == "download":
+        year = today.year if today.month >= 7 else today.year - 1
+        failed = download_history(args.data_dir / "raw", args.first_year, year)
+        note(f"history download: {len(failed)} files unavailable {failed[:5]}")
+        return 0
+    if args.command == "daily":
+        client = FootballDataOrgClient(os.environ["FOOTBALL_DATA_TOKEN"])
+        result = run_daily(args.data_dir, args.site_data_dir, client, today, registry_dir=args.registry_dir)
+        note(f"daily: published={result.published} new_results={result.new_results} scored={result.scored_fixtures}")
+        for w in result.warnings:
+            note(f"- warning: {w}")
+        return 0 if result.published else 3  # 3 = nothing new; the workflow skips deployment
+    if args.command == "retrain":
+        result = run_retrain(args.data_dir, args.registry_dir, today)
+        note(f"retrain: promoted={result.promote} ({result.reason})")
+        return 0
+    run_benchmark(args.data_dir, args.out, today=today)
+    note(f"benchmark written to {args.out}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

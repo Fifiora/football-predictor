@@ -1,0 +1,56 @@
+name: daily
+on:
+  schedule:
+    - cron: "17 6 * * *"        # every day
+    - cron: "47 22 * * 5,6,0,1" # late on matchday nights
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency: { group: footpred-state, cancel-in-progress: false }
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load saved state (predictions log, API results, model registry)
+        run: |
+          if git ls-remote --exit-code origin state >/dev/null 2>&1; then
+            git fetch origin state && git worktree add state origin/state
+          else
+            mkdir -p state/data state/registry
+          fi
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e .
+      - run: python -m footpred.pipeline.cli download
+      - name: Refresh predictions
+        id: daily
+        env: { FOOTBALL_DATA_TOKEN: "${{ secrets.FOOTBALL_DATA_TOKEN }}" }
+        run: |
+          set +e
+          python -m footpred.pipeline.cli daily
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" = "0" ] || [ "$code" = "3" ]   # 3 = nothing new: success, but do not deploy
+      - name: Save state
+        if: steps.daily.outputs.code == '0'
+        run: |
+          cd state
+          git init -q 2>/dev/null; git checkout -q -B state
+          git add data/prediction_log.csv data/api_results.csv registry
+          git -c user.name=footpred-bot -c user.email=bot@users.noreply.github.com commit -qm "state $(date -u +%F)" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" state
+      - uses: actions/setup-node@v4
+        if: steps.daily.outputs.code == '0'
+        with: { node-version: "22" }
+      - name: Build site
+        if: steps.daily.outputs.code == '0'
+        env: { SITE_BASE: "/${{ github.event.repository.name }}/" }
+        run: cd site && npm install && npm test && npm run build
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.daily.outputs.code == '0'
+        with: { path: site/dist }
+      - uses: actions/deploy-pages@v4
+        if: steps.daily.outputs.code == '0'

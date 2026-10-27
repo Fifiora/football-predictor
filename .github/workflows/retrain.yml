@@ -1,0 +1,33 @@
+name: retrain
+on:
+  schedule:
+    - cron: "23 3 * * 1"  # weekly, Monday
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: footpred-state, cancel-in-progress: false }
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load saved state
+        run: |
+          if git ls-remote --exit-code origin state >/dev/null 2>&1; then
+            git fetch origin state && git worktree add state origin/state
+          else
+            mkdir -p state/data state/registry
+          fi
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e .
+      - run: python -m footpred.pipeline.cli download
+      - name: Train challenger and apply the champion gate
+        run: python -m footpred.pipeline.cli retrain
+      - name: Save state
+        run: |
+          cd state
+          git init -q 2>/dev/null; git checkout -q -B state
+          git add data/prediction_log.csv data/api_results.csv registry
+          git -c user.name=footpred-bot -c user.email=bot@users.noreply.github.com commit -qm "retrain $(date -u +%F)" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" state
