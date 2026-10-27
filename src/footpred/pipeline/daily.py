@@ -147,6 +147,10 @@ def run_daily(
         try:
             odds, odds_warnings = fetch_odds()
             warnings += odds_warnings
+            league_fixtures = scored[scored["league"] != "CL"] if len(scored) else scored
+            have = sum(1 for m in league_fixtures["match_id"] if m in odds) if len(league_fixtures) else 0
+            if len(league_fixtures) and have < len(league_fixtures):
+                warnings.append(f"bookmaker odds found for {have} of {len(league_fixtures)} league fixtures")
         except Exception as err:  # noqa: BLE001
             warnings.append(f"bookmaker odds unavailable: {type(err).__name__}: {err}")
 

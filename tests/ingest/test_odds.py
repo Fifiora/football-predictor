@@ -36,3 +36,12 @@ def test_average_falls_back_to_bet365_when_missing(tmp_path):
     text = "Div,Date,HomeTeam,AwayTeam,B365H,B365D,B365A\nE0,03/11/2026,Arsenal,Chelsea,2.0,3.5,4.0\n"
     frame, _ = parse_fixture_odds(text, aliases_path=aliases)
     assert frame.iloc[0]["average"] is None and frame.iloc[0]["bet365"] is not None
+
+
+def test_divisions_without_aliases_are_ignored_quietly(tmp_path):
+    aliases = tmp_path / "a.csv"
+    aliases.write_text("league,alias,canonical\nE0,Arsenal,Arsenal\nE0,Chelsea,Chelsea\n")
+    text = ("Div,Date,HomeTeam,AwayTeam,B365H,B365D,B365A\nSC0,03/11/2026,Celtic,Dundee,2.0,3.5,4.0\n"
+            "E0,03/11/2026,Arsenal,Chelsea,2.0,3.5,4.0\n")
+    frame, warnings = parse_fixture_odds(text, aliases_path=aliases)
+    assert len(frame) == 1 and warnings == []

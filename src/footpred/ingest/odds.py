@@ -12,7 +12,7 @@ from typing import Callable
 
 import pandas as pd
 
-from footpred.ingest.teams import UnknownTeamError, canonical_team
+from footpred.ingest.teams import UnknownTeamError, canonical_team, covered_leagues
 
 FIXTURES_URL = "https://www.football-data.co.uk/fixtures.csv"
 _SOURCES = {"bet365": ("B365H", "B365D", "B365A"), "average": ("AvgH", "AvgD", "AvgA")}
@@ -37,9 +37,12 @@ def parse_fixture_odds(text: str, aliases_path: Path | None = None) -> tuple[pd.
     raw.columns = [c.strip() for c in raw.columns]
     warnings: list[str] = []
     unknown: set[str] = set()
+    covered = set(covered_leagues(aliases_path))  # other divisions in the file are not ours to map
     rows = []
     for r in raw.dropna(subset=["Div", "Date", "HomeTeam", "AwayTeam"]).to_dict("records"):
         league = str(r["Div"]).strip()
+        if league not in covered:
+            continue
         try:
             home = canonical_team(r["HomeTeam"], league, aliases_path)
             away = canonical_team(r["AwayTeam"], league, aliases_path)
