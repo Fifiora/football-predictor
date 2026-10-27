@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import MatchCard from "../components/MatchCard.astro";
+import Scoreboard from "../components/Scoreboard.astro";
 import { fixtures, meta, trackRecord } from "../lib/data.mjs";
 import { formatDay, formatUpdated, isExperimental, leagueName } from "../lib/format.mjs";
 import { applyFilters, defaultState, leagueCounts } from "../lib/filters.mjs";
@@ -12,6 +13,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
 <Base title="Fixtures">
   <h1>Upcoming matches</h1>
   <p class="lede">Chances of a home win, draw and away win for the big five leagues and the Champions League. Last updated {formatUpdated(meta.updated_at)}.</p>
+  <Scoreboard recent={trackRecord.recent} />
   {sorted.length === 0
     ? <p>No fixtures are scheduled in the next two weeks. Check back after the next update.</p>
     : (
@@ -163,13 +165,13 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   .filters .grow { flex: 1 1 14rem; }
   .group { display: grid; gap: 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface);
+  .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--edge); background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
     color: var(--ink); font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background .15s, border-color .15s; }
   .chip:hover { border-color: var(--brand); }
   .chip[aria-pressed="true"] { background: var(--home); border-color: var(--home); color: var(--on-home); }
   .chip .n { opacity: 0.75; font-weight: 500; font-variant-numeric: tabular-nums; margin-left: 4px; }
   .foot { justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px solid var(--line); }
-  .clear, .linklike { min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--line); background: transparent;
+  .clear, .linklike { min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--edge); background: transparent;
     color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
   .clear:disabled { opacity: 0.45; cursor: default; }
   .linklike { border: 0; color: var(--brand); text-decoration: underline; padding: 0 4px; }

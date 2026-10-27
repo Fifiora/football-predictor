@@ -45,7 +45,19 @@
     "strength": 0.05,
     "text": "The model weighted expected goals in favour of Arsenal."
    }
-  ]
+  ],
+  "bookies": {
+   "average": {
+    "p_home": 0.47,
+    "p_draw": 0.28,
+    "p_away": 0.25
+   },
+   "bet365": {
+    "p_home": 0.48,
+    "p_draw": 0.27,
+    "p_away": 0.25
+   }
+  }
  },
  {
   "match_id": "E0-20251031-Fulham-Everton",

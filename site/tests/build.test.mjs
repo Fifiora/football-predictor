@@ -95,3 +95,17 @@ test("track record shows tiles and a calibration chart once matches are graded",
   assert.match(html, /<svg[^>]*role="img"/);
   assert.match(html, /Back-test on past seasons/);
 });
+
+test("cards show what the bookies say, labelled as reference only, and the scoreboard marks right and wrong", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "index.html");
+  const card = html.split('data-match="E0-20251030-Arsenal-Chelsea"')[1].split("</article>")[0];
+  assert.match(card, /What the bookies say/);
+  assert.match(card, /For reference only/);
+  assert.match(card, /47%/);
+  const other = html.split('data-match="E0-20251031-Fulham-Everton"')[1]?.split("</article>")[0] ?? "";
+  assert.doesNotMatch(other, /What the bookies say/);
+  assert.match(html, /data-scoreboard/);
+  assert.match(html, /1<\/b> of 2 recent picks right/);
+  assert.match(html, /Fulham v Everton: right/);
+  assert.match(html, /Getafe v Betis: wrong/);
+});

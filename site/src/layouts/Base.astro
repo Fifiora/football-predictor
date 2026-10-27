@@ -68,43 +68,55 @@ const nav = [
     </script>
     <style is:global>
       :root {
-        --paper: #f3f6f2; --surface: #ffffff; --ink: #13221a; --muted: #4b5b51; --line: #d6ded7;
+        --paper: #eaf3ee; --surface: rgb(255 255 255 / 0.58); --field: rgb(255 255 255 / 0.7); --ink: #10201a; --muted: #43544a; --line: rgb(255 255 255 / 0.65);
+        --edge: rgb(16 32 26 / 0.12); --glass-blur: blur(18px) saturate(170%);
+        --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(95 207 151 / 0.45), transparent 60%),
+          radial-gradient(50rem 36rem at 100% 0%, rgb(86 130 230 / 0.38), transparent 60%),
+          radial-gradient(46rem 34rem at 60% 110%, rgb(240 190 90 / 0.34), transparent 60%);
         --brand: #17623d; --focus: #b87500;
         --home: #1b6b43; --on-home: #ffffff;
         --draw: #e3b04b; --on-draw: #2b1d00;
         --away: #3556a0; --on-away: #ffffff;
-        --warn: #8a2d1f; --shadow: 0 1px 2px rgb(19 34 26 / 0.06), 0 4px 14px rgb(19 34 26 / 0.06);
+        --warn: #8a2d1f; --shadow: 0 8px 30px rgb(19 34 26 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.8);
         --good: #17623d; --lean: #8a5a00; --toss: #4b5b51;
-        --radius: 14px;
+        --radius: 18px;
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
-          --paper: #0d1511; --surface: #15211b; --ink: #e9f0ea; --muted: #a6b6ab; --line: #27382d;
+          --paper: #07100c; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #eef5f0; --muted: #b3c4b8; --line: rgb(255 255 255 / 0.14);
+          --edge: rgb(255 255 255 / 0.1);
+          --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(63 174 119 / 0.38), transparent 60%),
+            radial-gradient(50rem 36rem at 100% 0%, rgb(86 120 220 / 0.34), transparent 60%),
+            radial-gradient(46rem 34rem at 60% 110%, rgb(224 176 74 / 0.2), transparent 60%);
           --brand: #5fcf97; --focus: #f0c060;
           --home: #3fae77; --on-home: #06150d;
           --draw: #e0b04a; --on-draw: #241900;
           --away: #86a2e6; --on-away: #0b1430;
-          --shadow: 0 1px 2px rgb(0 0 0 / 0.4); --good: #6ad9a0; --lean: #f0c060; --toss: #a6b6ab;
+          --shadow: 0 8px 32px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.08); --good: #6ad9a0; --lean: #f0c060; --toss: #b3c4b8; --warn: #ff9b86;
         }
       }
       :root[data-theme="dark"] {
-        --paper: #0d1511; --surface: #15211b; --ink: #e9f0ea; --muted: #a6b6ab; --line: #27382d;
+        --paper: #07100c; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #eef5f0; --muted: #b3c4b8; --line: rgb(255 255 255 / 0.14);
+        --edge: rgb(255 255 255 / 0.1);
+        --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(63 174 119 / 0.38), transparent 60%),
+          radial-gradient(50rem 36rem at 100% 0%, rgb(86 120 220 / 0.34), transparent 60%),
+          radial-gradient(46rem 34rem at 60% 110%, rgb(224 176 74 / 0.2), transparent 60%);
         --brand: #5fcf97; --focus: #f0c060;
         --home: #3fae77; --on-home: #06150d;
         --draw: #e0b04a; --on-draw: #241900;
         --away: #86a2e6; --on-away: #0b1430;
-        --shadow: 0 1px 2px rgb(0 0 0 / 0.4); --good: #6ad9a0; --lean: #f0c060; --toss: #a6b6ab;
+        --shadow: 0 8px 32px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.08); --good: #6ad9a0; --lean: #f0c060; --toss: #b3c4b8; --warn: #ff9b86;
       }
       * { box-sizing: border-box; }
       html { color-scheme: light dark; }
-      body { margin: 0; background: var(--paper); color: var(--ink);
+      body { margin: 0; background-color: var(--paper); background-image: var(--mesh); background-attachment: fixed; color: var(--ink); min-height: 100vh;
         font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
       a { color: var(--brand); }
       :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
       .skip { position: absolute; left: 8px; top: -60px; background: var(--surface); color: var(--ink);
         padding: 10px 14px; border-radius: 8px; z-index: 50; }
       .skip:focus { top: 8px; }
-      .topbar { background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+      .topbar { background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-bottom: 1px solid var(--line); box-shadow: 0 1px 0 var(--edge); position: sticky; top: 0; z-index: 20; }
       .topbar-inner { max-width: 60rem; margin: 0 auto; padding: 8px 16px; display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; }
       .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.2rem; color: var(--ink);
         text-decoration: none; letter-spacing: -0.01em; min-height: 44px; }
@@ -114,7 +126,7 @@ const nav = [
         color: var(--muted); text-decoration: none; font-weight: 600; font-size: 0.97rem; }
       nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--line) 55%, transparent); }
       nav a[aria-current="page"] { color: var(--on-home); background: var(--home); }
-      .theme { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line); background: transparent;
+      .theme { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--edge); background: transparent;
         color: var(--ink); display: inline-grid; place-items: center; cursor: pointer; margin-left: auto; }
       .theme:hover { background: color-mix(in srgb, var(--line) 55%, transparent); }
       main, footer { max-width: 60rem; margin: 0 auto; padding: 0 16px; }
@@ -127,8 +139,8 @@ const nav = [
       th, td { text-align: left; padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); }
       .field { display: grid; gap: 4px; }
       .lab { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-      .field input, .field select { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px;
-        background: var(--paper); color: var(--ink); font: inherit; width: 100%; }
+      .field input, .field select { min-height: 44px; border: 1px solid var(--edge); border-radius: 10px; padding: 0 12px;
+        background: var(--field); color: var(--ink); font: inherit; width: 100%; }
       .check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
       .check input { width: 22px; height: 22px; accent-color: var(--home); }
       .count { margin: 0; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -138,7 +150,13 @@ const nav = [
         nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto; margin: 0 -8px; padding: 0 8px 6px; scrollbar-width: none; }
         nav a { white-space: nowrap; }
       }
-      .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+      .panel { background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--line);
+        border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
+      @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        :root { --surface: #ffffff; --field: #ffffff; --line: #d6ded7; }
+        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --surface: #15211b; --field: #15211b; --line: #27382d; } }
+        :root[data-theme="dark"] { --surface: #15211b; --field: #15211b; --line: #27382d; }
+      }
       @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
     </style>
   </body>

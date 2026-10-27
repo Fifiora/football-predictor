@@ -47,7 +47,19 @@
     "strength": 0.1,
     "text": "The model weighted Roma out-shooting opponents by 3.2 shots a match lately, which points to Roma."
    }
-  ]
+  ],
+  "bookies": {
+   "average": {
+    "p_home": 0.47,
+    "p_draw": 0.28,
+    "p_away": 0.25
+   },
+   "bet365": {
+    "p_home": 0.48,
+    "p_draw": 0.27,
+    "p_away": 0.25
+   }
+  }
  },
  {
   "match_id": "I1-20261027-Torino-Como",
@@ -350,10 +362,10 @@
   ]
  },
  {
-  "match_id": "D1-20261031-Köln-Mainz",
+  "match_id": "D1-20261031-K\u00f6ln-Mainz",
   "league": "D1",
   "date": "2026-10-31",
-  "home": "Köln",
+  "home": "K\u00f6ln",
   "away": "Mainz",
   "p_home": 0.4,
   "p_draw": 0.3,
@@ -383,19 +395,19 @@
     "feature": "elo_diff",
     "direction": "home",
     "strength": 0.3,
-    "text": "The model weighted Köln being rated 150 Elo points above Mainz, which points to Köln."
+    "text": "The model weighted K\u00f6ln being rated 150 Elo points above Mainz, which points to K\u00f6ln."
    },
    {
     "feature": "dc_exp_home",
     "direction": "home",
     "strength": 0.2,
-    "text": "The model weighted the goals model expecting Köln to score 1.8 goals, which points to Köln."
+    "text": "The model weighted the goals model expecting K\u00f6ln to score 1.8 goals, which points to K\u00f6ln."
    },
    {
     "feature": "form_shots_diff",
     "direction": "home",
     "strength": 0.1,
-    "text": "The model weighted Köln out-shooting opponents by 3.2 shots a match lately, which points to Köln."
+    "text": "The model weighted K\u00f6ln out-shooting opponents by 3.2 shots a match lately, which points to K\u00f6ln."
    }
   ]
  },

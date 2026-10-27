@@ -49,3 +49,20 @@ test("day labels read like a fixture list", async () => {
   assert.equal(formatDay("2026-11-03"), "Tue 3 Nov");
   assert.equal(formatDay("nonsense"), "nonsense");
 });
+
+import { bookieView, scoreboard } from "../src/lib/format.mjs";
+
+test("scoreboard counts hits over the latest picks and tolerates missing data", () => {
+  const recent = [{ correct: true }, { correct: false }, { correct: true }, { correct: true }];
+  const s = scoreboard(recent, 3);
+  assert.deepEqual([s.total, s.hits], [3, 2]);
+  assert.equal(s.items.length, 3);
+  assert.deepEqual(scoreboard(undefined), { items: [], hits: 0, total: 0 });
+});
+
+test("bookieView prefers the market average and falls back to Bet365", () => {
+  const a = { average: { p_home: 0.5, p_draw: 0.3, p_away: 0.2 }, bet365: { p_home: 0.6, p_draw: 0.2, p_away: 0.2 } };
+  assert.equal(bookieView({ bookies: a }).label, "Average of bookmakers");
+  assert.equal(bookieView({ bookies: { bet365: a.bet365 } }).label, "Bet365");
+  assert.equal(bookieView({}), null);
+});

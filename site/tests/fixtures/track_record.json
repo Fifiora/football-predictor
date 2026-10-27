@@ -1,3 +1,47 @@
-{"n_graded": 3, "log_loss": 0.9, "rps": 0.2, "accuracy": 0.667, "ece": 0.05,
- "calibration": [{"bin": "0.2-0.4", "predicted": 0.3, "observed": 0.33, "n": 6}],
- "by_league": {"E0": {"n": 2, "log_loss": 0.8, "rps": 0.18, "accuracy": 1.0}}}
+{
+ "n_graded": 3,
+ "log_loss": 0.9,
+ "rps": 0.2,
+ "accuracy": 0.667,
+ "ece": 0.05,
+ "calibration": [
+  {
+   "bin": "0.2-0.4",
+   "predicted": 0.3,
+   "observed": 0.33,
+   "n": 6
+  }
+ ],
+ "by_league": {
+  "E0": {
+   "n": 2,
+   "log_loss": 0.8,
+   "rps": 0.18,
+   "accuracy": 1.0
+  }
+ },
+ "recent": [
+  {
+   "match_id": "E0-20251020-Fulham-Everton",
+   "league": "E0",
+   "home": "Fulham",
+   "away": "Everton",
+   "date": "2025-10-20",
+   "pick": "H",
+   "result": "H",
+   "correct": true,
+   "p_pick": 0.52
+  },
+  {
+   "match_id": "SP1-20251019-Getafe-Betis",
+   "league": "SP1",
+   "home": "Getafe",
+   "away": "Betis",
+   "date": "2025-10-19",
+   "pick": "A",
+   "result": "D",
+   "correct": false,
+   "p_pick": 0.44
+  }
+ ]
+}

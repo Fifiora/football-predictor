@@ -1,0 +1,50 @@
+---
+import { formatDay, pct, scoreboard } from "../lib/format.mjs";
+const { recent } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const board = scoreboard(recent, 10);
+const word = { H: "home win", D: "draw", A: "away win" };
+---
+{board.total > 0 && (
+  <section class="panel board" aria-labelledby="board-title" data-scoreboard>
+    <div class="head">
+      <h2 id="board-title">Live scoreboard</h2>
+      <p class="score"><b>{board.hits}</b> of {board.total} recent picks right</p>
+    </div>
+    <ol class="dots" aria-label="Latest results, newest first">
+      {board.items.map((r) => (
+        <li class={r.correct ? "hit" : "miss"} title={`${r.home} v ${r.away}: picked ${word[r.pick]}, was ${word[r.result]}`}>
+          <span aria-hidden="true">{r.correct ? "✓" : "✗"}</span>
+          <span class="sr">{r.home} v {r.away}: {r.correct ? "right" : "wrong"}</span>
+        </li>
+      ))}
+    </ol>
+    <ul class="recent">
+      {board.items.slice(0, 4).map((r) => (
+        <li>
+          <span class={`mark ${r.correct ? "hit" : "miss"}`} aria-hidden="true">{r.correct ? "✓" : "✗"}</span>
+          <span class="who">{r.home} v {r.away}</span>
+          <span class="what">picked {word[r.pick]} ({pct(r.p_pick)}), was {word[r.result]} · {formatDay(r.date)}</span>
+        </li>
+      ))}
+    </ul>
+    <p class="more"><a href={`${base}/track-record/`}>Full track record</a></p>
+  </section>
+)}
+<style>
+  .board { margin: 0 0 18px; }
+  .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+  .head h2 { margin: 0; font-size: 1.05rem; }
+  .score { margin: 0; color: var(--muted); max-width: none; font-variant-numeric: tabular-nums; }
+  .score b { color: var(--ink); font-size: 1.4rem; }
+  .dots { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; max-width: none; }
+  .dots li { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; font-weight: 800; border: 1.5px solid currentColor; }
+  .hit { color: var(--good); } .miss { color: var(--warn); }
+  .recent { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-width: none; }
+  .recent li { display: flex; flex-wrap: wrap; gap: 0 10px; align-items: baseline; font-size: 0.93rem; max-width: none; }
+  .mark { font-weight: 800; }
+  .who { font-weight: 700; }
+  .what { color: var(--muted); }
+  .more { margin: 10px 0 0; font-size: 0.93rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>

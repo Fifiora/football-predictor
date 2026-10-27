@@ -58,3 +58,18 @@ export function formatDay(isoDate) {
   if (Number.isNaN(d.getTime())) return String(isoDate);
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 }
+
+/** Latest graded picks for the scoreboard strip: hits among the newest ``limit``. */
+export function scoreboard(recent, limit = 10) {
+  const items = (recent ?? []).slice(0, limit);
+  return { items, hits: items.filter((r) => r.correct).length, total: items.length };
+}
+
+/** What the bookmakers say, shown beside (never inside) the model's chances. */
+export function bookieView(fixture) {
+  const b = fixture.bookies;
+  if (!b) return null;
+  if (b.average) return { label: "Average of bookmakers", ...b.average };
+  if (b.bet365) return { label: "Bet365", ...b.bet365 };
+  return null;
+}
