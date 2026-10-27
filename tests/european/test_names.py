@@ -69,3 +69,10 @@ def test_groups():
 def test_openfootball_spellings_that_needed_an_alias(raw, country, canonical):
     names = EuropeanNames()  # the shipped data/european_aliases.csv
     assert names.resolve(raw, country) == canonical and names.unmatched == set()
+
+
+def test_live_feed_spellings_of_non_big_five_clubs_match_the_history_files():
+    names = EuropeanNames()
+    assert names.resolve("Fenerbahçe SK") == "Fenerbahçe"
+    assert names.resolve("LASK Linz") == "LASK"
+    assert names.resolve("PAE AEK") == "AEK Athen"
