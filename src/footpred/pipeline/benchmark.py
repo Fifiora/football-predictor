@@ -21,6 +21,20 @@ from footpred.pipeline.common import load_all_matches, per_league_log_loss, play
 
 CAL_FRACTION = 0.15
 MODELS = {"base_rate": "Base rate", "elo": "Elo only", "dixon_coles": "Dixon-Coles only", "hybrid": "Hybrid"}
+VARIANT_LABELS = {"hybrid_logistic": "Hybrid (logistic)", "hybrid_regularized": "Hybrid (regularized trees)"}
+
+
+def default_variants() -> dict[str, dict | None]:
+    """Hybrid meta-model candidates. Tree parameter names depend on the available backend."""
+    if MetaModel().backend == "lightgbm":
+        regularized = {"n_estimators": 150, "learning_rate": 0.03, "num_leaves": 4, "min_child_samples": 100, "reg_lambda": 10.0}
+    else:
+        regularized = {"max_iter": 150, "learning_rate": 0.03, "max_depth": 2, "min_samples_leaf": 100, "l2_regularization": 10.0}
+    return {
+        "hybrid": None,
+        "hybrid_regularized": regularized,
+        "hybrid_logistic": {"backend": "logistic", "C": 0.1},
+    }
 
 
 def _holdout_season(played: pd.DataFrame) -> str:
@@ -35,13 +49,13 @@ def _holdout_season(played: pd.DataFrame) -> str:
     raise ValueError("no complete season to hold out")
 
 
-def _hybrid_fit_predict(dates: pd.Series):
+def _hybrid_fit_predict(dates: pd.Series, params: dict | None = None):
     def fit_predict(train: pd.DataFrame, test: pd.DataFrame) -> np.ndarray:
         order = dates.reindex(train.index).sort_values(kind="stable").index
         train = train.loc[order]
         cut = int(len(train) * (1 - CAL_FRACTION))
         fit, cal = train.iloc[:cut], train.iloc[cut:]
-        model = MetaModel().fit(fit[FEATURE_COLUMNS], fit["outcome"].to_numpy())
+        model = MetaModel(params).fit(fit[FEATURE_COLUMNS], fit["outcome"].to_numpy())
         calibrator = Calibrator().fit(model.predict_proba(cal[FEATURE_COLUMNS]), cal["outcome"].to_numpy())
         return calibrator.transform(model.predict_proba(test[FEATURE_COLUMNS]))
 
@@ -64,7 +78,8 @@ def _table(results: dict) -> str:
     leagues = sorted({lg for r in results.values() for lg in r["by_league_log_loss"]})
     lines = ["| Model | Matches | Log loss | RPS | ECE | " + " | ".join(leagues) + " |",
              "|---|---|---|---|---|" + "---|" * len(leagues)]
-    for key, label in MODELS.items():
+    labels = {**MODELS, **VARIANT_LABELS}
+    for key, label in labels.items():
         if key in results:
             r = results[key]
             per = " | ".join(f"{r['by_league_log_loss'].get(lg, float('nan')):.3f}" for lg in leagues)
@@ -78,6 +93,8 @@ def run_benchmark(
     aliases_path: Path | None = None,
     today: pd.Timestamp | None = None,
     step_days: int = 60,
+    variants: dict | None = None,
+    test_seasons: int = 3,
 ) -> dict:
     today = pd.Timestamp.now().normalize() if today is None else pd.Timestamp(today)
     played = played_before(load_all_matches(data_dir, aliases_path), today + pd.Timedelta(days=1))
@@ -91,18 +108,22 @@ def run_benchmark(
     dates = meta["date"]
 
     seasons = sorted(dev_matches["season"].unique())
-    first_test = dev_matches.loc[dev_matches["season"] == seasons[-1], "date"].min() if len(seasons) > 1 \
-        else dev_matches["date"].quantile(0.5)
+    if len(seasons) > 1:  # test on the last `test_seasons` development seasons, always keeping one to train on
+        first_test = dev_matches.loc[dev_matches["season"] == seasons[max(1, len(seasons) - test_seasons)], "date"].min()
+    else:
+        first_test = dev_matches["date"].quantile(0.5)
 
+    variants = variants if variants is not None else default_variants()
     fit_predicts = {"base_rate": baseline_base_rate, "elo": baseline_elo, "dixon_coles": baseline_dixon_coles,
-                    "hybrid": _hybrid_fit_predict(dates)}
+                    **{name: _hybrid_fit_predict(dates, params) for name, params in variants.items()}}
     dev_features = features.loc[dev_ids]
     development = {
         name: _summarize(backtest(fp, dev_features, dev_matches, first_test, step_days=step_days))
         for name, fp in fit_predicts.items()
     }
 
-    beats_both = development["hybrid"]["log_loss"] < min(
+    chosen = min(variants, key=lambda name: development[name]["log_loss"])  # chosen on development seasons only
+    beats_both = development[chosen]["log_loss"] < min(
         development["elo"]["log_loss"], development["dixon_coles"]["log_loss"]
     )
     held_out = None
@@ -113,7 +134,9 @@ def run_benchmark(
         y = outcome.reindex(test_ids).to_numpy()
         leagues = meta["league"].reindex(test_ids).to_numpy()
         held_out = {}
-        for name, fp in fit_predicts.items():
+        final = {"base_rate": baseline_base_rate, "elo": baseline_elo, "dixon_coles": baseline_dixon_coles,
+                 "hybrid": fit_predicts[chosen]}  # only the chosen variant is evaluated on the held-out season
+        for name, fp in final.items():
             p = np.asarray(fp(train, test), dtype=float)
             held_out[name] = _summarize(pd.DataFrame(
                 {"p_home": p[:, 0], "p_draw": p[:, 1], "p_away": p[:, 2], "outcome": y, "league": leagues}))
@@ -122,7 +145,9 @@ def run_benchmark(
     text = [
         "# Baseline versus hybrid results", "",
         f"Generated {today:%Y-%m-%d}. Walk-forward backtest, no random splits; lower is better for log loss, RPS and ECE.", "",
-        f"## Development seasons", "", f"Everything before {holdout}. All model comparison happens here.", "",
+        f"## Development seasons", "",
+        f"Everything before {holdout}; tested on the last {min(test_seasons, max(1, len(seasons) - 1))} of them. "
+        f"All model comparison happens here. Best hybrid variant on these seasons: {chosen}.", "",
         _table(development), "",
         "## Held-out season", "",
     ]
@@ -130,6 +155,7 @@ def run_benchmark(
         text.append(f"Not evaluated: the hybrid did not beat both Elo-only and Dixon-Coles-only on the development seasons, so {holdout} stays untouched.")
     else:
         text += [f"{holdout} was evaluated once, after the hybrid beat Elo-only and Dixon-Coles-only on the development seasons. "
-                 "It is not used for tuning; the hybrid is the first release candidate.", "", _table(held_out)]
+                 f"Only the chosen variant ({chosen}) was evaluated, shown as Hybrid. It is not used for tuning; "
+                 "this is the first release candidate.", "", _table(held_out)]
     Path(out_path).write_text("\n".join(text) + "\n")
-    return {"development": development, "holdout": held_out, "holdout_season": holdout}
+    return {"development": development, "holdout": held_out, "holdout_season": holdout, "chosen_hybrid": chosen}

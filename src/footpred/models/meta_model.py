@@ -46,12 +46,25 @@ class MetaModel:
 
     def __init__(self, params: dict | None = None):
         self.params = params
-        self.backend = "lightgbm" if _lightgbm_available() else "sklearn"
+        if params and params.get("backend") == "logistic":
+            self.backend = "logistic"  # regularised multinomial logistic regression, hard to overfit
+        else:
+            self.backend = "lightgbm" if _lightgbm_available() else "sklearn"
         self.estimator = None
         self.feature_names: list[str] = []
         self.baseline: pd.Series | None = None  # per-feature training median, used by explanations
 
     def _new_estimator(self):
+        if self.backend == "logistic":
+            from sklearn.impute import SimpleImputer
+            from sklearn.linear_model import LogisticRegression
+            from sklearn.pipeline import make_pipeline
+            from sklearn.preprocessing import StandardScaler
+
+            c = float((self.params or {}).get("C", 0.1))
+            return make_pipeline(
+                SimpleImputer(strategy="median"), StandardScaler(), LogisticRegression(C=c, max_iter=2000)
+            )
         if self.backend == "lightgbm":
             import lightgbm as lgb
 

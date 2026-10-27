@@ -80,3 +80,20 @@ def test_fit_hybrid_rejects_calibration_data_older_than_training():
         fit_hybrid(X.iloc[:300], y[:300], X.iloc[300:], y[300:],
                    train_dates=dates.iloc[300:].reset_index(drop=True),
                    cal_dates=dates.iloc[:300].reset_index(drop=True))
+
+
+def test_logistic_backend_gives_valid_probabilities_with_missing_values():
+    import numpy as np
+    import pandas as pd
+
+    from footpred.models.meta_model import MetaModel
+
+    rng = np.random.default_rng(0)
+    X = pd.DataFrame({"elo_diff": rng.normal(0, 100, 600), "dc_p_home": rng.uniform(0.2, 0.7, 600)})
+    y = np.where(X["elo_diff"] + rng.normal(0, 80, 600) > 20, 0, rng.choice([1, 2], 600))
+    X.loc[::7, "dc_p_home"] = np.nan
+    model = MetaModel({"backend": "logistic", "C": 0.1}).fit(X, y)
+    probs = model.predict_proba(X)
+    assert model.backend == "logistic"
+    assert np.allclose(probs.sum(axis=1), 1) and (probs >= 0).all()
+    assert probs[X["elo_diff"].idxmax(), 0] > probs[X["elo_diff"].idxmin(), 0]
