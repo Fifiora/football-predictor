@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -128,11 +128,11 @@ def test_football_data_org_adapter_normalizes_and_authenticates():
         return 200, SAMPLE
 
     client = FootballDataOrgClient("secret-token", http_get=http_get)
-    rows = client.get_fixtures("E0", date(2025, 10, 27), date(2025, 11, 10))
+    rows = client.get_fixtures("E0", date(2025, 10, 27), date(2025, 11, 5))
 
     assert seen["url"].endswith("/v4/competitions/PL/matches")
     assert seen["headers"]["X-Auth-Token"] == "secret-token"
-    assert seen["params"] == {"dateFrom": "2025-10-27", "dateTo": "2025-11-10"}
+    assert seen["params"] == {"dateFrom": "2025-10-27", "dateTo": "2025-11-05"}
     assert rows[0] == {**fx("2025-10-30", "Arsenal FC", "Chelsea FC", status="TIMED"), "stage": None}
     assert rows[1]["home_goals"] == 3 and rows[1]["away_goals"] == 1 and rows[1]["status"] == "FINISHED"
 
@@ -253,8 +253,29 @@ def test_client_spaces_requests_to_stay_under_the_free_rate_limit():
     client = FootballDataOrgClient("t", http_get=lambda *a: (200, {"matches": []}), min_interval=6.5,
                                    clock=lambda: clock["now"], sleep=sleep)
     for _ in range(3):
-        client.get_fixtures("E0", date(2025, 10, 27), date(2025, 11, 10))
+        client.get_fixtures("E0", date(2025, 10, 27), date(2025, 10, 30))
     assert slept == [6.5, 6.5]  # the first call is immediate; each later call waits out the interval
     clock["now"] += 30
-    client.get_fixtures("E0", date(2025, 10, 27), date(2025, 11, 10))
+    client.get_fixtures("E0", date(2025, 10, 27), date(2025, 10, 30))
     assert slept == [6.5, 6.5]  # already slow enough
+
+
+def test_long_ranges_are_split_into_windows_the_provider_accepts():
+    calls = []
+
+    def http_get(url, headers, params):
+        calls.append((params["dateFrom"], params["dateTo"]))
+        return 200, {"matches": []}
+
+    client = FootballDataOrgClient("t", http_get=http_get, min_interval=0)
+    client.get_fixtures("CL", date(2026, 9, 1), date(2026, 10, 27))
+    spans = [(date.fromisoformat(b) - date.fromisoformat(a)).days for a, b in calls]
+    assert max(spans) <= 9 and calls[0][0] == "2026-09-01" and calls[-1][1] == "2026-10-27"
+    for (_, end), (start, _) in zip(calls, calls[1:]):  # consecutive windows, no gap and no overlap
+        assert date.fromisoformat(start) - date.fromisoformat(end) == timedelta(days=1)
+
+
+def test_http_errors_report_the_provider_message():
+    client = FootballDataOrgClient("t", http_get=lambda *a: (400, {"message": "Invalid date range"}), min_interval=0)
+    with pytest.raises(FixturesUnavailable, match="Invalid date range"):
+        client.get_fixtures("CL", date(2026, 10, 1), date(2026, 10, 2))

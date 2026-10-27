@@ -52,6 +52,9 @@ def _urllib_get(url: str, headers: dict, params: dict) -> tuple[int, dict]:
         return err.code, {}
 
 
+MAX_WINDOW_DAYS = 10
+
+
 class FootballDataOrgClient:
     BASE_URL = "https://api.football-data.org"
 
@@ -75,14 +78,22 @@ class FootballDataOrgClient:
     def get_fixtures(self, league: str, date_from: date, date_to: date) -> list[dict]:
         if league not in _COMPETITION_CODES:
             raise ValueError(f"unsupported league {league!r}")
-        self._throttle()
-        status, payload = self._http_get(
-            f"{self._base_url}/v4/competitions/{_COMPETITION_CODES[league]}/matches",
-            {"X-Auth-Token": self._token},
-            {"dateFrom": date_from.isoformat(), "dateTo": date_to.isoformat()},
-        )
-        if status != 200:
-            raise FixturesUnavailable(f"football-data.org answered HTTP {status} for {league}")
+        matches: list[dict] = []
+        start = date_from
+        while start <= date_to:  # the provider rejects ranges longer than ten days
+            end = min(start + timedelta(days=MAX_WINDOW_DAYS - 1), date_to)
+            self._throttle()
+            status, payload = self._http_get(
+                f"{self._base_url}/v4/competitions/{_COMPETITION_CODES[league]}/matches",
+                {"X-Auth-Token": self._token},
+                {"dateFrom": start.isoformat(), "dateTo": end.isoformat()},
+            )
+            if status != 200:
+                detail = payload.get("message") if isinstance(payload, dict) else None
+                raise FixturesUnavailable(f"football-data.org answered HTTP {status} for {league}" + (f" ({detail})" if detail else ""))
+            matches += payload.get("matches", [])
+            start = end + timedelta(days=1)
+        payload = {"matches": matches}
         rows = []
         for match in payload.get("matches", []):
             score = match.get("score", {})
