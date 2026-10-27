@@ -1,0 +1,27 @@
+{
+  "data_snapshot": "2026-10-26",
+  "code_version": "92de3e9",
+  "params": {
+    "backend": "logistic",
+    "C": 10.0
+  },
+  "metrics": {
+    "n_eval": 768,
+    "log_loss": 1.028752386984365,
+    "rps": 0.22241770516000478,
+    "ece": 0.033882986764762264
+  },
+  "trained_on": 2479,
+  "offsets": {
+    "E0": 0.0,
+    "SP1": 25.0,
+    "I1": 0.0,
+    "D1": 25.0,
+    "F1": -50.0,
+    "OTHER": -50.0
+  },
+  "publish_gate": {
+    "ok": true,
+    "reason": "model log loss 0.974 vs base rate 1.035 and pooled Elo 0.974: passes (beats the base rate, matches pooled Elo)"
+  }
+}
