@@ -37,3 +37,8 @@ def canonical_team(name: str, league: str, aliases_path: Path | None = None) -> 
         return table[(league, _key(name))]
     except KeyError:
         raise UnknownTeamError(f"unknown team {name!r} in league {league}") from None
+
+
+def covered_leagues(aliases_path: Path | None = None) -> list[str]:
+    """Leagues that have team aliases; the pipelines only handle these."""
+    return sorted({league for league, _ in _load(Path(aliases_path) if aliases_path else DEFAULT_ALIASES_PATH)})

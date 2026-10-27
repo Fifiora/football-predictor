@@ -7,10 +7,12 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 
 from footpred.ingest.fixtures import FootballDataOrgClient
+from footpred.ingest.teams import covered_leagues
 from footpred.pipeline.benchmark import run_benchmark
 from footpred.pipeline.daily import run_daily
 from footpred.pipeline.retrain import run_retrain
@@ -19,20 +21,30 @@ LEAGUES = ["E0", "SP1", "I1", "D1", "F1"]
 HISTORY_URL = "https://www.football-data.co.uk/mmz4281/{season}/{league}.csv"
 
 
-def download_history(raw_dir: Path, first_start_year: int, last_start_year: int) -> list[str]:
+def _urlopen_bytes(url: str) -> bytes:
+    with urllib.request.urlopen(url, timeout=60) as r:
+        return r.read()
+
+
+def download_history(
+    raw_dir: Path,
+    first_start_year: int,
+    last_start_year: int,
+    leagues: list[str] | None = None,
+    fetch: Callable[[str], bytes] = _urlopen_bytes,
+) -> list[str]:
     """Fetch season CSVs that are not on disk yet; returns the names that failed (e.g. not published yet)."""
     raw_dir.mkdir(parents=True, exist_ok=True)
     failed = []
     for year in range(first_start_year, last_start_year + 1):
         season = f"{year % 100:02d}{(year + 1) % 100:02d}"
-        for league in LEAGUES:
+        for league in leagues or LEAGUES:
             target = raw_dir / f"{league}_{season}.csv"
             current = year == last_start_year
             if target.exists() and not current:
                 continue
             try:
-                with urllib.request.urlopen(HISTORY_URL.format(season=season, league=league), timeout=60) as r:
-                    target.write_bytes(r.read())
+                target.write_bytes(fetch(HISTORY_URL.format(season=season, league=league)))
             except (urllib.error.URLError, OSError):
                 failed.append(target.name)
     return failed
@@ -60,8 +72,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "download":
         year = today.year if today.month >= 7 else today.year - 1
-        failed = download_history(args.data_dir / "raw", args.first_year, year)
-        note(f"history download: {len(failed)} files unavailable {failed[:5]}")
+        covered = covered_leagues()
+        skipped = [lg for lg in LEAGUES if lg not in covered]
+        failed = download_history(args.data_dir / "raw", args.first_year, year, leagues=covered)
+        note(f"history download for {covered}: {len(failed)} files unavailable {failed[:5]}")
+        if skipped:
+            note(f"- warning: no team aliases yet for {skipped}; add them to data/team_aliases.csv to enable these leagues")
         return 0
     if args.command == "daily":
         client = FootballDataOrgClient(os.environ["FOOTBALL_DATA_TOKEN"])

@@ -39,7 +39,7 @@ jobs:
         run: |
           cd state
           git init -q 2>/dev/null; git checkout -q -B state
-          git add data/prediction_log.csv data/api_results.csv registry
+          for f in data/prediction_log.csv data/api_results.csv registry; do [ -e "$f" ] && git add "$f"; done
           git -c user.name=footpred-bot -c user.email=bot@users.noreply.github.com commit -qm "state $(date -u +%F)" || true
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" state
       - uses: actions/setup-node@v4
