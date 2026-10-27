@@ -48,7 +48,15 @@ jobs:
       - name: Build site
         if: steps.daily.outputs.code == '0'
         env: { SITE_BASE: "/${{ github.event.repository.name }}/" }
-        run: cd site && npm install && npm test && npm run build
+        run: |
+          cd site
+          set +e
+          (npm install && npm test && npm run build) > ../site-build.log 2>&1
+          code=$?
+          if [ "$code" != "0" ]; then
+            echo "::error title=site build failed::$(tail -c 3500 ../site-build.log | tr '\n' '|')"
+            exit "$code"
+          fi
       - uses: actions/upload-pages-artifact@v3
         if: steps.daily.outputs.code == '0'
         with: { path: site/dist }
