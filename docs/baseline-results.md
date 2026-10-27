@@ -32,6 +32,15 @@ Correct picks by league (the most probable outcome was what happened):
 | Hybrid (logistic) | 51.4% | 55.5% | 51.7% | 52.5% | 53.6% |
 | Hybrid (regularized trees) | 51.6% | 55.8% | 52.3% | 52.5% | 53.0% |
 
+### Against the bookmakers
+
+Closing odds with the margin removed, on the same development matches as the chosen hybrid. A reference point only: odds are never a model input.
+
+| Source | Matches | Correct picks | Log loss | RPS |
+|---|---|---|---|---|
+| Our model (Hybrid) | 5330 | 53.1% | 0.981 | 0.199 |
+| Bookmaker closing odds (reference only) | 5330 | 54.7% | 0.963 | 0.193 |
+
 ## Held-out season
 
 2025-26 was evaluated once, after the hybrid beat Elo-only and Dixon-Coles-only on the development seasons. Only the chosen variant (hybrid_logistic) was evaluated, shown as Hybrid. It is not used for tuning; this is the first release candidate.
@@ -53,3 +62,10 @@ Correct picks by league (the most probable outcome was what happened):
 | Dixon-Coles only | 54.2% | 46.7% | 52.9% | 53.7% | 52.6% |
 | Blend (Elo + Dixon-Coles) | 53.4% | 48.3% | 51.9% | 53.0% | 53.4% |
 | Hybrid | 55.0% | 47.0% | 52.1% | 54.6% | 50.7% |
+
+Against the bookmakers on the held-out season (reference only):
+
+| Source | Matches | Correct picks | Log loss | RPS |
+|---|---|---|---|---|
+| Our model (Hybrid) | 898 | 52.4% | 0.987 | 0.200 |
+| Bookmaker closing odds (reference only) | 898 | 53.8% | 0.964 | 0.194 |
