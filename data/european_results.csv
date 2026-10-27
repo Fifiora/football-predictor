@@ -1,55 +1,61 @@
 match_id,competition,season,stage,date,home,away,home_country,away_country,home_goals,away_goals,result
-CL-20260908-Club Brugge KV-Aston Villa,CL,2026-27,,2026-09-08 00:00:00,Club Brugge KV,Aston Villa,,,2.0,3.0,A
-CL-20260908-Dortmund-Villarreal,CL,2026-27,,2026-09-08 00:00:00,Dortmund,Villarreal,,,3.0,2.0,H
-CL-20260908-FC Porto-Manchester City,CL,2026-27,,2026-09-08 00:00:00,FC Porto,Manchester City,,,0.0,2.0,A
-CL-20260908-Lille-Betis,CL,2026-27,,2026-09-08 00:00:00,Lille,Betis,,,2.0,3.0,A
-CL-20260908-PAE AEK-LASK Linz,CL,2026-27,,2026-09-08 00:00:00,PAE AEK,LASK Linz,,,1.0,0.0,H
-CL-20260908-Real Madrid-Inter,CL,2026-27,,2026-09-08 00:00:00,Real Madrid,Inter,,,2.0,1.0,H
-CL-20260909-Barcelona-Feyenoord Rotterdam,CL,2026-27,,2026-09-09 00:00:00,Barcelona,Feyenoord Rotterdam,,,5.0,1.0,H
-CL-20260909-Liverpool-Ath Madrid,CL,2026-27,,2026-09-09 00:00:00,Liverpool,Ath Madrid,,,2.0,1.0,H
-CL-20260909-Napoli-Arsenal,CL,2026-27,,2026-09-09 00:00:00,Napoli,Arsenal,,,0.0,1.0,A
-CL-20260909-Paris SG-ŠK Slovan Bratislava,CL,2026-27,,2026-09-09 00:00:00,Paris SG,ŠK Slovan Bratislava,,,6.0,1.0,H
-CL-20260909-Sporting Clube de Portugal-Galatasaray SK,CL,2026-27,,2026-09-09 00:00:00,Sporting Clube de Portugal,Galatasaray SK,,,3.0,1.0,H
-CL-20260909-Stuttgart-Viking FK,CL,2026-27,,2026-09-09 00:00:00,Stuttgart,Viking FK,,,3.0,1.0,H
-CL-20260910-Bayern Munich-FK Bodø/Glimt,CL,2026-27,,2026-09-10 00:00:00,Bayern Munich,FK Bodø/Glimt,,,5.0,0.0,H
-CL-20260910-Como-RB Leipzig,CL,2026-27,,2026-09-10 00:00:00,Como,RB Leipzig,,,4.0,1.0,H
-CL-20260910-Fenerbahçe SK-Roma,CL,2026-27,,2026-09-10 00:00:00,Fenerbahçe SK,Roma,,,1.0,1.0,D
-CL-20260910-Manchester United-Sabah FK,CL,2026-27,,2026-09-10 00:00:00,Manchester United,Sabah FK,,,4.0,0.0,H
-CL-20260910-PSV-FK Shakhtar Donetsk,CL,2026-27,,2026-09-10 00:00:00,PSV,FK Shakhtar Donetsk,,,1.0,1.0,D
-CL-20260910-SK Slavia Praha-Lens,CL,2026-27,,2026-09-10 00:00:00,SK Slavia Praha,Lens,,,2.0,3.0,A
-CL-20261013-Arsenal-Lille,CL,2026-27,,2026-10-13 00:00:00,Arsenal,Lille,,,3.0,0.0,H
-CL-20261013-Ath Madrid-Manchester United,CL,2026-27,,2026-10-13 00:00:00,Ath Madrid,Manchester United,,,2.0,0.0,H
-CL-20261013-Galatasaray SK-Barcelona,CL,2026-27,,2026-10-13 00:00:00,Galatasaray SK,Barcelona,,,1.0,4.0,A
-CL-20261013-Inter-Club Brugge KV,CL,2026-27,,2026-10-13 00:00:00,Inter,Club Brugge KV,,,3.0,4.0,A
-CL-20261013-Lens-Sporting Clube de Portugal,CL,2026-27,,2026-10-13 00:00:00,Lens,Sporting Clube de Portugal,,,0.0,2.0,A
-CL-20261013-RB Leipzig-PSV,CL,2026-27,,2026-10-13 00:00:00,RB Leipzig,PSV,,,1.0,0.0,H
-CL-20261013-Sabah FK-SK Slavia Praha,CL,2026-27,,2026-10-13 00:00:00,Sabah FK,SK Slavia Praha,,,2.0,0.0,H
-CL-20261013-Viking FK-Bayern Munich,CL,2026-27,,2026-10-13 00:00:00,Viking FK,Bayern Munich,,,3.0,3.0,D
-CL-20261013-Villarreal-Napoli,CL,2026-27,,2026-10-13 00:00:00,Villarreal,Napoli,,,3.0,1.0,H
-CL-20261014-Aston Villa-Fenerbahçe SK,CL,2026-27,,2026-10-14 00:00:00,Aston Villa,Fenerbahçe SK,,,6.0,0.0,H
-CL-20261014-Betis-FC Porto,CL,2026-27,,2026-10-14 00:00:00,Betis,FC Porto,,,3.0,2.0,H
-CL-20261014-FK Bodø/Glimt-Dortmund,CL,2026-27,,2026-10-14 00:00:00,FK Bodø/Glimt,Dortmund,,,1.0,0.0,H
-CL-20261014-FK Shakhtar Donetsk-PAE AEK,CL,2026-27,,2026-10-14 00:00:00,FK Shakhtar Donetsk,PAE AEK,,,3.0,1.0,H
-CL-20261014-Feyenoord Rotterdam-Como,CL,2026-27,,2026-10-14 00:00:00,Feyenoord Rotterdam,Como,,,3.0,2.0,H
-CL-20261014-LASK Linz-Liverpool,CL,2026-27,,2026-10-14 00:00:00,LASK Linz,Liverpool,,,3.0,6.0,A
-CL-20261014-Manchester City-Paris SG,CL,2026-27,,2026-10-14 00:00:00,Manchester City,Paris SG,,,2.0,4.0,A
-CL-20261014-Roma-Real Madrid,CL,2026-27,,2026-10-14 00:00:00,Roma,Real Madrid,,,3.0,4.0,A
-CL-20261014-ŠK Slovan Bratislava-Stuttgart,CL,2026-27,,2026-10-14 00:00:00,ŠK Slovan Bratislava,Stuttgart,,,0.0,3.0,A
-CL-20261020-FC Porto-PSV,CL,2026-27,,2026-10-20 00:00:00,FC Porto,PSV,,,0.0,1.0,A
-CL-20261020-Fenerbahçe SK-SK Slavia Praha,CL,2026-27,,2026-10-20 00:00:00,Fenerbahçe SK,SK Slavia Praha,,,2.0,2.0,D
-CL-20261020-Liverpool-Villarreal,CL,2026-27,,2026-10-20 00:00:00,Liverpool,Villarreal,,,4.0,3.0,H
-CL-20261020-Manchester City-PAE AEK,CL,2026-27,,2026-10-20 00:00:00,Manchester City,PAE AEK,,,5.0,1.0,H
-CL-20261020-Napoli-FK Bodø/Glimt,CL,2026-27,,2026-10-20 00:00:00,Napoli,FK Bodø/Glimt,,,4.0,3.0,H
-CL-20261020-Paris SG-Barcelona,CL,2026-27,,2026-10-20 00:00:00,Paris SG,Barcelona,,,4.0,2.0,H
-CL-20261020-Roma-ŠK Slovan Bratislava,CL,2026-27,,2026-10-20 00:00:00,Roma,ŠK Slovan Bratislava,,,4.0,0.0,H
-CL-20261020-Sabah FK-Dortmund,CL,2026-27,,2026-10-20 00:00:00,Sabah FK,Dortmund,,,1.0,2.0,A
-CL-20261020-Stuttgart-Ath Madrid,CL,2026-27,,2026-10-20 00:00:00,Stuttgart,Ath Madrid,,,1.0,1.0,D
-CL-20261021-Aston Villa-Viking FK,CL,2026-27,,2026-10-21 00:00:00,Aston Villa,Viking FK,,,3.0,1.0,H
-CL-20261021-Bayern Munich-Arsenal,CL,2026-27,,2026-10-21 00:00:00,Bayern Munich,Arsenal,,,2.0,2.0,D
-CL-20261021-Betis-Feyenoord Rotterdam,CL,2026-27,,2026-10-21 00:00:00,Betis,Feyenoord Rotterdam,,,1.0,0.0,H
-CL-20261021-Club Brugge KV-Lens,CL,2026-27,,2026-10-21 00:00:00,Club Brugge KV,Lens,,,3.0,0.0,H
-CL-20261021-Como-Manchester United,CL,2026-27,,2026-10-21 00:00:00,Como,Manchester United,,,4.0,1.0,H
-CL-20261021-Inter-FK Shakhtar Donetsk,CL,2026-27,,2026-10-21 00:00:00,Inter,FK Shakhtar Donetsk,,,1.0,0.0,H
-CL-20261021-Lille-Galatasaray SK,CL,2026-27,,2026-10-21 00:00:00,Lille,Galatasaray SK,,,2.0,4.0,A
-CL-20261021-Real Madrid-RB Leipzig,CL,2026-27,,2026-10-21 00:00:00,Real Madrid,RB Leipzig,,,4.0,1.0,H
-CL-20261021-Sporting Clube de Portugal-LASK Linz,CL,2026-27,,2026-10-21 00:00:00,Sporting Clube de Portugal,LASK Linz,,,2.0,3.0,A
+CL-20260908-Club Brugge KV-Aston Villa,CL,2026-27,,2026-09-08,Club Brugge KV,Aston Villa,,,2.0,3.0,A
+CL-20260908-Dortmund-Villarreal,CL,2026-27,,2026-09-08,Dortmund,Villarreal,,,3.0,2.0,H
+CL-20260908-FC Porto-Manchester City,CL,2026-27,,2026-09-08,FC Porto,Manchester City,,,0.0,2.0,A
+CL-20260908-Lille-Betis,CL,2026-27,,2026-09-08,Lille,Betis,,,2.0,3.0,A
+CL-20260908-PAE AEK-LASK Linz,CL,2026-27,,2026-09-08,PAE AEK,LASK Linz,,,1.0,0.0,H
+CL-20260908-Real Madrid-Inter,CL,2026-27,,2026-09-08,Real Madrid,Inter,,,2.0,1.0,H
+CL-20260909-Barcelona-Feyenoord Rotterdam,CL,2026-27,,2026-09-09,Barcelona,Feyenoord Rotterdam,,,5.0,1.0,H
+CL-20260909-Liverpool-Ath Madrid,CL,2026-27,,2026-09-09,Liverpool,Ath Madrid,,,2.0,1.0,H
+CL-20260909-Napoli-Arsenal,CL,2026-27,,2026-09-09,Napoli,Arsenal,,,0.0,1.0,A
+CL-20260909-Paris SG-ŠK Slovan Bratislava,CL,2026-27,,2026-09-09,Paris SG,ŠK Slovan Bratislava,,,6.0,1.0,H
+CL-20260909-Sporting Clube de Portugal-Galatasaray SK,CL,2026-27,,2026-09-09,Sporting Clube de Portugal,Galatasaray SK,,,3.0,1.0,H
+CL-20260909-Stuttgart-Viking FK,CL,2026-27,,2026-09-09,Stuttgart,Viking FK,,,3.0,1.0,H
+CL-20260910-Bayern Munich-FK Bodø/Glimt,CL,2026-27,,2026-09-10,Bayern Munich,FK Bodø/Glimt,,,5.0,0.0,H
+CL-20260910-Como-RB Leipzig,CL,2026-27,,2026-09-10,Como,RB Leipzig,,,4.0,1.0,H
+CL-20260910-Fenerbahçe SK-Roma,CL,2026-27,,2026-09-10,Fenerbahçe SK,Roma,,,1.0,1.0,D
+CL-20260910-Manchester United-Sabah FK,CL,2026-27,,2026-09-10,Manchester United,Sabah FK,,,4.0,0.0,H
+CL-20260910-PSV-FK Shakhtar Donetsk,CL,2026-27,,2026-09-10,PSV,FK Shakhtar Donetsk,,,1.0,1.0,D
+CL-20260910-SK Slavia Praha-Lens,CL,2026-27,,2026-09-10,SK Slavia Praha,Lens,,,2.0,3.0,A
+CL-20261013-Arsenal-Lille,CL,2026-27,,2026-10-13,Arsenal,Lille,,,3.0,0.0,H
+CL-20261013-Ath Madrid-Manchester United,CL,2026-27,,2026-10-13,Ath Madrid,Manchester United,,,2.0,0.0,H
+CL-20261013-Galatasaray SK-Barcelona,CL,2026-27,,2026-10-13,Galatasaray SK,Barcelona,,,1.0,4.0,A
+CL-20261013-Inter-Club Brugge KV,CL,2026-27,,2026-10-13,Inter,Club Brugge KV,,,3.0,4.0,A
+CL-20261013-Lens-Sporting Clube de Portugal,CL,2026-27,,2026-10-13,Lens,Sporting Clube de Portugal,,,0.0,2.0,A
+CL-20261013-RB Leipzig-PSV,CL,2026-27,,2026-10-13,RB Leipzig,PSV,,,1.0,0.0,H
+CL-20261013-Sabah FK-SK Slavia Praha,CL,2026-27,,2026-10-13,Sabah FK,SK Slavia Praha,,,2.0,0.0,H
+CL-20261013-Viking FK-Bayern Munich,CL,2026-27,,2026-10-13,Viking FK,Bayern Munich,,,3.0,3.0,D
+CL-20261013-Villarreal-Napoli,CL,2026-27,,2026-10-13,Villarreal,Napoli,,,3.0,1.0,H
+CL-20261014-Aston Villa-Fenerbahçe,CL,2026-27,,2026-10-14,Aston Villa,Fenerbahçe,,,6.0,0.0,H
+CL-20261014-Aston Villa-Fenerbahçe SK,CL,2026-27,,2026-10-14,Aston Villa,Fenerbahçe SK,,,6.0,0.0,H
+CL-20261014-Betis-FC Porto,CL,2026-27,,2026-10-14,Betis,FC Porto,,,3.0,2.0,H
+CL-20261014-FK Bodø/Glimt-Dortmund,CL,2026-27,,2026-10-14,FK Bodø/Glimt,Dortmund,,,1.0,0.0,H
+CL-20261014-FK Shakhtar Donetsk-AEK Athen,CL,2026-27,,2026-10-14,FK Shakhtar Donetsk,AEK Athen,,,3.0,1.0,H
+CL-20261014-FK Shakhtar Donetsk-PAE AEK,CL,2026-27,,2026-10-14,FK Shakhtar Donetsk,PAE AEK,,,3.0,1.0,H
+CL-20261014-Feyenoord Rotterdam-Como,CL,2026-27,,2026-10-14,Feyenoord Rotterdam,Como,,,3.0,2.0,H
+CL-20261014-LASK Linz-Liverpool,CL,2026-27,,2026-10-14,LASK Linz,Liverpool,,,3.0,6.0,A
+CL-20261014-LASK-Liverpool,CL,2026-27,,2026-10-14,LASK,Liverpool,,,3.0,6.0,A
+CL-20261014-Manchester City-Paris SG,CL,2026-27,,2026-10-14,Manchester City,Paris SG,,,2.0,4.0,A
+CL-20261014-Roma-Real Madrid,CL,2026-27,,2026-10-14,Roma,Real Madrid,,,3.0,4.0,A
+CL-20261014-ŠK Slovan Bratislava-Stuttgart,CL,2026-27,,2026-10-14,ŠK Slovan Bratislava,Stuttgart,,,0.0,3.0,A
+CL-20261020-FC Porto-PSV,CL,2026-27,,2026-10-20,FC Porto,PSV,,,0.0,1.0,A
+CL-20261020-Fenerbahçe SK-SK Slavia Praha,CL,2026-27,,2026-10-20,Fenerbahçe SK,SK Slavia Praha,,,2.0,2.0,D
+CL-20261020-Fenerbahçe-SK Slavia Praha,CL,2026-27,,2026-10-20,Fenerbahçe,SK Slavia Praha,,,2.0,2.0,D
+CL-20261020-Liverpool-Villarreal,CL,2026-27,,2026-10-20,Liverpool,Villarreal,,,4.0,3.0,H
+CL-20261020-Manchester City-AEK Athen,CL,2026-27,,2026-10-20,Manchester City,AEK Athen,,,5.0,1.0,H
+CL-20261020-Manchester City-PAE AEK,CL,2026-27,,2026-10-20,Manchester City,PAE AEK,,,5.0,1.0,H
+CL-20261020-Napoli-FK Bodø/Glimt,CL,2026-27,,2026-10-20,Napoli,FK Bodø/Glimt,,,4.0,3.0,H
+CL-20261020-Paris SG-Barcelona,CL,2026-27,,2026-10-20,Paris SG,Barcelona,,,4.0,2.0,H
+CL-20261020-Roma-ŠK Slovan Bratislava,CL,2026-27,,2026-10-20,Roma,ŠK Slovan Bratislava,,,4.0,0.0,H
+CL-20261020-Sabah FK-Dortmund,CL,2026-27,,2026-10-20,Sabah FK,Dortmund,,,1.0,2.0,A
+CL-20261020-Stuttgart-Ath Madrid,CL,2026-27,,2026-10-20,Stuttgart,Ath Madrid,,,1.0,1.0,D
+CL-20261021-Aston Villa-Viking FK,CL,2026-27,,2026-10-21,Aston Villa,Viking FK,,,3.0,1.0,H
+CL-20261021-Bayern Munich-Arsenal,CL,2026-27,,2026-10-21,Bayern Munich,Arsenal,,,2.0,2.0,D
+CL-20261021-Betis-Feyenoord Rotterdam,CL,2026-27,,2026-10-21,Betis,Feyenoord Rotterdam,,,1.0,0.0,H
+CL-20261021-Club Brugge KV-Lens,CL,2026-27,,2026-10-21,Club Brugge KV,Lens,,,3.0,0.0,H
+CL-20261021-Como-Manchester United,CL,2026-27,,2026-10-21,Como,Manchester United,,,4.0,1.0,H
+CL-20261021-Inter-FK Shakhtar Donetsk,CL,2026-27,,2026-10-21,Inter,FK Shakhtar Donetsk,,,1.0,0.0,H
+CL-20261021-Lille-Galatasaray SK,CL,2026-27,,2026-10-21,Lille,Galatasaray SK,,,2.0,4.0,A
+CL-20261021-Real Madrid-RB Leipzig,CL,2026-27,,2026-10-21,Real Madrid,RB Leipzig,,,4.0,1.0,H
+CL-20261021-Sporting Clube de Portugal-LASK,CL,2026-27,,2026-10-21,Sporting Clube de Portugal,LASK,,,2.0,3.0,A
+CL-20261021-Sporting Clube de Portugal-LASK Linz,CL,2026-27,,2026-10-21,Sporting Clube de Portugal,LASK Linz,,,2.0,3.0,A
