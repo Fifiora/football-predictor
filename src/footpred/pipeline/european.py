@@ -174,6 +174,7 @@ def score_european(
     live = EuropeanNames(league_aliases_path=aliases_path)  # spells the clubs of the live feed
     names = EuropeanNames(league_aliases_path=aliases_path)  # spells the clubs of the history files
     history = load_european_history(data_dir / "openfootball", names)
+    live.learn(set(history["home"]) | set(history["away"]))
     before = load_european_matches(data_dir, names)
     latest = before["date"].max() if len(before) else today
     since = max(latest - pd.Timedelta(days=7), today - pd.Timedelta(days=RESULTS_LOOKBACK_DAYS))
@@ -228,6 +229,8 @@ def score_european(
     pre, _ = run_pooled_elo(pooled_matches(league, with_fixtures), groups, params)
     X = european_features(rows, pre)
     probs = predict_european(model, calibrator, X)
-    fixtures = upcoming.assign(p_home=probs[:, 0], p_draw=probs[:, 1], p_away=probs[:, 2])
+    unknown = live_clubs - known
+    fixtures = upcoming.assign(p_home=probs[:, 0], p_draw=probs[:, 1], p_away=probs[:, 2],
+                               low_confidence=[h in unknown or a in unknown for h, a in zip(upcoming['home'], upcoming['away'])])
     drivers = {r.match_id: top_drivers(model, X.loc[r.match_id], home=r.home, away=r.away) for r in fixtures.itertuples(index=False)}
     return EuropeanScores(fixtures, drivers, {}, results, warnings, True, new_results)

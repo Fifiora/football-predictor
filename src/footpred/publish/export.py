@@ -55,6 +55,8 @@ def _fixtures_payload(fixtures, drivers, dc_grids) -> list[dict]:
                 for d in drivers.get(row.match_id, [])
             ],
         }
+        if getattr(row, "low_confidence", False) is True:  # a club the ratings do not know yet
+            item["low_confidence"] = True
         if row.match_id in dc_grids:
             item.update(_scoreline_fields(dc_grids[row.match_id]))
         out.append(item)

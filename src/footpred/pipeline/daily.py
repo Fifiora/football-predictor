@@ -17,7 +17,7 @@ from footpred.ingest.fixtures import FixturesClient, fetch_latest_results, fetch
 from footpred.ingest.historical import season_label
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.models.registry import load_champion
-from footpred.pipeline.european import score_european
+from footpred.pipeline.european import EuropeanScores, score_european
 from footpred.pipeline.common import PLAYED, append_api_results, load_all_matches, played_before
 from footpred.predictions.log import grade_predictions, log_predictions
 from footpred.publish.export import export_site_data
@@ -72,10 +72,15 @@ def run_daily(
     new = results[~results["match_id"].isin(matches["match_id"])]
     euro = None
     if european:  # never raises for feed or model problems: those come back as warnings
-        euro = score_european(
-            data_dir, client, today, registry_dir, aliases_path=aliases_path, sleep=sleep,
-            league_matches=matches if new.empty else pd.concat([matches, new], ignore_index=True),
-        )
+        try:
+            euro = score_european(
+                data_dir, client, today, registry_dir, aliases_path=aliases_path, sleep=sleep,
+                league_matches=matches if new.empty else pd.concat([matches, new], ignore_index=True),
+            )
+        except Exception as err:  # noqa: BLE001  the Champions League must never stop the league run
+            euro = EuropeanScores(pd.DataFrame(columns=["match_id", "league", "date", "home", "away", "stage"]), {}, {},
+                                  pd.DataFrame(columns=["match_id", "result"]),
+                                  [f"Champions League skipped this run: {type(err).__name__}: {err}"], False)
         warnings = warnings + euro.warnings
     if new.empty and upcoming.empty and (euro is None or euro.nothing_new):
         return DailyResult(0, 0, False, warnings)  # nothing changed: keep the last good site

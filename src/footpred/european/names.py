@@ -53,7 +53,18 @@ class EuropeanNames:
         self._by_key: dict[str, dict[str, str]] = {}  # league -> normalized key -> canonical
         for (league, raw_key), canonical in table.items():
             self._by_key.setdefault(league, {}).setdefault(normalize_key(raw_key), canonical)
+        self._canonical = {c for per in self._by_key.values() for c in per.values()}
+        self._learned: dict[str, str] = {}  # normalized key -> club name already used by the history files
         self.unmatched: set[str] = set()
+
+    def learn(self, clubs) -> None:
+        """Remember club names that are already in use, so a differently written feed spelling joins them."""
+        for club in clubs:
+            self._canonical.add(club)
+            self._learned.setdefault(normalize_key(club), club)
+
+    def is_canonical(self, name: str) -> bool:
+        return name in self._canonical
 
     def _leagues_for(self, country: str | None) -> list[str]:
         if country in COUNTRY_TO_LEAGUE:
@@ -78,6 +89,9 @@ class EuropeanNames:
             found = self._by_key.get(league, {}).get(key)
             if found:
                 return found
+        learned = self._learned.get(key)
+        if learned:
+            return learned
         self.unmatched.add(cleaned)
         return cleaned
 

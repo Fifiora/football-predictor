@@ -61,6 +61,7 @@ Multinomial logistic regression on: pooled Elo gap, home advantage (off for the 
 the two clubs' recent league-phase goal averages if they help on development seasons. Platt calibration as
 elsewhere. Trained on all European matches before the prediction date; walk-forward for testing.
 - Registry namespace `cl` with the existing champion/challenger gate and weekly retrain.
+- **Outcome of tuning (2026-10-27):** on development seasons the extra inputs and a separate calibration block never beat the plain rating gap, so the shipped model is a logistic regression on the pooled-Elo gap with tuned rating settings (docs/european-tuning.md). The gate below therefore asks for a win over the base rate and a tie (within 0.002 log loss) with the plain Elo formula; the weekly retrain applies it on its evaluation block, and the benchmark applies it walk-forward on Champions League matches.
 - **Publish gate:** Champions League predictions go live only if, on development seasons, the model beats the
   base rate and the pooled-Elo-only formula on log loss. If it does not, the fixtures are not shown and the
   report says why.

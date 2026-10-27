@@ -22,6 +22,7 @@ const segs = [
     <span>Most likely: <b>{top.side === "draw" ? "a draw" : `${top.team} win`}</b> ({pct(top.p)})</span>
   </p>
   {european && <p class="note">90-minute result: extra time and penalties are not counted.</p>}
+  {f.low_confidence && <p class="note">A club here is new to the ratings, so its chances are a rough guess.</p>}
   <div class="bar" role="img" aria-label={`${f.home} ${pct(f.p_home)}, draw ${pct(f.p_draw)}, ${f.away} ${pct(f.p_away)}`}>
     {segs.map((s) => <span class={s.k} style={`flex:${s.p}`}>{s.p >= 0.12 ? pct(s.p) : ""}</span>)}
   </div>

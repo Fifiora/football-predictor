@@ -80,6 +80,11 @@ def load_european_matches(data_dir: Path, names: EuropeanNames) -> pd.DataFrame:
     feed = read_european_results(data_dir)
     if feed.empty:
         return history
+    names.learn(set(history["home"]) | set(history["away"]))
+    feed = feed.assign(  # stored names follow alias fixes made after they were saved
+        home=[n if names.is_canonical(n) else names.resolve(n) for n in feed["home"]],
+        away=[n if names.is_canonical(n) else names.resolve(n) for n in feed["away"]],
+    )
     if not history.empty:
         window = pd.Timedelta(days=DUPLICATE_WINDOW_DAYS)
         by_key = {k: g["date"].to_numpy() for k, g in history.groupby(["competition", "home", "away"])}

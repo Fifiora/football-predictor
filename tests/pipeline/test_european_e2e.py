@@ -91,6 +91,9 @@ def test_unmatched_club_does_not_stop_the_run_and_is_warned(w):
     assert {"CL-20251030-A-Q1", "CL-20251031-Mystery United-Q2"} <= ids  # kept at the default rating
     assert any("Mystery United" in text for text in result.warnings)
     assert not any("Q1" in text or "Q2" in text for text in result.warnings)  # known history clubs are not flagged
+    rows = {f["match_id"]: f for f in fixtures_json(w)}
+    assert rows["CL-20251031-Mystery United-Q2"]["low_confidence"] is True
+    assert "low_confidence" not in rows["CL-20251030-A-Q1"] and "low_confidence" not in rows["E0-20251030-A-B"]
 
 
 def test_failed_publish_gate_hides_european_fixtures_only(w, monkeypatch):
@@ -144,3 +147,32 @@ def test_european_feed_outage_does_not_stop_league_run(w):
     result = daily(w, Broken(w["client"].fixtures, []))
     assert result.published and {f["league"] for f in fixtures_json(w)} == {"E0"}
     assert any("Champions League" in text for text in result.warnings)
+
+
+def test_any_european_failure_leaves_the_league_run_intact(w):
+    seed(w)
+    bad = w["data_dir"] / "openfootball" / "2025-26" / "cl.txt"
+    bad.write_text(bad.read_text(encoding="utf-8") + "\n▪ Mystery Phase, Matchday 9\n", encoding="utf-8")
+    result = daily(w, client_with(w, cl("2025-10-30", "A FC", "Q1")))
+    assert result.published and {f["league"] for f in fixtures_json(w)} == {"E0"}
+    assert any("Champions League" in text and "Mystery Phase" in text for text in result.warnings)
+
+
+def test_a_feed_spelling_that_differs_only_in_form_matches_the_history_club(w):
+    seed(w)
+    result = daily(w, client_with(w, cl("2025-10-30", "A FC", "Q1 FC")))  # history has "Q1"
+    ids = {f["match_id"] for f in fixtures_json(w)}
+    assert "CL-20251030-A-Q1" in ids and not any("Q1" in text for text in result.warnings)
+
+
+def test_stored_feed_rows_follow_later_alias_fixes(w):
+    from footpred.european.history import append_european_results
+    from footpred.european.names import EuropeanNames
+    from footpred.european.history import load_european_matches
+
+    row = {"match_id": "CL-20250918-Q1 FC-A", "competition": "CL", "season": "2025-26", "stage": None,
+           "date": pd.Timestamp("2025-09-18"), "home": "Q1 FC", "away": "A", "home_country": None, "away_country": None,
+           "home_goals": 1.0, "away_goals": 1.0, "result": "D"}
+    append_european_results(w["data_dir"], pd.DataFrame([row]))
+    df = load_european_matches(w["data_dir"], EuropeanNames(league_aliases_path=w["aliases"]))
+    assert "Q1 FC" not in set(df["home"]) and "Q1" in set(df["home"])
