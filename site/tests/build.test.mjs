@@ -82,7 +82,7 @@ test("teams page lists rated teams and links to team pages", () => {
 
 test("match page shows goal meters and reason bars", () => {
   const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
-  const id = readdirSync(join(dist, "match")).find((n) => n.includes("arsenal"));
+  const id = readdirSync(join(dist, "match")).find((n) => n.startsWith("e0-") && n.includes("arsenal"));
   const html = read(dist, `match/${id}/index.html`);
   assert.match(html, /Both teams score/);
   assert.match(html, /Most likely scores/);
