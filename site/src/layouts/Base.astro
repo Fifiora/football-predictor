@@ -125,6 +125,19 @@ const nav = [
       footer { color: var(--muted); padding-top: 28px; padding-bottom: 44px; font-size: 0.9rem; }
       table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
       th, td { text-align: left; padding: 10px 8px 10px 0; border-bottom: 1px solid var(--line); }
+      .field { display: grid; gap: 4px; }
+      .lab { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+      .field input, .field select { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px;
+        background: var(--paper); color: var(--ink); font: inherit; width: 100%; }
+      .check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
+      .check input { width: 22px; height: 22px; accent-color: var(--home); }
+      .count { margin: 0; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+      [hidden] { display: none !important; }
+      @media (max-width: 640px) {
+        .topbar-inner { gap: 0 12px; }
+        nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto; margin: 0 -8px; padding: 0 8px 6px; scrollbar-width: none; }
+        nav a { white-space: nowrap; }
+      }
       .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
       @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
     </style>

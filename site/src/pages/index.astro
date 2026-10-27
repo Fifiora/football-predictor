@@ -153,7 +153,6 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   </script>
 </Base>
 <style is:global>
-  [hidden] { display: none !important; }
   .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
   @media (min-width: 720px) { .list { grid-template-columns: 1fr 1fr; } .list .day { grid-column: 1 / -1; } }
   .list .item { max-width: none; }
@@ -162,10 +161,6 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   .filters { display: grid; gap: 14px; margin-bottom: 18px; }
   .filters .row { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; }
   .filters .grow { flex: 1 1 14rem; }
-  .field { display: grid; gap: 4px; }
-  .lab { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .field input, .field select { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px;
-    background: var(--paper); color: var(--ink); font: inherit; width: 100%; }
   .group { display: grid; gap: 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface);
@@ -174,12 +169,19 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   .chip[aria-pressed="true"] { background: var(--home); border-color: var(--home); color: var(--on-home); }
   .chip .n { opacity: 0.75; font-weight: 500; font-variant-numeric: tabular-nums; margin-left: 4px; }
   .foot { justify-content: space-between; align-items: center; padding-top: 4px; border-top: 1px solid var(--line); }
-  .check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
-  .check input { width: 22px; height: 22px; accent-color: var(--home); }
-  .count { margin: 0; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; flex: 1; text-align: center; }
   .clear, .linklike { min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--line); background: transparent;
     color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
   .clear:disabled { opacity: 0.45; cursor: default; }
   .linklike { border: 0; color: var(--brand); text-decoration: underline; padding: 0 4px; }
   .empty { text-align: center; color: var(--muted); }
+  .count { flex: 1; text-align: center; }
+  .item .meta time { display: none; }
+  @media (max-width: 640px) {
+    .chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; }
+    .chip { flex: none; white-space: nowrap; }
+    .filters { gap: 10px; padding: 14px; }
+    .filters .row .field { flex: 1 1 100%; }
+    .foot { gap: 4px 12px; }
+    .count { order: 3; flex-basis: 100%; text-align: left; }
+  }
 </style>

@@ -7,9 +7,9 @@ const graded = t.n_graded > 0;
 const cal = graded ? t.calibration : [];
 const maxN = Math.max(...cal.map((c) => c.n), 1);
 // Chart geometry: 0-100% on both axes inside a 300x300 plot with a margin for labels.
-const S = 300, M = 36;
-const x = (p) => M + p * S;
-const y = (p) => M + (1 - p) * S;
+const S = 300, ML = 62, MR = 16, MT = 16, MB = 46;
+const x = (p) => ML + p * S;
+const y = (p) => MT + (1 - p) * S;
 const ticks = [0, 0.25, 0.5, 0.75, 1];
 const leagues = graded ? Object.entries(t.by_league) : [];
 ---
@@ -32,13 +32,13 @@ const leagues = graded ? Object.entries(t.by_league) : [];
       <h2>Are the percentages honest?</h2>
       <p>When the model says 30%, that should happen about 30% of the time. Dots on the dashed line mean the model is honest. Bigger dots mean more matches.</p>
       <figure class="panel chart">
-        <svg viewBox={`0 0 ${S + M * 2} ${S + M * 2}`} role="img" aria-label="Chart of predicted chance against how often it happened" >
+        <svg viewBox={`0 0 ${S + ML + MR} ${S + MT + MB}`} role="img" aria-label="Chart of predicted chance against how often it happened" >
           {ticks.map((p) => (
             <>
               <line x1={x(0)} x2={x(1)} y1={y(p)} y2={y(p)} class="grid" />
               <line y1={y(0)} y2={y(1)} x1={x(p)} x2={x(p)} class="grid" />
               <text x={x(0) - 8} y={y(p) + 4} text-anchor="end" class="tick">{Math.round(p * 100)}%</text>
-              <text x={x(p)} y={y(0) + 20} text-anchor="middle" class="tick">{Math.round(p * 100)}%</text>
+              <text x={x(p)} y={y(0) + 18} text-anchor="middle" class="tick">{Math.round(p * 100)}%</text>
             </>
           ))}
           <line x1={x(0)} y1={y(0)} x2={x(1)} y2={y(1)} class="diag" />
@@ -47,7 +47,7 @@ const leagues = graded ? Object.entries(t.by_league) : [];
               <title>Said {pct(c.predicted)}, happened {pct(c.observed)} ({c.n} cases)</title>
             </circle>
           ))}
-          <text x={x(0.5)} y={S + M * 2 - 4} text-anchor="middle" class="axis">What the model said</text>
+          <text x={x(0.5)} y={S + MT + MB - 6} text-anchor="middle" class="axis">What the model said</text>
           <text x="12" y={y(0.5)} text-anchor="middle" class="axis" transform={`rotate(-90 12 ${y(0.5)})`}>How often it happened</text>
         </svg>
         <details>
