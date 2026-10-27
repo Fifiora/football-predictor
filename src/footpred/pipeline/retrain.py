@@ -17,7 +17,7 @@ from footpred.models.registry import load_champion, save_model, set_champion
 from footpred.pipeline.common import code_version, load_all_matches, per_league_log_loss, played_before, training_frame
 
 # Production model: chosen on development seasons of the real five-league benchmark (docs/baseline-results.md).
-PRODUCTION_PARAMS = {"backend": "blend"}
+PRODUCTION_PARAMS = {"backend": "logistic", "C": 0.1}
 EVAL_FRACTION = 0.20  # newest matches, used only to compare champion and challenger
 CAL_FRACTION = 0.15   # block just before it, used only to calibrate
 
