@@ -18,6 +18,7 @@ from footpred.ingest.fixtures import FootballDataOrgClient
 from footpred.ingest.historical import read_csv_text
 from footpred.ingest.teams import covered_leagues
 from footpred.pipeline.benchmark import run_benchmark
+from footpred.pipeline.tune import tune_league
 from footpred.pipeline.daily import run_daily
 from footpred.pipeline.european import run_european_retrain
 from footpred.pipeline.retrain import run_retrain
@@ -97,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="footpred")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("download", "daily", "retrain", "benchmark", "benchmark-european", "tune-european", "teams"):
+    for name in ("download", "daily", "retrain", "benchmark", "benchmark-european", "tune-european", "tune-league", "teams"):
         p = sub.add_parser(name)
         p.add_argument("--data-dir", type=Path, default=Path("state/data"))
         p.add_argument("--registry-dir", type=Path, default=Path("state/registry"))
@@ -157,6 +158,10 @@ def _main(argv: list[str] | None = None) -> int:
             note(f"european retrain: promoted={euro.promote} ({euro.reason})")
         except Exception as err:  # noqa: BLE001
             print(f"::warning title=european retrain::{type(err).__name__}: {err}")
+        return 0
+    if args.command == "tune-league":
+        res = tune_league(args.data_dir, args.out, today=today)
+        note(f"league tuning written to {args.out}; best hybrid: {res['hybrid']}")
         return 0
     if args.command == "tune-european":
         tune_european(args.data_dir, args.out, today=today)

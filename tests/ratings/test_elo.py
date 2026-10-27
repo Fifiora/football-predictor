@@ -135,3 +135,15 @@ def test_same_date_matches_do_not_see_each_other():
     assert pre["elo_home_pre"].tolist() == [initial, initial]
     assert pre["elo_away_pre"].tolist() == [initial, initial]
     assert final["A"] != initial  # both results are still applied after the day
+
+
+def test_margin_flag_changes_update_size():
+    import pandas as pd
+    from footpred.ratings.elo import EloParams, run_elo
+
+    df = pd.DataFrame({"match_id": ["a", "b"], "date": pd.to_datetime(["2025-08-01", "2025-08-08"]),
+                       "league": "E0", "season": "2025-26", "home": ["A", "A"], "away": ["B", "C"],
+                       "home_goals": [4.0, 0.0], "away_goals": [0.0, 0.0]})
+    with_margin = run_elo(df, EloParams(margin=True))[0].loc["b", "elo_home_pre"]
+    without = run_elo(df, EloParams(margin=False))[0].loc["b", "elo_home_pre"]
+    assert with_margin > without > 1500

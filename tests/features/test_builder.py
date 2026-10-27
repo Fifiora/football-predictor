@@ -120,3 +120,29 @@ def test_upcoming_fixture_gets_features_without_changing_earlier_rows():
     upcoming = ext.loc[with_upcoming["match_id"].iloc[2]]
     assert upcoming["form_goals_for_home"] == pytest.approx(2.0)  # A's one played match
     assert upcoming["rest_days_home"] == 14
+
+
+def test_extra_columns_are_prior_only_and_venue_specific():
+    from footpred.features.builder import ALL_COLUMNS
+
+    # A plays home to B (2-0), away at C (0-3), then home to D (the match under test)
+    m = mk([("2025-08-16", "A", "B", 2, 0), ("2025-08-23", "C", "A", 3, 0), ("2025-08-30", "A", "D", 1, 1)])
+    elo_pre, _ = run_elo(m)
+    feats = build_features(m, elo_pre, dc_pre_match(m), ALL_COLUMNS)
+    assert list(feats.columns) == ALL_COLUMNS
+    first, last = feats.iloc[0], feats.iloc[2]
+    assert np.isnan(first["form_ppg_home"]) and np.isnan(first["venue_gd_home"])
+    assert last["form_ppg_home"] == pytest.approx(1.5)  # a win then a loss
+    assert last["form_gd10_home"] == pytest.approx(-0.5)  # +2 and -3
+    assert last["venue_gd_home"] == pytest.approx(2.0)  # only the earlier home game counts
+
+
+def test_extra_columns_do_not_see_the_match_itself():
+    from footpred.features.builder import ALL_COLUMNS
+
+    base = [("2025-08-16", "A", "B", 2, 0), ("2025-08-30", "A", "D", 1, 1)]
+    a = mk(base)
+    b = mk([base[0], ("2025-08-30", "A", "D", 9, 0)])
+    fa = build_features(a, run_elo(a)[0], dc_pre_match(a), ALL_COLUMNS).iloc[1]
+    fb = build_features(b, run_elo(b)[0], dc_pre_match(b), ALL_COLUMNS).iloc[1]
+    pd.testing.assert_series_equal(fa, fb)

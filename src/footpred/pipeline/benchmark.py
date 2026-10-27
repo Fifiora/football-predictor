@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from footpred.evaluate.backtest import backtest
-from footpred.evaluate.baselines import baseline_base_rate, baseline_blend, baseline_dixon_coles, baseline_elo
+from footpred.evaluate.baselines import benchmark_closing_odds, baseline_base_rate, baseline_blend, baseline_dixon_coles, baseline_elo
 from footpred.evaluate.metrics import accuracy, expected_calibration_error, log_loss, rps
 from footpred.features.builder import FEATURE_COLUMNS
 from footpred.models.calibration import Calibrator
@@ -83,6 +83,32 @@ def _summarize(preds: pd.DataFrame) -> dict:
     }
 
 
+def bookmaker_reference(preds: pd.DataFrame, matches: pd.DataFrame) -> dict | None:
+    """Model versus de-vigged closing odds on the same matches. Comparison only: odds are never an input."""
+    odds = matches.set_index("match_id")[["close_h", "close_d", "close_a"]]
+    merged = preds.join(odds, on="match_id")
+    usable = merged[["close_h", "close_d", "close_a"]].notna().all(axis=1) & (merged[["close_h", "close_d", "close_a"]] > 1).all(axis=1)
+    merged = merged[usable]
+    if merged.empty:
+        return None
+    y = merged["outcome"].to_numpy(dtype=int)
+    book = benchmark_closing_odds(merged)
+    model = merged[["p_home", "p_draw", "p_away"]].to_numpy()
+    return {"n": int(len(y)),
+            "model": {"log_loss": float(log_loss(model, y)), "rps": float(rps(model, y)), "accuracy": float(accuracy(model, y))},
+            "bookmaker": {"log_loss": float(log_loss(book, y)), "rps": float(rps(book, y)), "accuracy": float(accuracy(book, y))}}
+
+
+def _bookmaker_table(ref: dict | None) -> str:
+    if ref is None:
+        return "No closing odds were available for these matches."
+    rows = ["| Source | Matches | Correct picks | Log loss | RPS |", "|---|---|---|---|---|"]
+    for key, label in (("model", "Our model (Hybrid)"), ("bookmaker", "Bookmaker closing odds (reference only)")):
+        r = ref[key]
+        rows.append(f"| {label} | {ref['n']} | {r['accuracy']:.1%} | {r['log_loss']:.3f} | {r['rps']:.3f} |")
+    return "\n".join(rows)
+
+
 def _table(results: dict) -> str:
     leagues = sorted({lg for r in results.values() for lg in r["by_league_log_loss"]})
     lines = ["| Model | Matches | Correct picks | Log loss | RPS | ECE | " + " | ".join(leagues) + " |",
@@ -137,16 +163,17 @@ def run_benchmark(
     fit_predicts = {"base_rate": baseline_base_rate, "elo": baseline_elo, "dixon_coles": baseline_dixon_coles,
                     "blend": baseline_blend, **{name: _hybrid_fit_predict(dates, params) for name, params in variants.items()}}
     dev_features = features.loc[dev_ids]
-    development = {
-        name: _summarize(backtest(fp, dev_features, dev_matches, first_test, step_days=step_days))
-        for name, fp in fit_predicts.items()
-    }
+    dev_preds = {name: backtest(fp, dev_features, dev_matches, first_test, step_days=step_days)
+                 for name, fp in fit_predicts.items()}
+    development = {name: _summarize(preds) for name, preds in dev_preds.items()}
 
     chosen = min(variants, key=lambda name: development[name]["log_loss"])  # chosen on development seasons only
     beats_both = development[chosen]["log_loss"] < min(
         development["elo"]["log_loss"], development["dixon_coles"]["log_loss"]
     )
+    dev_book = bookmaker_reference(dev_preds[chosen], played)
     held_out = None
+    book_held = None
     if beats_both:  # the one and only look at the held-out season
         train = features.loc[dev_ids].assign(outcome=outcome.reindex(dev_ids).to_numpy())
         test_ids = features.index[is_holdout.to_numpy()]
@@ -160,6 +187,9 @@ def run_benchmark(
             p = np.asarray(fp(train, test), dtype=float)
             held_out[name] = _summarize(pd.DataFrame(
                 {"p_home": p[:, 0], "p_draw": p[:, 1], "p_away": p[:, 2], "outcome": y, "league": leagues}))
+            if name == "hybrid":
+                book_held = bookmaker_reference(pd.DataFrame(
+                    {"match_id": test_ids, "p_home": p[:, 0], "p_draw": p[:, 1], "p_away": p[:, 2], "outcome": y}), played)
 
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     text = [
@@ -169,6 +199,10 @@ def run_benchmark(
         f"Everything before {holdout}; tested on the last {min(test_seasons, max(1, len(seasons) - 1))} of them. "
         f"All model comparison happens here. Best hybrid variant on these seasons: {chosen}.", "",
         _table(development), "", _accuracy_table(development), "",
+        "### Against the bookmakers", "",
+        "Closing odds with the margin removed, on the same development matches as the chosen hybrid. "
+        "A reference point only: odds are never a model input.", "",
+        _bookmaker_table(dev_book), "",
         "## Held-out season", "",
     ]
     if held_out is None:
@@ -176,6 +210,7 @@ def run_benchmark(
     else:
         text += [f"{holdout} was evaluated once, after the hybrid beat Elo-only and Dixon-Coles-only on the development seasons. "
                  f"Only the chosen variant ({chosen}) was evaluated, shown as Hybrid. It is not used for tuning; "
-                 "this is the first release candidate.", "", _table(held_out), "", _accuracy_table(held_out)]
+                 "this is the first release candidate.", "", _table(held_out), "", _accuracy_table(held_out), "",
+                 "Against the bookmakers on the held-out season (reference only):", "", _bookmaker_table(book_held)]
     Path(out_path).write_text("\n".join(text) + "\n")
-    return {"development": development, "holdout": held_out, "holdout_season": holdout, "chosen_hybrid": chosen}
+    return {"development": development, "holdout": held_out, "bookmaker_dev": dev_book, "bookmaker_holdout": book_held, "holdout_season": holdout, "chosen_hybrid": chosen}

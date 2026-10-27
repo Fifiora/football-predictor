@@ -14,6 +14,7 @@ class EloParams:
     home_adv: float = 60.0
     season_regress: float = 0.25
     initial: float = 1500.0
+    margin: bool = True  # scale updates by goal margin
 
 
 def expected_home_score(home_rating: float, away_rating: float, home_adv: float) -> float:
@@ -85,7 +86,8 @@ def run_elo(
             goal_diff = int(row.home_goals) - int(row.away_goals)
             score = 1.0 if goal_diff > 0 else 0.5 if goal_diff == 0 else 0.0
             expected = expected_home_score(r_home, r_away, params.home_adv)
-            delta = params.k * _margin_multiplier(goal_diff) * (score - expected)
+            mult = _margin_multiplier(goal_diff) if params.margin else 1.0
+            delta = params.k * mult * (score - expected)
             pending.append((row.home, row.away, delta))
 
         for home, away, delta in pending:

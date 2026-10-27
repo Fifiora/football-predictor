@@ -25,6 +25,20 @@ FEATURE_COLUMNS: list[str] = [
     "rest_days_away",
 ]
 
+# Candidate inputs beyond the production set; used by the tuning run, not by the shipped model.
+EXTRA_COLUMNS: list[str] = [
+    "form_ppg_home",
+    "form_ppg_away",
+    "form_gd10_home",
+    "form_gd10_away",
+    "venue_gd_home",
+    "venue_gd_away",
+]
+ALL_COLUMNS: list[str] = FEATURE_COLUMNS + EXTRA_COLUMNS
+PPG_WINDOW = 5
+GD_WINDOW = 10
+VENUE_WINDOW = 6
+
 
 def _team_rows(m: pd.DataFrame) -> pd.DataFrame:
     """Long format: one row per team per match, from that team's perspective."""
@@ -93,8 +107,49 @@ def _team_state(long: pd.DataFrame) -> pd.DataFrame:
     return long
 
 
-def build_features(matches: pd.DataFrame, elo_pre: pd.DataFrame, dc_pre: pd.DataFrame) -> pd.DataFrame:
-    """Feature frame indexed by ``match_id`` with exactly ``FEATURE_COLUMNS``."""
+def _prior_mean(values: np.ndarray, played_dates: np.ndarray, targets: np.ndarray, window: int) -> np.ndarray:
+    """Mean of the last ``window`` values dated strictly before each target date (NaN if none)."""
+    idx = np.searchsorted(played_dates, targets, side="left")
+    lo = np.maximum(idx - window, 0)
+    cs = np.concatenate([[0.0], np.cumsum(values)])
+    n = (idx - lo).astype(float)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return np.where(n > 0, (cs[idx] - cs[lo]) / np.where(n > 0, n, 1), np.nan)
+
+
+def _extra_state(long: pd.DataFrame) -> pd.DataFrame:
+    """Points per game, longer goal difference and venue-specific goal difference, strictly prior."""
+    long = long.copy()
+    for col in ("form_ppg", "form_gd10", "venue_gd"):
+        long[col] = np.nan
+    played_mask = long["gf"].notna() & long["ga"].notna()
+
+    for _, group in long.groupby("team"):
+        played = group[played_mask.loc[group.index]].sort_values(["date", "match_id"], kind="stable")
+        if played.empty:
+            continue
+        p_dates = played["date"].to_numpy(dtype="datetime64[D]")
+        targets = group["date"].to_numpy(dtype="datetime64[D]")
+        gd = (played["gf"] - played["ga"]).to_numpy(dtype=float)
+        pts = np.where(gd > 0, 3.0, np.where(gd == 0, 1.0, 0.0))
+        long.loc[group.index, "form_ppg"] = _prior_mean(pts, p_dates, targets, PPG_WINDOW)
+        long.loc[group.index, "form_gd10"] = _prior_mean(gd, p_dates, targets, GD_WINDOW)
+
+    for _, group in long.groupby(["team", "side"]):
+        played = group[played_mask.loc[group.index]].sort_values(["date", "match_id"], kind="stable")
+        if played.empty:
+            continue
+        p_dates = played["date"].to_numpy(dtype="datetime64[D]")
+        targets = group["date"].to_numpy(dtype="datetime64[D]")
+        gd = (played["gf"] - played["ga"]).to_numpy(dtype=float)
+        long.loc[group.index, "venue_gd"] = _prior_mean(gd, p_dates, targets, VENUE_WINDOW)
+    return long
+
+
+def build_features(
+    matches: pd.DataFrame, elo_pre: pd.DataFrame, dc_pre: pd.DataFrame, columns: list[str] | None = None
+) -> pd.DataFrame:
+    """Feature frame indexed by ``match_id`` with exactly ``columns`` (default ``FEATURE_COLUMNS``)."""
     m = matches.reset_index(drop=True)
     ids = pd.Index(m["match_id"], name="match_id")
     out = pd.DataFrame(index=ids)
@@ -113,4 +168,11 @@ def build_features(matches: pd.DataFrame, elo_pre: pd.DataFrame, dc_pre: pd.Data
         out[f"form_shots_diff_{side}"] = part["form_sd"].to_numpy()
         out[f"rest_days_{side}"] = part["rest"].to_numpy()
 
-    return out[FEATURE_COLUMNS]
+    extra = _extra_state(_team_rows(m))
+    for side in ("home", "away"):
+        part = extra[extra["side"] == side].set_index("match_id").reindex(ids)
+        out[f"form_ppg_{side}"] = part["form_ppg"].to_numpy()
+        out[f"form_gd10_{side}"] = part["form_gd10"].to_numpy()
+        out[f"venue_gd_{side}"] = part["venue_gd"].to_numpy()
+
+    return out[columns or FEATURE_COLUMNS]

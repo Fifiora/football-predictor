@@ -13,7 +13,7 @@ from footpred.features.builder import build_features
 from footpred.ingest.historical import load_historical
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.ratings.dixon_coles import dc_pre_match
-from footpred.ratings.elo import run_elo
+from footpred.ratings.elo import EloParams, run_elo
 
 PLAYED = ["H", "D", "A"]
 API_RESULTS = "api_results.csv"
@@ -47,11 +47,12 @@ def played_before(matches: pd.DataFrame, today: pd.Timestamp) -> pd.DataFrame:
     return matches[keep].reset_index(drop=True)
 
 
-def training_frame(played: pd.DataFrame):
+def training_frame(played: pd.DataFrame, elo_params: EloParams | None = None, xi: float | None = None,
+                   columns: list[str] | None = None):
     """Point-in-time features, Elo pre-ratings and encoded outcomes for played matches."""
-    elo_pre, ratings = run_elo(played)
-    dc_pre = dc_pre_match(played)
-    features = build_features(played, elo_pre, dc_pre)
+    elo_pre, ratings = run_elo(played, elo_params) if elo_params else run_elo(played)
+    dc_pre = dc_pre_match(played, xi=xi) if xi is not None else dc_pre_match(played)
+    features = build_features(played, elo_pre, dc_pre, columns)
     outcome = pd.Series(encode_outcome(played["result"]), index=pd.Index(played["match_id"], name="match_id"))
     return features, outcome, elo_pre, ratings
 

@@ -52,3 +52,24 @@ def test_benchmark_reports_how_often_the_top_pick_was_right(world, tmp_path):
         assert "E0" in r["by_league_accuracy"]
     text = out.read_text()
     assert "Correct picks" in text and "Correct picks by league" in text
+
+
+def test_bookmaker_reference_compares_on_matches_with_odds_only():
+    import numpy as np
+    import pandas as pd
+    from footpred.pipeline.benchmark import bookmaker_reference
+
+    preds = pd.DataFrame({"match_id": ["a", "b", "c"], "p_home": [0.5, 0.4, 0.3], "p_draw": [0.3, 0.3, 0.3],
+                          "p_away": [0.2, 0.3, 0.4], "outcome": [0, 2, 1]})
+    matches = pd.DataFrame({"match_id": ["a", "b", "c"], "close_h": [2.0, 3.0, np.nan],
+                            "close_d": [3.5, 3.4, np.nan], "close_a": [4.0, 2.5, np.nan]})
+    ref = bookmaker_reference(preds, matches)
+    assert ref["n"] == 2  # the match without odds is left out of both sides
+    assert 0 < ref["bookmaker"]["log_loss"] < 2 and 0 < ref["model"]["log_loss"] < 2
+    assert bookmaker_reference(preds, matches.assign(close_h=np.nan)) is None
+
+
+def test_benchmark_report_has_a_bookmaker_section(world, tmp_path):
+    out = tmp_path / "out.md"
+    run_benchmark(world["data_dir"], out, aliases_path=world["aliases"], today=TODAY)
+    assert "### Against the bookmakers" in out.read_text()
