@@ -1,4 +1,4 @@
-"""Probability calibration: isotonic by default, Platt scaling when data is too small."""
+"""Probability calibration: Platt scaling by default, isotonic only with very large data."""
 from __future__ import annotations
 
 import numpy as np
@@ -34,7 +34,7 @@ class _Platt:
 class Calibrator:
     """One-vs-rest calibration of home/draw/away probabilities, renormalized to sum to 1."""
 
-    def __init__(self, min_samples_isotonic: int = 1000):
+    def __init__(self, min_samples_isotonic: int = 20000):
         self.min_samples_isotonic = min_samples_isotonic
         self.method: str | None = None
         self._maps: list = []
