@@ -1,0 +1,12 @@
+{
+  "name": "footpred-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "astro build",
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "astro": "4.16.18"
+  }
+}

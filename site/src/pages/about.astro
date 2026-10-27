@@ -1,0 +1,15 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="How it works">
+  <h1>How the predictions work</h1>
+  <p>Football is noisy, so probabilities, not certainties, are the product. A 60% favourite still fails to win four times in ten.</p>
+  <h2>The method</h2>
+  <p>Each team has a rating that moves after every match. A goals model estimates how many each side will score. A second model combines those with recent form and rest days, and a final step corrects the percentages so they match how often things really happen.</p>
+  <h2>What the reasons mean</h2>
+  <p>"The model weighted…" lines show what the model paid most attention to. They describe the model, not the cause of the result.</p>
+  <h2>How it is checked</h2>
+  <p>Predictions are tested on seasons the model had not seen, and every live prediction is saved before kickoff. The track record page shows how they have done. A new version only replaces the current one if it scores better on matches it has not seen.</p>
+  <h2>What it does not know</h2>
+  <p>Injuries, line-ups, and transfers are not included. This is for fans, not for betting.</p>
+</Base>

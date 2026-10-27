@@ -1,0 +1,26 @@
+---
+import { isStale } from "../lib/format.mjs";
+const { updatedAt, now } = Astro.props;
+const stale = isStale(updatedAt, new Date(now));
+---
+{stale && (
+  <div class="stale" role="status" data-stale-banner="shown">
+    These predictions are more than 48 hours old. The daily update may have failed, so check the date before you rely on them.
+  </div>
+)}
+{!stale && (
+  <div class="stale" role="status" data-stale-banner="hidden" data-updated={updatedAt} hidden>
+    These predictions are more than 48 hours old. The daily update may have failed, so check the date before you rely on them.
+  </div>
+)}
+<script>
+  // The site is static, so a page opened days after its build still needs to warn the reader.
+  const el = document.querySelector('[data-stale-banner="hidden"]');
+  if (el) {
+    const age = Date.now() - new Date(el.dataset.updated).getTime();
+    if (age > 48 * 3600 * 1000) el.hidden = false;
+  }
+</script>
+<style>
+  .stale { background: var(--warn); color: #fff; padding: 10px 16px; text-align: center; font-weight: 600; }
+</style>

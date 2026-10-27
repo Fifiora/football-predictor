@@ -1,0 +1,14 @@
+---
+import Base from "../layouts/Base.astro";
+import MatchCard from "../components/MatchCard.astro";
+import { fixtures, meta } from "../lib/data.mjs";
+import { formatUpdated } from "../lib/format.mjs";
+const sorted = [...fixtures].sort((a, b) => a.date.localeCompare(b.date) || a.match_id.localeCompare(b.match_id));
+---
+<Base title="Fixtures">
+  <h1>Next matches in the big five leagues</h1>
+  <p>Last updated {formatUpdated(meta.updated_at)}. Each bar shows the chance of a home win, draw and away win.</p>
+  {sorted.length === 0
+    ? <p>No fixtures are scheduled in the next two weeks. Check back after the next update.</p>
+    : sorted.map((f) => <MatchCard fixture={f} />)}
+</Base>

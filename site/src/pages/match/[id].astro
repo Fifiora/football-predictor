@@ -1,0 +1,31 @@
+---
+import Base from "../../layouts/Base.astro";
+import MatchCard from "../../components/MatchCard.astro";
+import { fixtures } from "../../lib/data.mjs";
+import { pct, slug, topDrivers } from "../../lib/format.mjs";
+export function getStaticPaths() {
+  return fixtures.map((f) => ({ params: { id: slug(f.match_id) }, props: { f } }));
+}
+const { f } = Astro.props;
+---
+<Base title={`${f.home} v ${f.away}`}>
+  <h1>{f.home} v {f.away}</h1>
+  <MatchCard fixture={f} />
+  {f.btts !== undefined && (
+    <section>
+      <h2>Goals</h2>
+      <p>Both teams score: {pct(f.btts)}. Over 2.5 goals: {pct(f.over_2_5)}.</p>
+      <table>
+        <thead><tr><th>Most likely scores</th><th>Chance</th></tr></thead>
+        <tbody>{(f.top_scorelines ?? []).map((s) => <tr><td>{s.score}</td><td>{pct(s.p)}</td></tr>)}</tbody>
+      </table>
+    </section>
+  )}
+  <section>
+    <h2>What the model weighed</h2>
+    {topDrivers(f.drivers, 3).length === 0
+      ? <p>No single factor stood out for this match.</p>
+      : <ul>{topDrivers(f.drivers, 3).map((d) => <li>{d.text}</li>)}</ul>}
+    <p>These describe what the model paid attention to. They are not proof of why a team will win.</p>
+  </section>
+</Base>

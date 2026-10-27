@@ -1,0 +1,17 @@
+---
+import Base from "../../layouts/Base.astro";
+import MatchCard from "../../components/MatchCard.astro";
+import { fixtures, teams } from "../../lib/data.mjs";
+import { slug } from "../../lib/format.mjs";
+export function getStaticPaths() {
+  return Object.keys(teams).map((name) => ({ params: { name: slug(name) }, props: { name } }));
+}
+const { name } = Astro.props;
+const games = fixtures.filter((f) => f.home === name || f.away === name);
+---
+<Base title={name}>
+  <h1>{name}</h1>
+  <p>Current Elo rating: {teams[name].toFixed(0)}. A team at 1500 is average for its league.</p>
+  <h2>Upcoming</h2>
+  {games.length === 0 ? <p>No scheduled matches in the next two weeks.</p> : games.map((f) => <MatchCard fixture={f} />)}
+</Base>

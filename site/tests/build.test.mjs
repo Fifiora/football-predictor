@@ -1,0 +1,53 @@
+// Needs `npm install` (astro). Runs a real build against the sample JSON in tests/fixtures.
+import test from "node:test";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const data = join(root, "tests", "fixtures");
+
+function build(outDir, now) {
+  rmSync(join(root, outDir), { recursive: true, force: true });
+  execFileSync("npx", ["astro", "build", "--outDir", outDir], {
+    cwd: root,
+    env: { ...process.env, SITE_DATA_DIR: data, SITE_NOW: now },
+    stdio: "pipe",
+  });
+  return join(root, outDir);
+}
+const read = (dist, p) => readFileSync(join(dist, p), "utf8");
+
+test("build succeeds and emits all page types", () => {
+  const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
+  for (const p of ["index.html", "track-record/index.html", "about/index.html"]) {
+    assert.ok(existsSync(join(dist, p)), p);
+  }
+  assert.ok(readdirSync(join(dist, "match")).length >= 1);
+  assert.ok(readdirSync(join(dist, "team")).length >= 1);
+  assert.match(read(dist, "index.html"), /Last updated/);
+});
+
+test("match card shows three probabilities and at most three drivers", () => {
+  const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
+  const html = read(dist, "index.html");
+  assert.match(html, /50%/);
+  assert.match(html, /30%/);
+  assert.match(html, /20%/);
+  const card = html.split('data-match="E0-20251030-Arsenal-Chelsea"')[1].split("</article>")[0];
+  assert.ok((card.match(/data-driver/g) ?? []).length <= 3);
+});
+
+test("staleness banner appears after 48 hours and is absent when fresh", () => {
+  const fresh = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "index.html");
+  assert.doesNotMatch(fresh, /data-stale-banner="shown"/);
+  const stale = read(build("dist-test-stale", "2025-10-30T12:00:00Z"), "index.html");
+  assert.match(stale, /data-stale-banner="shown"/);
+});
+
+test("about page says probabilities, not certainties, are the product", () => {
+  const about = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "about/index.html");
+  assert.match(about, /Football is noisy, so probabilities, not certainties, are the product/);
+});

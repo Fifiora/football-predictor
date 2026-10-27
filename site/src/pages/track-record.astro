@@ -1,0 +1,32 @@
+---
+import Base from "../layouts/Base.astro";
+import { trackRecord as t } from "../lib/data.mjs";
+import { pct } from "../lib/format.mjs";
+const f = (x) => (x == null ? "n/a" : x.toFixed(3));
+---
+<Base title="Track record">
+  <h1>How the predictions have done</h1>
+  {t.n_graded === 0
+    ? <p>No matches have been graded yet. Results appear here after the first predicted matches finish.</p>
+    : <>
+      <p>{t.n_graded} predicted matches graded. Every prediction was logged before kickoff and is never edited afterwards.</p>
+      <table>
+        <tbody>
+          <tr><th>Log loss (lower is better)</th><td>{f(t.log_loss)}</td></tr>
+          <tr><th>Ranked probability score (lower is better)</th><td>{f(t.rps)}</td></tr>
+          <tr><th>Picked the right result</th><td>{pct(t.accuracy)}</td></tr>
+        </tbody>
+      </table>
+      <h2>Are the percentages honest?</h2>
+      <p>When the model says 30%, that should happen about 30% of the time.</p>
+      <table>
+        <thead><tr><th>Said</th><th>Happened</th><th>Cases</th></tr></thead>
+        <tbody>{t.calibration.map((c) => <tr><td>{pct(c.predicted)}</td><td>{pct(c.observed)}</td><td>{c.n}</td></tr>)}</tbody>
+      </table>
+      <h2>By league</h2>
+      <table>
+        <thead><tr><th>League</th><th>Matches</th><th>Log loss</th><th>Right result</th></tr></thead>
+        <tbody>{Object.entries(t.by_league).map(([l, m]) => <tr><td>{l}</td><td>{m.n}</td><td>{f(m.log_loss)}</td><td>{pct(m.accuracy)}</td></tr>)}</tbody>
+      </table>
+    </>}
+</Base>

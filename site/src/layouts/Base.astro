@@ -1,0 +1,51 @@
+---
+import StalenessBanner from "../components/StalenessBanner.astro";
+import { meta, now } from "../lib/data.mjs";
+import { formatUpdated } from "../lib/format.mjs";
+const { title } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} | Match odds</title>
+  </head>
+  <body>
+    <StalenessBanner updatedAt={meta.updated_at} now={now.toISOString()} />
+    <header class="topbar">
+      <a class="brand" href={`${base}/`}>Match odds</a>
+      <nav aria-label="Main">
+        <a href={`${base}/`}>Fixtures</a>
+        <a href={`${base}/track-record/`}>Track record</a>
+        <a href={`${base}/about/`}>How it works</a>
+      </nav>
+    </header>
+    <main><slot /></main>
+    <footer>
+      <p>Last updated {formatUpdated(meta.updated_at)}. Model {meta.model_version}.</p>
+    </footer>
+    <style is:global>
+      :root {
+        --paper: #eef1ec; --ink: #16211b; --muted: #55635a; --line: #c9d3ca;
+        --home: #1f5c3a; --draw: #b8892b; --away: #3b4f7a; --warn: #8a2d1f;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--ink);
+        font: 17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+      a { color: var(--home); }
+      a:focus-visible { outline: 3px solid var(--draw); outline-offset: 2px; }
+      main, .topbar, footer { max-width: 46rem; margin: 0 auto; padding: 0 16px; }
+      .topbar { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; padding-top: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+      .brand { font-weight: 800; font-size: 1.25rem; color: var(--ink); text-decoration: none; letter-spacing: -0.01em; }
+      nav { display: flex; gap: 18px; flex-wrap: wrap; }
+      h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); line-height: 1.15; letter-spacing: -0.02em; margin: 28px 0 8px; }
+      h2 { font-size: 1.2rem; margin: 28px 0 8px; }
+      p, li { max-width: 62ch; }
+      footer { color: var(--muted); padding-top: 24px; padding-bottom: 40px; font-size: 0.9rem; }
+      table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+      th, td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); }
+    </style>
+  </body>
+</html>
