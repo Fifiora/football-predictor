@@ -12,11 +12,11 @@ Everything before 2025-26; tested on the last 3 of them. All model comparison ha
 | Elo only | 5330 | 53.0% | 0.991 | 0.202 | 0.011 | 1.006 | 0.973 | 1.001 | 0.991 | 0.986 |
 | Dixon-Coles only | 5330 | 52.7% | 0.987 | 0.201 | 0.013 | 1.002 | 0.974 | 0.999 | 0.985 | 0.978 |
 | Blend (Elo + Dixon-Coles) | 5330 | 53.2% | 0.983 | 0.200 | 0.010 | 0.998 | 0.967 | 0.995 | 0.983 | 0.979 |
-| Hybrid | 5330 | 53.0% | 0.985 | 0.200 | 0.015 | 0.992 | 0.970 | 1.005 | 0.986 | 0.976 |
+| Hybrid | 5330 | 53.0% | 0.985 | 0.200 | 0.014 | 0.992 | 0.970 | 1.004 | 0.986 | 0.976 |
 | Hybrid (blend backend, calibrated) | 5330 | 53.0% | 0.984 | 0.200 | 0.010 | 1.000 | 0.968 | 0.997 | 0.982 | 0.979 |
 | Hybrid (logistic, core inputs only) | 5330 | 53.0% | 0.984 | 0.200 | 0.009 | 0.999 | 0.968 | 0.997 | 0.982 | 0.978 |
 | Hybrid (logistic) | 5330 | 53.1% | 0.981 | 0.199 | 0.009 | 0.992 | 0.961 | 0.998 | 0.982 | 0.977 |
-| Hybrid (regularized trees) | 5330 | 53.1% | 0.983 | 0.199 | 0.014 | 0.991 | 0.969 | 1.000 | 0.985 | 0.974 |
+| Hybrid (regularized trees) | 5330 | 53.1% | 0.983 | 0.199 | 0.015 | 0.991 | 0.969 | 1.000 | 0.985 | 0.974 |
 
 Correct picks by league (the most probable outcome was what happened):
 
@@ -26,11 +26,11 @@ Correct picks by league (the most probable outcome was what happened):
 | Elo only | 50.2% | 54.9% | 51.5% | 53.1% | 54.4% |
 | Dixon-Coles only | 50.9% | 54.4% | 52.2% | 52.5% | 53.2% |
 | Blend (Elo + Dixon-Coles) | 50.8% | 54.6% | 52.8% | 52.8% | 54.6% |
-| Hybrid | 52.2% | 55.7% | 52.0% | 52.5% | 52.5% |
+| Hybrid | 52.2% | 55.6% | 51.8% | 52.4% | 52.7% |
 | Hybrid (blend backend, calibrated) | 50.5% | 54.4% | 52.3% | 52.8% | 54.5% |
 | Hybrid (logistic, core inputs only) | 50.5% | 54.6% | 52.7% | 52.5% | 54.2% |
 | Hybrid (logistic) | 51.4% | 55.5% | 51.7% | 52.5% | 53.6% |
-| Hybrid (regularized trees) | 51.5% | 55.8% | 52.2% | 52.6% | 52.9% |
+| Hybrid (regularized trees) | 51.6% | 55.8% | 52.3% | 52.5% | 53.0% |
 
 ## Held-out season
 
