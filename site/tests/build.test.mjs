@@ -109,3 +109,11 @@ test("cards show what the bookies say, labelled as reference only, and the score
   assert.match(html, /Fulham v Everton: right/);
   assert.match(html, /Getafe v Betis: wrong/);
 });
+
+test("track record compares the model with the bookmakers honestly", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "track-record/index.html");
+  assert.match(html, /data-benchmark/);
+  assert.match(html, /How do we compare with the bookmakers/);
+  assert.match(html, /about 1\.4 points ahead/);
+  assert.match(html, /We never use odds in our predictions/);
+});

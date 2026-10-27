@@ -11,6 +11,13 @@ const S = 300, ML = 62, MR = 16, MT = 16, MB = 46;
 const x = (p) => ML + p * S;
 const y = (p) => MT + (1 - p) * S;
 const ticks = [0, 0.25, 0.5, 0.75, 1];
+const bench = t.benchmark?.holdout ?? t.benchmark?.development ?? null;
+const benchLabel = t.benchmark?.holdout ? `the ${t.benchmark.holdout_season} season, played after the model was built` : "past seasons";
+const gap = bench ? (bench.bookmaker.accuracy - bench.model.accuracy) * 100 : 0;
+const rows = bench ? [
+  { name: "Right result", note: "higher is better", m: bench.model.accuracy, b: bench.bookmaker.accuracy, show: pct, width: (x) => x },
+  { name: "Log loss", note: "lower is better", m: bench.model.log_loss, b: bench.bookmaker.log_loss, show: (x) => x.toFixed(3), width: (x) => Math.min(1, x / 1.1) },
+] : [];
 const leagues = graded ? Object.entries(t.by_league) : [];
 ---
 <Base title="Track record">
@@ -76,10 +83,35 @@ const leagues = graded ? Object.entries(t.by_league) : [];
       )}
     </>}
 
+  {bench && (
+    <section class="panel glow bm" aria-labelledby="bm-title" data-benchmark>
+      <h2 id="bm-title">How do we compare with the bookmakers?</h2>
+      <p class="sub">On {bench.n} matches from {benchLabel}. We compared against the bookmakers' closing odds with their margin removed. We never use odds in our predictions.</p>
+      {rows.map((r) => (
+        <div class="cmp">
+          <p class="cmp-head"><b>{r.name}</b> <span class="n">{r.note}</span></p>
+          <div class="pair"><span class="who">Our model</span><div class="track" aria-hidden="true"><span class="us" style={`width:${Math.round(r.width(r.m) * 100)}%`}></span></div><b>{r.show(r.m)}</b></div>
+          <div class="pair"><span class="who">Bookmakers</span><div class="track" aria-hidden="true"><span class="them" style={`width:${Math.round(r.width(r.b) * 100)}%`}></span></div><b>{r.show(r.b)}</b></div>
+        </div>
+      ))}
+      <p class="verdict">The bookmakers are {gap >= 0 ? `about ${gap.toFixed(1)} points ahead` : "behind us"} on picking the right result. That is expected: they know about injuries and line-ups, and we use match results only. They set the bar we are chasing.</p>
+    </section>
+  )}
+
   <h2>Back-test on past seasons</h2>
   <p>Before going live, the model was tested the way it is used: predicting each match using only earlier matches. On 5,330 matches from the three seasons before 2025-26 it picked the right result 53% of the time, against 44% for always picking the home team. Football keeps most models in the 50 to 55% range. These live results are the stricter test, and this page will fill in as matches finish.</p>
 </Base>
 <style>
+  .bm { margin: 28px 0 0; max-width: 40rem; }
+  .bm h2 { margin: 0 0 4px; }
+  .bm .sub { margin: 0 0 12px; color: var(--muted); font-size: 0.95rem; }
+  .cmp { margin: 14px 0; }
+  .cmp-head { margin: 0 0 4px; max-width: none; }
+  .pair { display: grid; grid-template-columns: 6.5rem 1fr 3.6rem; gap: 10px; align-items: center; font-variant-numeric: tabular-nums; margin: 4px 0; }
+  .pair .who { font-size: 0.9rem; color: var(--muted); font-weight: 600; }
+  .pair b { text-align: right; }
+  .track .us { background: var(--home); } .track .them { background: var(--away); }
+  .verdict { margin: 12px 0 0; color: var(--muted); font-size: 0.95rem; }
   .empty { max-width: 40rem; }
   .empty h2 { margin-top: 0; }
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 12px; }

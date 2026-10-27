@@ -9,6 +9,7 @@ const top = pick(f);
 const level = confidenceLabel(f);
 const book = bookieView(f);
 const cls = level.toLowerCase().replace("-", "");
+const lead = Math.max(f.p_home, f.p_draw, f.p_away);
 const segs = [
   { k: "h", p: f.p_home, label: f.home },
   { k: "d", p: f.p_draw, label: "Draw" },
@@ -27,8 +28,8 @@ const segs = [
   <div class="bar" role="img" aria-label={`${f.home} ${pct(f.p_home)}, draw ${pct(f.p_draw)}, ${f.away} ${pct(f.p_away)}`}>
     {segs.map((s) => <span class={s.k} style={`flex:${s.p}`}>{s.p >= 0.12 ? pct(s.p) : ""}</span>)}
   </div>
-  <ul class="legend" aria-hidden="true">
-    {segs.map((s) => <li class={s.k}><i></i>{s.label} <b>{pct(s.p)}</b></li>)}
+  <ul class="stats" aria-hidden="true">
+    {segs.map((s) => <li class={`${s.k}${s.p === lead ? " lead" : ""}`}><span class="who">{s.label}</span><b>{pct(s.p)}</b></li>)}
   </ul>
   {book && (
     <p class="bookies" data-bookies>
@@ -49,9 +50,9 @@ const segs = [
   )}
 </article>
 <style>
-  .card { position: relative; background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: var(--radius);
+  .card { position: relative; animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms); background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 14px 16px 12px; transition: transform .2s ease, box-shadow .2s ease; }
-  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow), 0 14px 40px rgb(0 0 0 / 0.12); }
+  .card:hover { background-image: radial-gradient(22rem circle at var(--mx, 50%) var(--my, 0%), rgb(255 255 255 / 0.16), transparent 60%); transform: translateY(-3px); box-shadow: var(--shadow), 0 14px 40px rgb(0 0 0 / 0.12); }
   .meta { margin: 0; display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
   .tag { margin-left: 8px; font-size: 0.72rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1.5px solid var(--lean); color: var(--lean); letter-spacing: .02em; text-transform: uppercase; }
   .note { margin: 0 0 8px; font-size: 0.86rem; color: var(--muted); max-width: none; }
@@ -68,15 +69,12 @@ const segs = [
   .bar .h { background: var(--home); color: var(--on-home); }
   .bar .d { background: var(--draw); color: var(--on-draw); }
   .bar .a { background: var(--away); color: var(--on-away); }
-  .legend { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 0.88rem; color: var(--muted); max-width: none; }
-  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
-  .legend .h i { background: var(--home); } .legend .d i { background: var(--draw); } .legend .a i { background: var(--away); }
-  .legend b { color: var(--ink); font-variant-numeric: tabular-nums; }
-  .bookies { margin: 10px 0 0; padding: 8px 12px; border-radius: 12px; border: 1px dashed var(--edge); display: flex; flex-wrap: wrap;
-    gap: 2px 14px; align-items: baseline; font-size: 0.88rem; color: var(--muted); max-width: none; }
-  .bookies .bk { font-weight: 700; color: var(--ink); flex-basis: 100%; }
-  .bookies b { color: var(--ink); font-variant-numeric: tabular-nums; }
-  .bookies .bs { flex-basis: 100%; font-size: 0.78rem; }
+  .stats { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: none; }
+  .stats li { display: grid; gap: 0; padding: 6px 10px; border-radius: 12px; border: 1px solid transparent; min-width: 0; }
+  .stats .who { font-size: 0.78rem; color: var(--muted); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stats b { font-size: 1.55rem; line-height: 1.15; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stats .lead { border-color: var(--edge); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+  .stats .h.lead b { color: var(--home); } .stats .a.lead b { color: var(--away); } .stats .d.lead b { color: var(--draw); }
   .why { margin-top: 8px; position: relative; z-index: 1; }
   .why summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--brand); }
   .why ul { margin: 0 0 6px; padding-left: 20px; color: var(--muted); font-size: 0.94rem; }

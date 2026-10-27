@@ -64,7 +64,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
             {(i === 0 || sorted[i - 1].date !== f.date) && (
               <li class="day"><h2 class="day-title">{formatDay(f.date)}</h2></li>
             )}
-            <li class="item" data-id={f.match_id} data-league={f.league} data-date={f.date} data-home={f.home} data-away={f.away}
+            <li class="item" style={`--i:${Math.min(i, 12)}`} data-id={f.match_id} data-league={f.league} data-date={f.date} data-home={f.home} data-away={f.away}
               data-ph={f.p_home} data-pd={f.p_draw} data-pa={f.p_away}>
               <MatchCard fixture={f} experimental={isExperimental(trackRecord, f.league)} />
             </li>

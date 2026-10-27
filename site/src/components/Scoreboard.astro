@@ -3,13 +3,22 @@ import { formatDay, pct, scoreboard } from "../lib/format.mjs";
 const { recent } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const board = scoreboard(recent, 10);
+const C = 2 * Math.PI * 34;
+const rate = board.total ? board.hits / board.total : 0;
 const word = { H: "home win", D: "draw", A: "away win" };
 ---
 {board.total > 0 && (
-  <section class="panel board" aria-labelledby="board-title" data-scoreboard>
+  <section class="panel glow board" aria-labelledby="board-title" data-scoreboard>
     <div class="head">
-      <h2 id="board-title">Live scoreboard</h2>
-      <p class="score"><b>{board.hits}</b> of {board.total} recent picks right</p>
+      <svg class="ring" viewBox="0 0 80 80" width="76" height="76" aria-hidden="true" focusable="false">
+        <circle cx="40" cy="40" r="34" class="bg" />
+        <circle cx="40" cy="40" r="34" class="fg" style={`--c:${C.toFixed(1)};--to:${(C * (1 - rate)).toFixed(1)}`} transform="rotate(-90 40 40)" />
+        <text x="40" y="46" text-anchor="middle">{Math.round(rate * 100)}%</text>
+      </svg>
+      <div>
+        <h2 id="board-title">Live scoreboard</h2>
+        <p class="score"><b>{board.hits}</b> of {board.total} recent picks right</p>
+      </div>
     </div>
     <ol class="dots" aria-label="Latest results, newest first">
       {board.items.map((r) => (
@@ -33,7 +42,12 @@ const word = { H: "home win", D: "draw", A: "away win" };
 )}
 <style>
   .board { margin: 0 0 18px; }
-  .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+  .head { display: flex; align-items: center; gap: 16px; }
+  .ring .bg { fill: none; stroke: var(--rule); stroke-width: 7; }
+  .ring .fg { fill: none; stroke: var(--good); stroke-width: 7; stroke-linecap: round; stroke-dasharray: var(--c); stroke-dashoffset: var(--to);
+    animation: fill 1.2s cubic-bezier(.2,.8,.2,1) both; }
+  .ring text { fill: var(--ink); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  @keyframes fill { from { stroke-dashoffset: var(--c); } }
   .head h2 { margin: 0; font-size: 1.05rem; }
   .score { margin: 0; color: var(--muted); max-width: none; font-variant-numeric: tabular-nums; }
   .score b { color: var(--ink); font-size: 1.4rem; }

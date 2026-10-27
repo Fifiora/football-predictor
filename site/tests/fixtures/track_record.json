@@ -43,5 +43,35 @@
    "correct": false,
    "p_pick": 0.44
   }
- ]
+ ],
+ "benchmark": {
+  "generated": "2026-10-27",
+  "holdout_season": "2025-26",
+  "development": {
+   "n": 5330,
+   "model": {
+    "log_loss": 0.981,
+    "rps": 0.199,
+    "accuracy": 0.531
+   },
+   "bookmaker": {
+    "log_loss": 0.963,
+    "rps": 0.193,
+    "accuracy": 0.547
+   }
+  },
+  "holdout": {
+   "n": 898,
+   "model": {
+    "log_loss": 0.987,
+    "rps": 0.2,
+    "accuracy": 0.524
+   },
+   "bookmaker": {
+    "log_loss": 0.964,
+    "rps": 0.194,
+    "accuracy": 0.538
+   }
+  }
+ }
 }
