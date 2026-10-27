@@ -51,6 +51,17 @@ def download_history(
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        return _main(argv)
+    except SystemExit:
+        raise
+    except Exception as err:  # surface the reason in the GitHub run annotations, then fail the step
+        message = f"{type(err).__name__}: {err}".replace("\r", " ").replace("\n", " ")[:4000]
+        print(f"::error title=footpred failed::{message}")
+        return 1
+
+
+def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="footpred")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("download", "daily", "retrain", "benchmark"):

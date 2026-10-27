@@ -21,3 +21,12 @@ def test_completed_seasons_are_not_downloaded_twice(tmp_path):
     asked = []
     download_history(tmp_path, 2023, 2024, leagues=["E0"], fetch=lambda url: asked.append(url) or b"x")
     assert len(asked) == 1 and "2425" in asked[0]  # only the current season is refreshed
+
+
+def test_failures_become_github_error_annotations(tmp_path, capsys):
+    from footpred.pipeline.cli import main
+
+    code = main(["retrain", "--data-dir", str(tmp_path / "empty"), "--registry-dir", str(tmp_path / "reg")])
+    out = capsys.readouterr().out
+    assert code == 1
+    assert out.startswith("::error") or "\n::error" in out
