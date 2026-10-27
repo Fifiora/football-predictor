@@ -53,6 +53,7 @@ def run_daily(
     updated_at: pd.Timestamp | None = None,
     european: bool = False,
     fetch_odds: Callable[[], tuple[dict, list[str]]] | None = None,
+    reference_path: Path | None = None,
 ) -> DailyResult:
     """Refresh predictions. Any failure before the final export leaves ``site_data_dir`` untouched."""
     data_dir = Path(data_dir)
@@ -157,10 +158,17 @@ def run_daily(
         except Exception as err:  # noqa: BLE001
             warnings.append(f"bookmaker odds unavailable: {type(err).__name__}: {err}")
 
+    reference = None
+    if reference_path is not None and Path(reference_path).exists():
+        try:
+            reference = json.loads(Path(reference_path).read_text())
+        except (OSError, ValueError):
+            warnings.append("benchmark reference file could not be read")
+
     active = set(played.loc[played["date"] >= today - pd.Timedelta(days=400), ["home", "away"]].to_numpy().ravel())
     export_site_data(
         site_data_dir, scored, drivers, grids, graded,
         {t: r for t, r in ratings.items() if t in active}, updated_at if updated_at is not None else today,
-        model_version=version, odds=odds,
+        model_version=version, odds=odds, reference=reference,
     )
     return DailyResult(len(new) + (euro.new_results if euro is not None else 0), len(scored), True, warnings)

@@ -116,7 +116,14 @@ def _recent_picks(graded: pd.DataFrame) -> list[dict]:
     ]
 
 
-def _track_record_payload(graded_log: pd.DataFrame) -> dict:
+def _track_record_payload(graded_log: pd.DataFrame, reference: dict | None = None) -> dict:
+    payload = _track_record_core(graded_log)
+    if reference:
+        payload["benchmark"] = reference
+    return payload
+
+
+def _track_record_core(graded_log: pd.DataFrame) -> dict:
     graded = graded_log.dropna(subset=["outcome"]) if len(graded_log) else graded_log
     if graded.empty:
         return {"n_graded": 0, "log_loss": None, "rps": None, "accuracy": None, "ece": None,
@@ -146,6 +153,7 @@ def export_site_data(
     updated_at: pd.Timestamp,
     model_version: str = "unknown",
     odds: dict | None = None,
+    reference: dict | None = None,
 ) -> None:
     """Write fixtures/track_record/teams/meta JSON into ``out_dir``, replacing it atomically."""
     out_dir = Path(out_dir)
@@ -157,7 +165,7 @@ def export_site_data(
     tmp.mkdir()
     try:
         _write_json(tmp / "fixtures.json", _fixtures_payload(fixtures, drivers, dc_grids, odds))
-        _write_json(tmp / "track_record.json", _track_record_payload(graded_log))
+        _write_json(tmp / "track_record.json", _track_record_payload(graded_log, reference))
         _write_json(tmp / "teams.json", {team: round(float(r), 1) for team, r in sorted(ratings.items())})
         _write_json(tmp / "meta.json", {"updated_at": pd.Timestamp(updated_at).isoformat(), "model_version": model_version})
     except BaseException:

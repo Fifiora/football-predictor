@@ -73,3 +73,11 @@ def test_benchmark_report_has_a_bookmaker_section(world, tmp_path):
     out = tmp_path / "out.md"
     run_benchmark(world["data_dir"], out, aliases_path=world["aliases"], today=TODAY)
     assert "### Against the bookmakers" in out.read_text()
+
+
+def test_benchmark_writes_a_reference_file_next_to_the_report(world, tmp_path):
+    import json
+    out = tmp_path / "report.md"
+    run_benchmark(world["data_dir"], out, aliases_path=world["aliases"], today=TODAY)
+    ref = json.loads((tmp_path / "benchmark-reference.json").read_text())
+    assert ref["holdout_season"] == "2025-26" and set(ref) >= {"development", "holdout", "generated"}

@@ -6,6 +6,7 @@ beats both Elo-only and Dixon-Coles-only on the development seasons.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -213,4 +214,6 @@ def run_benchmark(
                  "this is the first release candidate.", "", _table(held_out), "", _accuracy_table(held_out), "",
                  "Against the bookmakers on the held-out season (reference only):", "", _bookmaker_table(book_held)]
     Path(out_path).write_text("\n".join(text) + "\n")
+    (Path(out_path).parent / "benchmark-reference.json").write_text(json.dumps(
+        {"generated": f"{today:%Y-%m-%d}", "holdout_season": holdout, "development": dev_book, "holdout": book_held}, indent=2))
     return {"development": development, "holdout": held_out, "bookmaker_dev": dev_book, "bookmaker_holdout": book_held, "holdout_season": holdout, "chosen_hybrid": chosen}

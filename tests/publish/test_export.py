@@ -138,3 +138,12 @@ def test_track_record_lists_recent_graded_picks_newest_first(tmp_path):
     assert by_id["a"]["pick"] == "H" and by_id["a"]["result"] == "H" and by_id["a"]["correct"] is True
     assert by_id["b"]["pick"] == "A" and by_id["b"]["correct"] is True
     assert by_id["c"]["pick"] == "H" and by_id["c"]["result"] == "D" and by_id["c"]["correct"] is False
+
+
+def test_benchmark_reference_is_passed_through_to_the_track_record(tmp_path):
+    fixtures, drivers, grids, graded, ratings = make_inputs()
+    ref = {"holdout_season": "2025-26", "holdout": {"n": 10}, "development": None}
+    export_site_data(tmp_path / "s", fixtures, drivers, grids, graded, ratings, NOW, reference=ref)
+    assert load(tmp_path / "s", "track_record.json")["benchmark"] == ref
+    export_site_data(tmp_path / "t", fixtures, drivers, grids, graded, ratings, NOW)
+    assert "benchmark" not in load(tmp_path / "t", "track_record.json")

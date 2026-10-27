@@ -124,3 +124,12 @@ def test_daily_publishes_even_when_the_odds_feed_fails(world):
                        aliases_path=world["aliases"], sleep=NO_SLEEP, fetch_odds=boom)
     assert result.published and any("bookmaker odds unavailable" in w for w in result.warnings)
     assert all("bookies" not in f for f in json.loads((world["site"] / "fixtures.json").read_text()))
+
+
+def test_daily_includes_the_benchmark_reference_when_the_file_exists(world, tmp_path):
+    seed_champion(world)
+    ref = tmp_path / "ref.json"
+    ref.write_text('{"holdout_season": "2025-26", "holdout": null, "development": null}')
+    run_daily(world["data_dir"], world["site"], world["client"], TODAY, registry_dir=world["registry"],
+              aliases_path=world["aliases"], sleep=NO_SLEEP, reference_path=ref)
+    assert json.loads((world["site"] / "track_record.json").read_text())["benchmark"]["holdout_season"] == "2025-26"
