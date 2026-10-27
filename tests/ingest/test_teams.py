@@ -26,7 +26,7 @@ def test_covered_leagues_lists_only_leagues_with_aliases(tmp_path):
     aliases = tmp_path / "a.csv"
     aliases.write_text("league,alias,canonical\nE0,Arsenal,Arsenal\nSP1,Betis,Real Betis\nE0,Spurs,Tottenham\n")
     assert covered_leagues(aliases) == ["E0", "SP1"]
-    assert covered_leagues() == ["E0"]  # the shipped table only seeds the Premier League so far
+    assert covered_leagues() == ["D1", "E0", "F1", "I1", "SP1"]  # the shipped table covers the big five
 
 
 def test_historical_premier_league_clubs_are_mapped():

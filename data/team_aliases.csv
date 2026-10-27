@@ -84,3 +84,214 @@ E0,Watford,Watford
 E0,Watford FC,Watford
 E0,West Brom,West Brom
 E0,West Bromwich Albion FC,West Brom
+SP1,Alaves,Alaves
+SP1,Almeria,Almeria
+SP1,Ath Bilbao,Ath Bilbao
+SP1,Ath Madrid,Ath Madrid
+SP1,Barcelona,Barcelona
+SP1,Betis,Betis
+SP1,Cadiz,Cadiz
+SP1,Celta,Celta
+SP1,Cordoba,Cordoba
+SP1,Eibar,Eibar
+SP1,Elche,Elche
+SP1,Espanol,Espanol
+SP1,Getafe,Getafe
+SP1,Girona,Girona
+SP1,Granada,Granada
+SP1,Huesca,Huesca
+SP1,La Coruna,La Coruna
+SP1,Las Palmas,Las Palmas
+SP1,Leganes,Leganes
+SP1,Levante,Levante
+SP1,Malaga,Malaga
+SP1,Mallorca,Mallorca
+SP1,Osasuna,Osasuna
+SP1,Oviedo,Oviedo
+SP1,Real Madrid,Real Madrid
+SP1,Santander,Santander
+SP1,Sevilla,Sevilla
+SP1,Sociedad,Sociedad
+SP1,Sp Gijon,Sp Gijon
+SP1,Valencia,Valencia
+SP1,Valladolid,Valladolid
+SP1,Vallecano,Vallecano
+SP1,Villarreal,Villarreal
+SP1,Athletic Club,Ath Bilbao
+SP1,Club Atlético de Madrid,Ath Madrid
+SP1,CA Osasuna,Osasuna
+SP1,RCD Espanyol de Barcelona,Espanol
+SP1,FC Barcelona,Barcelona
+SP1,Getafe CF,Getafe
+SP1,Málaga CF,Malaga
+SP1,Real Madrid CF,Real Madrid
+SP1,Rayo Vallecano de Madrid,Vallecano
+SP1,Levante UD,Levante
+SP1,Real Betis Balompié,Betis
+SP1,Real Sociedad de Fútbol,Sociedad
+SP1,Villarreal CF,Villarreal
+SP1,Valencia CF,Valencia
+SP1,Deportivo Alavés,Alaves
+SP1,Elche CF,Elche
+SP1,RC Celta de Vigo,Celta
+SP1,Sevilla FC,Sevilla
+SP1,RC Deportivo La Coruña,La Coruna
+SP1,Real Racing Club de Santander,Santander
+I1,Atalanta,Atalanta
+I1,Benevento,Benevento
+I1,Bologna,Bologna
+I1,Brescia,Brescia
+I1,Cagliari,Cagliari
+I1,Carpi,Carpi
+I1,Cesena,Cesena
+I1,Chievo,Chievo
+I1,Como,Como
+I1,Cremonese,Cremonese
+I1,Crotone,Crotone
+I1,Empoli,Empoli
+I1,Fiorentina,Fiorentina
+I1,Frosinone,Frosinone
+I1,Genoa,Genoa
+I1,Inter,Inter
+I1,Juventus,Juventus
+I1,Lazio,Lazio
+I1,Lecce,Lecce
+I1,Milan,Milan
+I1,Monza,Monza
+I1,Napoli,Napoli
+I1,Palermo,Palermo
+I1,Parma,Parma
+I1,Pescara,Pescara
+I1,Pisa,Pisa
+I1,Roma,Roma
+I1,Salernitana,Salernitana
+I1,Sampdoria,Sampdoria
+I1,Sassuolo,Sassuolo
+I1,Spal,Spal
+I1,Spezia,Spezia
+I1,Torino,Torino
+I1,Udinese,Udinese
+I1,Venezia,Venezia
+I1,Verona,Verona
+I1,AC Milan,Milan
+I1,ACF Fiorentina,Fiorentina
+I1,AS Roma,Roma
+I1,Atalanta BC,Atalanta
+I1,Bologna FC 1909,Bologna
+I1,Cagliari Calcio,Cagliari
+I1,Genoa CFC,Genoa
+I1,FC Internazionale Milano,Inter
+I1,Juventus FC,Juventus
+I1,SS Lazio,Lazio
+I1,Parma Calcio 1913,Parma
+I1,SSC Napoli,Napoli
+I1,Udinese Calcio,Udinese
+I1,Venezia FC,Venezia
+I1,Frosinone Calcio,Frosinone
+I1,US Sassuolo Calcio,Sassuolo
+I1,Torino FC,Torino
+I1,US Lecce,Lecce
+I1,AC Monza,Monza
+I1,Como 1907,Como
+F1,Ajaccio,Ajaccio
+F1,Ajaccio GFCO,Ajaccio GFCO
+F1,Amiens,Amiens
+F1,Angers,Angers
+F1,Auxerre,Auxerre
+F1,Bastia,Bastia
+F1,Bordeaux,Bordeaux
+F1,Brest,Brest
+F1,Caen,Caen
+F1,Clermont,Clermont
+F1,Dijon,Dijon
+F1,Evian Thonon Gaillard,Evian Thonon Gaillard
+F1,Guingamp,Guingamp
+F1,Le Havre,Le Havre
+F1,Le Mans,Le Mans
+F1,Lens,Lens
+F1,Lille,Lille
+F1,Lorient,Lorient
+F1,Lyon,Lyon
+F1,Marseille,Marseille
+F1,Metz,Metz
+F1,Monaco,Monaco
+F1,Montpellier,Montpellier
+F1,Nancy,Nancy
+F1,Nantes,Nantes
+F1,Nice,Nice
+F1,Nimes,Nimes
+F1,Paris FC,Paris FC
+F1,Paris SG,Paris SG
+F1,Reims,Reims
+F1,Rennes,Rennes
+F1,St Etienne,St Etienne
+F1,Strasbourg,Strasbourg
+F1,Toulouse,Toulouse
+F1,Troyes,Troyes
+F1,Toulouse FC,Toulouse
+F1,Stade Brestois 29,Brest
+F1,Olympique de Marseille,Marseille
+F1,AJ Auxerre,Auxerre
+F1,Lille OSC,Lille
+F1,OGC Nice,Nice
+F1,Olympique Lyonnais,Lyon
+F1,Paris Saint-Germain FC,Paris SG
+F1,FC Lorient,Lorient
+F1,Stade Rennais FC 1901,Rennes
+F1,ES Troyes AC,Troyes
+F1,Angers SCO,Angers
+F1,Le Havre AC,Le Havre
+F1,Le Mans FC,Le Mans
+F1,Racing Club de Lens,Lens
+F1,AS Monaco FC,Monaco
+F1,RC Strasbourg Alsace,Strasbourg
+F1,Paris FC,Paris FC
+D1,Augsburg,Augsburg
+D1,Bayern Munich,Bayern Munich
+D1,Bielefeld,Bielefeld
+D1,Bochum,Bochum
+D1,Darmstadt,Darmstadt
+D1,Dortmund,Dortmund
+D1,Ein Frankfurt,Ein Frankfurt
+D1,Elversberg,Elversberg
+D1,FC Koln,FC Koln
+D1,Fortuna Dusseldorf,Fortuna Dusseldorf
+D1,Freiburg,Freiburg
+D1,Greuther Furth,Greuther Furth
+D1,Hamburg,Hamburg
+D1,Hannover,Hannover
+D1,Heidenheim,Heidenheim
+D1,Hertha,Hertha
+D1,Hoffenheim,Hoffenheim
+D1,Holstein Kiel,Holstein Kiel
+D1,Ingolstadt,Ingolstadt
+D1,Leverkusen,Leverkusen
+D1,M'gladbach,M'gladbach
+D1,Mainz,Mainz
+D1,Nurnberg,Nurnberg
+D1,Paderborn,Paderborn
+D1,RB Leipzig,RB Leipzig
+D1,Schalke 04,Schalke 04
+D1,St Pauli,St Pauli
+D1,Stuttgart,Stuttgart
+D1,Union Berlin,Union Berlin
+D1,Werder Bremen,Werder Bremen
+D1,Wolfsburg,Wolfsburg
+D1,1. FC Köln,FC Koln
+D1,TSG 1899 Hoffenheim,Hoffenheim
+D1,Bayer 04 Leverkusen,Leverkusen
+D1,Borussia Dortmund,Dortmund
+D1,FC Bayern München,Bayern Munich
+D1,FC Schalke 04,Schalke 04
+D1,Hamburger SV,Hamburg
+D1,VfB Stuttgart,Stuttgart
+D1,SV Werder Bremen,Werder Bremen
+D1,1. FSV Mainz 05,Mainz
+D1,FC Augsburg,Augsburg
+D1,SC Freiburg,Freiburg
+D1,Borussia Mönchengladbach,M'gladbach
+D1,Eintracht Frankfurt,Ein Frankfurt
+D1,1. FC Union Berlin,Union Berlin
+D1,SC Paderborn 07,Paderborn
+D1,SV 07 Elversberg,Elversberg
+D1,RB Leipzig,RB Leipzig
