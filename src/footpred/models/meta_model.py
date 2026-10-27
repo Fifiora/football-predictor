@@ -49,6 +49,7 @@ class MetaModel:
         self.backend = "lightgbm" if _lightgbm_available() else "sklearn"
         self.estimator = None
         self.feature_names: list[str] = []
+        self.baseline: pd.Series | None = None  # per-feature training median, used by explanations
 
     def _new_estimator(self):
         if self.backend == "lightgbm":
@@ -61,6 +62,7 @@ class MetaModel:
 
     def fit(self, X: pd.DataFrame, y: np.ndarray) -> "MetaModel":
         self.feature_names = list(X.columns)
+        self.baseline = X[self.feature_names].median()
         self.estimator = self._new_estimator()
         self.estimator.fit(X[self.feature_names], np.asarray(y, dtype=int))
         return self
