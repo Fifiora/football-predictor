@@ -7,17 +7,20 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Look at bookmaker odds sources
         run: |
-          set +e
-          for u in https://www.football-data.co.uk/fixtures.csv https://www.football-data.co.uk/mmz4281/2627/E0.csv https://www.football-data.co.uk/mmz4281/2526/E0.csv; do
-            curl -s -m 30 -o f.csv -w "%{http_code} $u\n" "$u"
-            echo "::notice title=head $(basename $u)::$(head -c 700 f.csv | head -3 | tr '\n' '|')"
-            python3 - <<'PY'
-          import csv, collections
-          rows = list(csv.DictReader(open("f.csv", encoding="latin-1")))
-          cols = rows[0].keys() if rows else []
-          odds = [c for c in cols if c[:3] in ("B36","PSH","PSD","PSA","PSC","Avg","Max","BbA","BbM","WHH","BWH","IWH","VCH","1XB","B365")]
-          print("::notice title=odds columns::rows=%d divs=%s cols=%s" % (len(rows), dict(collections.Counter(r.get("Div") for r in rows)), ",".join(odds[:60])))
+          python3 - <<'PY'
+          import csv, collections, io, urllib.request
+          for u in ["https://www.football-data.co.uk/fixtures.csv", "https://www.football-data.co.uk/mmz4281/2627/E0.csv", "https://www.football-data.co.uk/mmz4281/2526/E0.csv"]:
+              try:
+                  raw = urllib.request.urlopen(u, timeout=60).read()
+              except Exception as e:
+                  print(f"::notice title=fetch {u[-22:]}::FAILED {e}")
+                  continue
+              rows = list(csv.DictReader(io.StringIO(raw.decode("latin-1"))))
+              cols = list(rows[0].keys()) if rows else []
+              last = rows[-1] if rows else {}
+              odds = [c for c in cols if c[:2] in ("B3","PS","Av","Ma","WH","BW","IW","VC","1X","BF","Bb","BM","BV","Co","P>","P<","A>","A<")]
+              print("::notice title=" + u[-22:] + "::rows=%d divs=%s lastdate=%s odds=%s" % (len(rows), dict(collections.Counter(r.get("Div") for r in rows)), last.get("Date"), ",".join(odds[:70])))
           PY
-          done
