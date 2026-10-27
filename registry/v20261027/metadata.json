@@ -1,0 +1,17 @@
+{
+  "data_snapshot": "2026-10-25",
+  "code_version": "ccbca07",
+  "params": {},
+  "metrics": {
+    "n_eval": 929,
+    "log_loss": 1.0290153973034677,
+    "rps": 0.21137091388401447,
+    "ece": 0.044600056217089894,
+    "baseline_elo_log_loss": 1.004922262132567,
+    "baseline_dixon_coles_log_loss": 1.003800926832233,
+    "by_league_log_loss": {
+      "E0": 1.0290153973034677
+    }
+  },
+  "trained_on": 3013
+}
