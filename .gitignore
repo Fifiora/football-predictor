@@ -1,0 +1,17 @@
+/*
+!/.gitignore
+!/docs/
+!/src/
+!/tests/
+!/data/
+!/site/
+!/pyproject.toml
+!/README.md
+!/.github/
+.superpowers/
+__pycache__/
+.pytest_cache/
+*.pyc
+node_modules/
+dist/
+*.egg-info/
