@@ -143,6 +143,8 @@ def _main(argv: list[str] | None = None) -> int:
         note(f"daily: published={result.published} new_results={result.new_results} scored={result.scored_fixtures}")
         for w in result.warnings:
             note(f"- warning: {w}")
+        if result.warnings:  # annotations are what CI shows when logs cannot be read
+            print("::warning title=daily warnings::" + "%0A".join(result.warnings[:30]))
         sample = summarize_fixtures(args.site_data_dir)
         if sample:
             print("::notice title=predictions::" + "%0A".join(sample))
