@@ -55,14 +55,27 @@ def _urllib_get(url: str, headers: dict, params: dict) -> tuple[int, dict]:
 class FootballDataOrgClient:
     BASE_URL = "https://api.football-data.org"
 
-    def __init__(self, token: str, http_get: HttpGet | None = None, base_url: str | None = None):
+    def __init__(self, token: str, http_get: HttpGet | None = None, base_url: str | None = None,
+                 min_interval: float = 6.5, clock: Callable[[], float] = time.monotonic,
+                 sleep: Callable[[float], None] = time.sleep):
+        # The free plan allows 10 requests a minute; spacing calls keeps a 12-call daily run under it.
+        self._min_interval, self._clock, self._sleep = min_interval, clock, sleep
+        self._last_request: float | None = None
         self._token = token
         self._http_get = http_get or _urllib_get
         self._base_url = base_url or self.BASE_URL
 
+    def _throttle(self) -> None:
+        if self._last_request is not None:
+            wait = self._min_interval - (self._clock() - self._last_request)
+            if wait > 0:
+                self._sleep(wait)
+        self._last_request = self._clock()
+
     def get_fixtures(self, league: str, date_from: date, date_to: date) -> list[dict]:
         if league not in _COMPETITION_CODES:
             raise ValueError(f"unsupported league {league!r}")
+        self._throttle()
         status, payload = self._http_get(
             f"{self._base_url}/v4/competitions/{_COMPETITION_CODES[league]}/matches",
             {"X-Auth-Token": self._token},

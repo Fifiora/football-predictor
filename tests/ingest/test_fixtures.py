@@ -240,3 +240,21 @@ def test_latest_results_also_use_the_hook(tmp_path):
 def test_league_fixtures_have_no_stage(tmp_path):
     df, _ = fetch_upcoming(FakeClient(UPCOMING), ["E0"], tmp_path, today=TODAY, sleep=NO_SLEEP)
     assert df["stage"].isna().all()
+
+
+def test_client_spaces_requests_to_stay_under_the_free_rate_limit():
+    clock = {"now": 100.0}
+    slept = []
+
+    def sleep(seconds):
+        slept.append(seconds)
+        clock["now"] += seconds
+
+    client = FootballDataOrgClient("t", http_get=lambda *a: (200, {"matches": []}), min_interval=6.5,
+                                   clock=lambda: clock["now"], sleep=sleep)
+    for _ in range(3):
+        client.get_fixtures("E0", date(2025, 10, 27), date(2025, 11, 10))
+    assert slept == [6.5, 6.5]  # the first call is immediate; each later call waits out the interval
+    clock["now"] += 30
+    client.get_fixtures("E0", date(2025, 10, 27), date(2025, 11, 10))
+    assert slept == [6.5, 6.5]  # already slow enough
