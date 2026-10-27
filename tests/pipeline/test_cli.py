@@ -68,3 +68,13 @@ def test_summarize_fixtures_lists_probabilities_and_reasons(tmp_path):
     assert lines[0] == "2026-10-31 E0 Aston Villa v Fulham: 49% / 24% / 27%"
     assert lines[1] == "  - The model weighted X, which points to Aston Villa."
     assert len(lines) == 2 and summarize_fixtures(tmp_path / "missing") == []
+
+
+def test_download_command_survives_a_failed_openfootball_clone(tmp_path, monkeypatch, capsys):
+    from footpred.pipeline import cli
+
+    monkeypatch.setattr(cli, "download_history", lambda *a, **k: [])
+    monkeypatch.setattr(cli, "download_openfootball", lambda dest, **k: False)
+    code = cli.main(["download", "--data-dir", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert code == 0 and "::warning title=openfootball" in out

@@ -11,6 +11,7 @@ from typing import Callable
 
 import pandas as pd
 
+from footpred.european.history import download_openfootball
 from footpred.ingest.fixtures import FootballDataOrgClient
 from footpred.ingest.historical import read_csv_text
 from footpred.ingest.teams import covered_leagues
@@ -118,6 +119,8 @@ def _main(argv: list[str] | None = None) -> int:
         note(f"history download for {covered}: {len(failed)} files unavailable {failed[:5]}")
         if skipped:
             note(f"- warning: no team aliases yet for {skipped}; add them to data/team_aliases.csv to enable these leagues")
+        if not download_openfootball(args.data_dir / "openfootball"):
+            print("::warning title=openfootball::European history could not be downloaded; Champions League data may be stale or missing")
         return 0
     if args.command == "teams":
         year = today.year if today.month >= 7 else today.year - 1
