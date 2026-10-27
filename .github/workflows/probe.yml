@@ -1,0 +1,23 @@
+name: probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Look at bookmaker odds sources
+        run: |
+          set +e
+          for u in https://www.football-data.co.uk/fixtures.csv https://www.football-data.co.uk/mmz4281/2627/E0.csv https://www.football-data.co.uk/mmz4281/2526/E0.csv; do
+            curl -s -m 30 -o f.csv -w "%{http_code} $u\n" "$u"
+            echo "::notice title=head $(basename $u)::$(head -c 700 f.csv | head -3 | tr '\n' '|')"
+            python3 - <<'PY'
+          import csv, collections
+          rows = list(csv.DictReader(open("f.csv", encoding="latin-1")))
+          cols = rows[0].keys() if rows else []
+          odds = [c for c in cols if c[:3] in ("B36","PSH","PSD","PSA","PSC","Avg","Max","BbA","BbM","WHH","BWH","IWH","VCH","1XB","B365")]
+          print("::notice title=odds columns::rows=%d divs=%s cols=%s" % (len(rows), dict(collections.Counter(r.get("Div") for r in rows)), ",".join(odds[:60])))
+          PY
+          done
