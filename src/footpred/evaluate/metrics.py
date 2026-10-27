@@ -18,6 +18,11 @@ def log_loss(probs: np.ndarray, outcomes: np.ndarray) -> float:
     return float(-np.mean(np.log(p[np.arange(len(outcomes)), outcomes])))
 
 
+def accuracy(probs: np.ndarray, outcomes: np.ndarray) -> float:
+    """Share of matches where the most probable outcome is what happened."""
+    return float(np.mean(np.argmax(np.asarray(probs, dtype=float), axis=1) == np.asarray(outcomes)))
+
+
 def rps(probs: np.ndarray, outcomes: np.ndarray) -> float:
     """Ranked probability score: draw sits between a home win and an away win."""
     probs = np.asarray(probs, dtype=float)

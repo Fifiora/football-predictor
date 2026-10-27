@@ -13,7 +13,7 @@ import pandas as pd
 
 from footpred.evaluate.backtest import backtest
 from footpred.evaluate.baselines import baseline_base_rate, baseline_blend, baseline_dixon_coles, baseline_elo
-from footpred.evaluate.metrics import expected_calibration_error, log_loss, rps
+from footpred.evaluate.metrics import accuracy, expected_calibration_error, log_loss, rps
 from footpred.features.builder import FEATURE_COLUMNS
 from footpred.models.calibration import Calibrator
 from footpred.models.meta_model import MetaModel
@@ -69,25 +69,41 @@ def _hybrid_fit_predict(dates: pd.Series, params: dict | None = None):
 def _summarize(preds: pd.DataFrame) -> dict:
     probs = preds[["p_home", "p_draw", "p_away"]].to_numpy()
     y = preds["outcome"].to_numpy(dtype=int)
+    leagues = preds["league"].to_numpy()
     return {
         "n": int(len(preds)),
         "log_loss": float(log_loss(probs, y)),
         "rps": float(rps(probs, y)),
         "ece": float(expected_calibration_error(probs, y)),
+        "accuracy": float(accuracy(probs, y)),
+        "by_league_accuracy": {
+            str(lg): float(accuracy(probs[leagues == lg], y[leagues == lg])) for lg in np.unique(leagues)
+        },
         "by_league_log_loss": per_league_log_loss(probs, y, preds["league"].to_numpy()),
     }
 
 
 def _table(results: dict) -> str:
     leagues = sorted({lg for r in results.values() for lg in r["by_league_log_loss"]})
-    lines = ["| Model | Matches | Log loss | RPS | ECE | " + " | ".join(leagues) + " |",
-             "|---|---|---|---|---|" + "---|" * len(leagues)]
+    lines = ["| Model | Matches | Correct picks | Log loss | RPS | ECE | " + " | ".join(leagues) + " |",
+             "|---|---|---|---|---|---|" + "---|" * len(leagues)]
     labels = {**MODELS, **VARIANT_LABELS}
     for key, label in labels.items():
         if key in results:
             r = results[key]
             per = " | ".join(f"{r['by_league_log_loss'].get(lg, float('nan')):.3f}" for lg in leagues)
-            lines.append(f"| {label} | {r['n']} | {r['log_loss']:.3f} | {r['rps']:.3f} | {r['ece']:.3f} | {per} |")
+            lines.append(f"| {label} | {r['n']} | {r['accuracy']:.1%} | {r['log_loss']:.3f} | {r['rps']:.3f} | {r['ece']:.3f} | {per} |")
+    return "\n".join(lines)
+
+
+def _accuracy_table(results: dict) -> str:
+    leagues = sorted({lg for r in results.values() for lg in r["by_league_accuracy"]})
+    lines = ["Correct picks by league (the most probable outcome was what happened):", "",
+             "| Model | " + " | ".join(leagues) + " |", "|---|" + "---|" * len(leagues)]
+    for key, label in {**MODELS, **VARIANT_LABELS}.items():
+        if key in results:
+            per = " | ".join(f"{results[key]['by_league_accuracy'].get(lg, float('nan')):.1%}" for lg in leagues)
+            lines.append(f"| {label} | {per} |")
     return "\n".join(lines)
 
 
@@ -152,7 +168,7 @@ def run_benchmark(
         f"## Development seasons", "",
         f"Everything before {holdout}; tested on the last {min(test_seasons, max(1, len(seasons) - 1))} of them. "
         f"All model comparison happens here. Best hybrid variant on these seasons: {chosen}.", "",
-        _table(development), "",
+        _table(development), "", _accuracy_table(development), "",
         "## Held-out season", "",
     ]
     if held_out is None:
@@ -160,6 +176,6 @@ def run_benchmark(
     else:
         text += [f"{holdout} was evaluated once, after the hybrid beat Elo-only and Dixon-Coles-only on the development seasons. "
                  f"Only the chosen variant ({chosen}) was evaluated, shown as Hybrid. It is not used for tuning; "
-                 "this is the first release candidate.", "", _table(held_out)]
+                 "this is the first release candidate.", "", _table(held_out), "", _accuracy_table(held_out)]
     Path(out_path).write_text("\n".join(text) + "\n")
     return {"development": development, "holdout": held_out, "holdout_season": holdout, "chosen_hybrid": chosen}

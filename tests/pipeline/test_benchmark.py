@@ -41,3 +41,14 @@ def test_benchmark_reports_blend_and_supports_feature_subsets(world, tmp_path):
                         variants={"hybrid_lean": lean}, test_seasons=3)
     assert {"blend", "hybrid_lean"} <= set(res["development"])
     assert "Blend" in (tmp_path / "out.md").read_text()
+
+
+def test_benchmark_reports_how_often_the_top_pick_was_right(world, tmp_path):
+    out = tmp_path / "baseline-results.md"
+    res = run_benchmark(world["data_dir"], out, aliases_path=world["aliases"], today=TODAY)
+
+    for name, r in res["development"].items():
+        assert 0.0 <= r["accuracy"] <= 1.0
+        assert "E0" in r["by_league_accuracy"]
+    text = out.read_text()
+    assert "Correct picks" in text and "Correct picks by league" in text

@@ -58,3 +58,11 @@ def test_devig_odds_sum_to_one():
     assert probs[:2].sum(axis=1) == pytest.approx([1.0, 1.0])
     assert probs[0, 0] > probs[0, 2]  # the favorite has the higher probability
     assert np.isnan(probs[2]).all()  # no odds, no benchmark
+
+
+def test_accuracy_counts_top_pick_hits():
+    from footpred.evaluate.metrics import accuracy
+
+    probs = np.array([[0.6, 0.3, 0.1], [0.2, 0.5, 0.3], [0.1, 0.2, 0.7], [0.5, 0.3, 0.2]])
+    outcomes = np.array([0, 2, 2, 1])  # hit, miss, hit, miss
+    assert accuracy(probs, outcomes) == pytest.approx(0.5)
