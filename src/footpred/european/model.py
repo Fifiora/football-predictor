@@ -28,15 +28,33 @@ def european_features(matches: pd.DataFrame, pre: pd.DataFrame, home_adv: float 
                         index=pd.Index(ids, name="match_id"))[EURO_FEATURES]
 
 
-def fit_european(X_train: pd.DataFrame, y_train, X_cal: pd.DataFrame, y_cal) -> tuple[MetaModel, Calibrator]:
-    """Fit on the older block, Platt-calibrate on the later block."""
-    model = MetaModel(dict(MODEL_PARAMS)).fit(X_train[EURO_FEATURES], np.asarray(y_train, dtype=int))
-    calibrator = Calibrator().fit(model.predict_proba(X_cal[EURO_FEATURES]), np.asarray(y_cal, dtype=int))
-    return model, calibrator
+class IdentityCalibrator:
+    """Leaves probabilities as they are (for models that are not calibrated separately)."""
+
+    def transform(self, probs: np.ndarray) -> np.ndarray:
+        return np.asarray(probs, dtype=float)
 
 
-def predict_european(model: MetaModel, calibrator: Calibrator, X: pd.DataFrame) -> np.ndarray:
-    return calibrator.transform(model.predict_proba(X[EURO_FEATURES]))
+def fit_european(
+    X_train: pd.DataFrame, y_train, X_cal: pd.DataFrame, y_cal,
+    params: dict | None = None, calibrate: bool = True, features: list[str] | None = None,
+):
+    """Fit on the older block and Platt-calibrate on the later block.
+
+    With ``calibrate=False`` both blocks train the model and probabilities are used as they come.
+    """
+    cols = list(features or EURO_FEATURES)
+    model_params = dict(params or MODEL_PARAMS)
+    y_train, y_cal = np.asarray(y_train, dtype=int), np.asarray(y_cal, dtype=int)
+    if not calibrate:
+        X_all = pd.concat([X_train[cols], X_cal[cols]])
+        return MetaModel(model_params).fit(X_all, np.concatenate([y_train, y_cal])), IdentityCalibrator()
+    model = MetaModel(model_params).fit(X_train[cols], y_train)
+    return model, Calibrator().fit(model.predict_proba(X_cal[cols]), y_cal)
+
+
+def predict_european(model: MetaModel, calibrator, X: pd.DataFrame) -> np.ndarray:
+    return calibrator.transform(model.predict_proba(X[model.feature_names]))
 
 
 def european_publish_gate(development: dict) -> tuple[bool, str]:
