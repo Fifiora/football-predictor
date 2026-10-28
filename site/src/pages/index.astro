@@ -64,7 +64,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
             {(i === 0 || sorted[i - 1].date !== f.date) && (
               <li class="day"><h2 class="day-title">{formatDay(f.date)}</h2></li>
             )}
-            <li class="item" style={`--i:${Math.min(i, 12)}`} data-id={f.match_id} data-league={f.league} data-date={f.date} data-home={f.home} data-away={f.away}
+            <li class="item" style={`--i:${Math.min(i, 12)}`} data-id={f.match_id} data-league={f.league} data-date={f.date} data-kickoff={f.kickoff ?? ""} data-home={f.home} data-away={f.away}
               data-ph={f.p_home} data-pd={f.p_draw} data-pa={f.p_away}>
               <MatchCard fixture={f} experimental={isExperimental(trackRecord, f.league)} />
             </li>
@@ -75,7 +75,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   )}
   <script>
     import { applyFilters, defaultState, parseState, serializeState } from "../lib/filters.mjs";
-    import { formatDay } from "../lib/format.mjs";
+    import { formatDay, localParts } from "../lib/format.mjs";
 
     const root = document.getElementById("fixtures");
     if (root) {
@@ -84,7 +84,9 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
       const items = [...list.querySelectorAll("li.item")];
       const byId = new Map(items.map((li) => [li.dataset.id, li]));
       const fixtures = items.map((li) => ({
-        match_id: li.dataset.id, league: li.dataset.league, date: li.dataset.date,
+        // the visitor's own calendar day, so "Today" and the day headings match their clock
+        match_id: li.dataset.id, league: li.dataset.league, kickoff: li.dataset.kickoff || undefined,
+        date: localParts(li.dataset.kickoff)?.date ?? li.dataset.date,
         home: li.dataset.home, away: li.dataset.away,
         p_home: Number(li.dataset.ph), p_draw: Number(li.dataset.pd), p_away: Number(li.dataset.pa),
       }));
@@ -178,7 +180,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   .linklike { border: 0; color: var(--brand); text-decoration: underline; padding: 0 4px; }
   .empty { text-align: center; color: var(--muted); }
   .count { flex: 1; text-align: center; }
-  .item .meta time { display: none; }
+  .item .meta time.day { display: none; }
   .list[data-ready] .card { animation: none; }
   @media (max-width: 640px) {
     .chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; }

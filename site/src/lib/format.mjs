@@ -82,3 +82,26 @@ export function verdictText(gap) {
   }
   return `We are about ${Math.abs(gap).toFixed(1)} points ahead of the bookmakers on picking the right result, on these matches.`;
 }
+
+const toDate = (iso) => {
+  if (typeof iso !== "string") return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+/** A kickoff instant as the visitor sees it: local calendar day, clock time and zone name. */
+export function localParts(iso, timeZone) {
+  const d = toDate(iso);
+  if (!d) return null;
+  const opts = timeZone ? { timeZone } : {};
+  const day = new Intl.DateTimeFormat("en-CA", { ...opts, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+  const time = new Intl.DateTimeFormat(undefined, { ...opts, hour: "numeric", minute: "2-digit" }).format(d);
+  const zone = new Intl.DateTimeFormat("en-US", { ...opts, timeZoneName: "short" }).formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "";
+  return { date: day, time, zone };
+}
+
+/** Static fallback shown before the page localizes it (and without JavaScript). */
+export function utcTime(iso) {
+  const d = toDate(iso);
+  return d ? `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")} UTC` : "";
+}

@@ -78,3 +78,22 @@ test("verdict wording follows the sign of the gap", () => {
   assert.match(behind, /about 1\.2 points ahead of the bookmakers/);
   assert.doesNotMatch(behind, /That is expected/);
 });
+
+import { localParts, utcTime } from "../src/lib/format.mjs";
+
+test("kickoff is shown in the visitor's timezone, including the local calendar day", () => {
+  const k = "2026-10-29T01:30:00Z";
+  const chicago = localParts(k, "America/Chicago");
+  assert.equal(chicago.date, "2026-10-28");  // still the evening before in Chicago
+  assert.match(chicago.time, /8:30\s?PM/);
+  assert.match(chicago.zone, /CDT|GMT-5/);
+  assert.equal(localParts(k, "Europe/London").date, "2026-10-29");
+  assert.equal(localParts(k, "Asia/Tokyo").date, "2026-10-29");
+});
+
+test("bad or missing kickoff values are ignored, and the static fallback names UTC", () => {
+  assert.equal(localParts("nonsense", "UTC"), null);
+  assert.equal(localParts(undefined, "UTC"), null);
+  assert.equal(utcTime("2026-10-29T19:45:00Z"), "19:45 UTC");
+  assert.equal(utcTime(undefined), "");
+});

@@ -129,3 +129,10 @@ test("entrance animation is switched off after the first render so filtering doe
   const assets = readdirSync(join(dist, "_astro")).map((n) => read(dist, `_astro/${n}`)).join("");
   assert.match(read(dist, "index.html") + assets, /data-ready/);
 });
+
+test("cards carry the kickoff instant with a UTC fallback that the page localizes", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "index.html");
+  const card = html.split('data-match="E0-20251030-Arsenal-Chelsea"')[1].split("</article>")[0];
+  assert.match(card, /data-kickoff="2025-10-30T19:45:00Z"/);
+  assert.match(card, />19:45 UTC</);
+});

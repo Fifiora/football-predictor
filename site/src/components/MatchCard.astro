@@ -1,5 +1,5 @@
 ---
-import { bookieView, formatDay, leagueName, pct, slug, topDrivers } from "../lib/format.mjs";
+import { bookieView, formatDay, leagueName, pct, slug, topDrivers, utcTime } from "../lib/format.mjs";
 import { confidenceLabel, pick } from "../lib/filters.mjs";
 const { fixture: f, open = false, experimental = false } = Astro.props;
 const european = f.league === "CL";
@@ -17,7 +17,7 @@ const segs = [
 ];
 ---
 <article class="card" data-match={f.match_id}>
-  <p class="meta"><span class="league">{leagueName(f.league)}{experimental && <span class="tag">Experimental</span>}</span><time datetime={f.date}>{formatDay(f.date)}</time></p>
+  <p class="meta"><span class="league">{leagueName(f.league)}{experimental && <span class="tag">Experimental</span>}</span><span class="when"><time datetime={f.date} class="day">{formatDay(f.date)}</time>{f.kickoff && <time class="kick" datetime={f.kickoff} data-kickoff={f.kickoff}>{utcTime(f.kickoff)}</time>}</span></p>
   <h3 class="teams"><a class="stretched" href={`${base}/match/${slug(f.match_id)}/`}>{f.home} <span class="vs">v</span> {f.away}</a></h3>
   <p class="pick">
     <span class={`badge ${cls}`}>{level}</span>
@@ -53,6 +53,8 @@ const segs = [
   .card { position: relative; animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms); background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 14px 16px 12px; transition: transform .2s ease, box-shadow .2s ease; }
   .card:hover { background-image: radial-gradient(22rem circle at var(--mx, 50%) var(--my, 0%), rgb(255 255 255 / 0.16), transparent 60%); transform: translateY(-3px); box-shadow: var(--shadow), 0 14px 40px rgb(0 0 0 / 0.12); }
+  .when { display: inline-flex; gap: 0 8px; }
+  .kick { color: var(--ink); font-variant-numeric: tabular-nums; }
   .meta { margin: 0; display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
   .tag { margin-left: 8px; font-size: 0.72rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1.5px solid var(--lean); color: var(--lean); letter-spacing: .02em; text-transform: uppercase; }
   .note { margin: 0 0 8px; font-size: 0.86rem; color: var(--muted); max-width: none; }

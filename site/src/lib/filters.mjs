@@ -44,7 +44,10 @@ export function applyFilters(fixtures, state, today) {
     if (s.confidentOnly && confidenceLabel(f) !== "Confident") return false;
     return true;
   });
-  const byDate = (a, b) => a.date.localeCompare(b.date) || a.match_id.localeCompare(b.match_id);
+  const byDate = (a, b) =>
+    a.date.localeCompare(b.date) ||
+    (a.kickoff ?? "9").localeCompare(b.kickoff ?? "9") ||  // unknown kickoff times go last
+    a.match_id.localeCompare(b.match_id);
   const top = (f) => pick(f).p;
   const sorters = {
     date: byDate,

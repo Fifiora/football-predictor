@@ -12,7 +12,7 @@ const check = (ok, msg) => { if (!ok) { problems.push(msg); console.log("FAIL", 
 
 const browser = await chromium.launch();
 async function open(path, { width, height, dark = false }) {
-  const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: dark ? "dark" : "light" });
+  const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: dark ? "dark" : "light", timezoneId: "America/Chicago" });
   const page = await ctx.newPage();
   page.on("pageerror", (e) => problems.push(`pageerror ${path}: ${e.message}`));
   page.on("console", (m) => { if (m.type() === "error") problems.push(`console error ${path}: ${m.text()}`); });
@@ -32,6 +32,8 @@ check(await p.locator("[data-scoreboard]").isVisible(), "the live scoreboard is 
 check((await p.locator("[data-bookies]").count()) >= 1, "bookmaker lines are shown on cards that have odds");
 const glass = await p.locator("article.card").first().evaluate((el) => getComputedStyle(el).backdropFilter || getComputedStyle(el).webkitBackdropFilter);
 check(glass && glass !== "none", `cards use a frosted-glass blur (${glass})`);
+const kick = await p.locator("li.item:not([hidden]) time.kick").first().textContent();
+check(/\d{1,2}:\d{2}/.test(kick) && !kick.includes("UTC"), `kickoff time is shown in the visitor's timezone (${kick.trim()})`);
 await p.waitForTimeout(1700);
 const anim = await p.locator("article.card").first().evaluate((el) => getComputedStyle(el).animationName);
 check(anim === "none", `entrance animation is off after load, so filtering will not replay it (${anim})`);

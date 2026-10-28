@@ -56,6 +56,13 @@ const nav = [
       <p>Last updated {formatUpdated(meta.updated_at)}. Model {meta.model_version}. Made for fans, not for betting.</p>
     </footer>
     <script>
+      import { formatDay, localParts } from "../lib/format.mjs";
+      document.querySelectorAll("[data-kickoff]").forEach((el) => {
+        const p = localParts(el.getAttribute("data-kickoff"));
+        if (p) { el.textContent = `${p.time} ${p.zone}`.trim(); el.title = "Shown in your timezone";
+          const day = el.parentElement?.querySelector("time.day");
+          if (day) day.textContent = formatDay(p.date); }
+      });
       let spotlight = null;
       document.addEventListener("pointermove", (e) => {
         const t = e.target instanceof Element ? e.target.closest(".card, .glow") : null;

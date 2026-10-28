@@ -59,7 +59,8 @@
     "p_draw": 0.27,
     "p_away": 0.25
    }
-  }
+  },
+  "kickoff": "2026-10-27T19:45:00Z"
  },
  {
   "match_id": "I1-20261027-Torino-Como",
@@ -109,7 +110,8 @@
     "strength": 0.1,
     "text": "The model weighted Torino out-shooting opponents by 3.2 shots a match lately, which points to Torino."
    }
-  ]
+  ],
+  "kickoff": "2026-10-27T19:45:00Z"
  },
  {
   "match_id": "I1-20261028-Venezia-Inter",
@@ -159,7 +161,8 @@
     "strength": 0.1,
     "text": "The model weighted Venezia out-shooting opponents by 3.2 shots a match lately, which points to Venezia."
    }
-  ]
+  ],
+  "kickoff": "2026-10-28T19:45:00Z"
  },
  {
   "match_id": "I1-20261028-Parma-Udinese",
@@ -209,7 +212,8 @@
     "strength": 0.1,
     "text": "The model weighted Parma out-shooting opponents by 3.2 shots a match lately, which points to Parma."
    }
-  ]
+  ],
+  "kickoff": "2026-10-28T19:45:00Z"
  },
  {
   "match_id": "E0-20261028-Arsenal-Chelsea",
@@ -259,7 +263,8 @@
     "strength": 0.1,
     "text": "The model weighted Arsenal out-shooting opponents by 3.2 shots a match lately, which points to Arsenal."
    }
-  ]
+  ],
+  "kickoff": "2026-10-28T19:45:00Z"
  },
  {
   "match_id": "E0-20261029-Liverpool-Brighton",
@@ -309,7 +314,8 @@
     "strength": 0.1,
     "text": "The model weighted Liverpool out-shooting opponents by 3.2 shots a match lately, which points to Liverpool."
    }
-  ]
+  ],
+  "kickoff": "2026-10-29T19:45:00Z"
  },
  {
   "match_id": "SP1-20261029-Sevilla-Valencia",
@@ -359,7 +365,8 @@
     "strength": 0.1,
     "text": "The model weighted Sevilla out-shooting opponents by 3.2 shots a match lately, which points to Sevilla."
    }
-  ]
+  ],
+  "kickoff": "2026-10-29T19:45:00Z"
  },
  {
   "match_id": "D1-20261031-K\u00f6ln-Mainz",
@@ -409,7 +416,8 @@
     "strength": 0.1,
     "text": "The model weighted K\u00f6ln out-shooting opponents by 3.2 shots a match lately, which points to K\u00f6ln."
    }
-  ]
+  ],
+  "kickoff": "2026-10-31T19:45:00Z"
  },
  {
   "match_id": "F1-20261101-Lille-Nice",
@@ -459,7 +467,8 @@
     "strength": 0.1,
     "text": "The model weighted Lille out-shooting opponents by 3.2 shots a match lately, which points to Lille."
    }
-  ]
+  ],
+  "kickoff": "2026-11-01T19:45:00Z"
  },
  {
   "match_id": "D1-20261103-Bayern Munich-Dortmund",
@@ -509,7 +518,8 @@
     "strength": 0.1,
     "text": "The model weighted Bayern Munich out-shooting opponents by 3.2 shots a match lately, which points to Bayern Munich."
    }
-  ]
+  ],
+  "kickoff": "2026-11-03T19:45:00Z"
  },
  {
   "match_id": "CL-20261028-Roma-Benfica",
@@ -527,6 +537,7 @@
     "strength": 0.21,
     "text": "The model weighted a big Elo gap in favour of Roma, which points to Roma."
    }
-  ]
+  ],
+  "kickoff": "2026-10-28T19:45:00Z"
  }
 ]

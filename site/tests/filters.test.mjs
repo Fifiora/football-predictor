@@ -74,3 +74,11 @@ test("state round-trips through the URL and ignores junk", () => {
   assert.equal(serializeState(defaultState()), "");
   assert.deepEqual(parseState("?range=bogus&sort=nope&league=ZZ,E0"), { ...defaultState(), leagues: ["E0", "ZZ"] });
 });
+
+test("matches on the same day are ordered by kickoff time", () => {
+  const a = { ...mk("z-late", "E0", "2026-10-28", "A", "B", [0.4, 0.3, 0.3]), kickoff: "2026-10-28T19:45:00Z" };
+  const b = { ...mk("a-early", "E0", "2026-10-28", "C", "D", [0.4, 0.3, 0.3]), kickoff: "2026-10-28T12:30:00Z" };
+  const c = mk("m-unknown", "E0", "2026-10-28", "E", "F", [0.4, 0.3, 0.3]);
+  const ids = applyFilters([a, c, b], defaultState(), "0000-00-00").map((f) => f.match_id);
+  assert.deepEqual(ids, ["a-early", "z-late", "m-unknown"]);
+});
