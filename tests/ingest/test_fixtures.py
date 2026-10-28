@@ -52,13 +52,13 @@ def test_unmapped_team_blocks_only_that_fixture(tmp_path):
 def test_only_scheduled_fixtures_are_upcoming(tmp_path):
     df, _ = fetch_upcoming(FakeClient(UPCOMING), ["E0"], tmp_path, today=TODAY, sleep=NO_SLEEP)
     assert "Burnley" not in set(df["home"])
-    assert list(df.columns) == ["match_id", "league", "date", "home", "away", "stage"]
+    assert list(df.columns) == ["match_id", "league", "date", "home", "away", "stage", "kickoff"]
     assert df.loc[df["home"] == "Arsenal", "match_id"].iloc[0] == "E0-20251030-Arsenal-Chelsea"
 
 
 def test_empty_response_returns_empty_frame_without_error(tmp_path):
     df, warnings = fetch_upcoming(FakeClient([]), ["E0", "SP1"], tmp_path, today=TODAY, sleep=NO_SLEEP)
-    assert df.empty and list(df.columns) == ["match_id", "league", "date", "home", "away", "stage"]
+    assert df.empty and list(df.columns) == ["match_id", "league", "date", "home", "away", "stage", "kickoff"]
     assert warnings == []
 
 
@@ -133,7 +133,7 @@ def test_football_data_org_adapter_normalizes_and_authenticates():
     assert seen["url"].endswith("/v4/competitions/PL/matches")
     assert seen["headers"]["X-Auth-Token"] == "secret-token"
     assert seen["params"] == {"dateFrom": "2025-10-27", "dateTo": "2025-11-05"}
-    assert rows[0] == {**fx("2025-10-30", "Arsenal FC", "Chelsea FC", status="TIMED"), "stage": None}
+    assert rows[0] == {**fx("2025-10-30", "Arsenal FC", "Chelsea FC", status="TIMED"), "stage": None, "kickoff": SAMPLE["matches"][0]["utcDate"]}
     assert rows[1]["home_goals"] == 3 and rows[1]["away_goals"] == 1 and rows[1]["status"] == "FINISHED"
 
 
@@ -279,3 +279,12 @@ def test_http_errors_report_the_provider_message():
     client = FootballDataOrgClient("t", http_get=lambda *a: (400, {"message": "Invalid date range"}), min_interval=0)
     with pytest.raises(FixturesUnavailable, match="Invalid date range"):
         client.get_fixtures("CL", date(2026, 10, 1), date(2026, 10, 2))
+
+
+def test_kickoff_time_is_carried_from_the_provider_to_upcoming_fixtures(tmp_path):
+    client, _ = cl_client([cl_match("2026-11-04", "Arsenal FC", "Sport Lisboa e Benfica")])
+    rows = client.get_fixtures("CL", date(2026, 11, 1), date(2026, 11, 10))
+    assert rows[0]["kickoff"] == "2026-11-04T19:00:00Z"
+    df, _ = fetch_upcoming(FakeClient([{**fx("2025-10-30", "Arsenal FC", "Chelsea FC"), "kickoff": "2025-10-30T19:45:00Z"}]),
+                           ["E0"], tmp_path, today=TODAY, sleep=NO_SLEEP)
+    assert df["kickoff"].iloc[0] == "2025-10-30T19:45:00Z"

@@ -22,7 +22,7 @@ from footpred.ingest.historical import season_label
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.ingest.teams import UnknownTeamError, canonical_team
 
-UPCOMING_COLUMNS = ["match_id", "league", "date", "home", "away", "stage"]
+UPCOMING_COLUMNS = ["match_id", "league", "date", "home", "away", "stage", "kickoff"]
 _UPCOMING_STATUSES = {"SCHEDULED", "TIMED"}
 _COMPETITION_CODES = {"E0": "PL", "SP1": "PD", "I1": "SA", "D1": "BL1", "F1": "FL1", "CL": "CL"}
 _STAGES = {
@@ -103,6 +103,7 @@ class FootballDataOrgClient:
             rows.append(
                 {
                     "date": match["utcDate"][:10],
+                    "kickoff": match["utcDate"],
                     "home": match["homeTeam"]["name"],
                     "away": match["awayTeam"]["name"],
                     "status": match["status"],
@@ -202,7 +203,7 @@ def fetch_upcoming(
                 warnings.append(f"{err}; skipped fixture {row['home']} v {row['away']} on {row['date']}")
                 continue
             day = pd.Timestamp(row["date"])
-            rows_out.append((f"{league}-{day:%Y%m%d}-{home}-{away}", league, day, home, away, row.get("stage")))
+            rows_out.append((f"{league}-{day:%Y%m%d}-{home}-{away}", league, day, home, away, row.get("stage"), row.get("kickoff")))
 
     df = pd.DataFrame(rows_out, columns=UPCOMING_COLUMNS)
     return df.sort_values(["date", "match_id"]).reset_index(drop=True), warnings

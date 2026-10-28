@@ -147,3 +147,12 @@ def test_benchmark_reference_is_passed_through_to_the_track_record(tmp_path):
     assert load(tmp_path / "s", "track_record.json")["benchmark"] == ref
     export_site_data(tmp_path / "t", fixtures, drivers, grids, graded, ratings, NOW)
     assert "benchmark" not in load(tmp_path / "t", "track_record.json")
+
+
+def test_kickoff_time_is_exported_when_known(tmp_path):
+    fixtures, drivers, grids, graded, ratings = make_inputs()
+    fixtures = fixtures.assign(kickoff=["2025-10-30T19:45:00Z", None])
+    export_site_data(tmp_path / "s", fixtures, drivers, grids, graded, ratings, NOW)
+    first, second = load(tmp_path / "s", "fixtures.json")
+    assert first["kickoff"] == "2025-10-30T19:45:00Z"
+    assert "kickoff" not in second

@@ -55,6 +55,9 @@ def _fixtures_payload(fixtures, drivers, dc_grids, odds=None) -> list[dict]:
                 for d in drivers.get(row.match_id, [])
             ],
         }
+        kickoff = getattr(row, "kickoff", None)
+        if isinstance(kickoff, str) and kickoff:  # UTC instant; the site shows it in the visitor's timezone
+            item["kickoff"] = kickoff
         if getattr(row, "low_confidence", False) is True:  # a club the ratings do not know yet
             item["low_confidence"] = True
         book = (odds or {}).get(row.match_id)
