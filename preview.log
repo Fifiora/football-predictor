@@ -1,0 +1,22 @@
+ok   all 11 matches shown by default
+ok   count reads 11 matches
+ok   the live scoreboard is visible
+ok   bookmaker lines are shown on cards that have odds
+ok   cards use a frosted-glass blur (blur(18px) saturate(1.7))
+ok   kickoff time is shown in the visitor's timezone (2:45 PM CDT)
+ok   entrance animation is off after load, so filtering will not replay it (none)
+ok   Serie A chip leaves 4 matches
+ok   count reads 4 of 11
+ok   filter is saved in the URL
+ok   Champions League chip narrows the list to its one match
+ok   the Champions League card says it is a 90-minute result
+ok   the Champions League card carries the Experimental tag
+ok   team search 'inter' leaves 1 match
+ok   empty state shows when nothing matches
+ok   clearing restores all matches
+ok   confident-only narrows the list (4)
+ok   no date headings when sorted by closeness
+ok   deep link restores the Bundesliga filter
+ok   no horizontal scroll on a phone
+ok   match page shows goal meters
+ok   team search narrows 20 teams to 1
