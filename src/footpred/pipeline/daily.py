@@ -182,8 +182,8 @@ def run_daily(
         try:
             odds, odds_warnings = fetch_odds()
             warnings += odds_warnings
-            # the odds file only lists the coming round, so only near-term league fixtures are expected in it
-            league_fixtures = scored[(scored["league"] != "CL") & (scored["date"] <= today + pd.Timedelta(days=3))] if len(scored) else scored
+            # the odds file only lists the coming round, so only the next day or two of league fixtures are expected in it
+            league_fixtures = scored[(scored["league"] != "CL") & (scored["date"] <= today + pd.Timedelta(days=1))] if len(scored) else scored
             have = sum(1 for m in league_fixtures["match_id"] if m in odds) if len(league_fixtures) else 0
             if len(league_fixtures) and have < len(league_fixtures):
                 missing = league_fixtures[~league_fixtures["match_id"].isin(odds)]
