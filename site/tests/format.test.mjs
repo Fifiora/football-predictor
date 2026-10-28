@@ -66,3 +66,15 @@ test("bookieView prefers the market average and falls back to Bet365", () => {
   assert.equal(bookieView({ bookies: { bet365: a.bet365 } }).label, "Bet365");
   assert.equal(bookieView({}), null);
 });
+
+import { verdictText } from "../src/lib/format.mjs";
+
+test("verdict wording follows the sign of the gap", () => {
+  assert.match(verdictText(1.4), /about 1\.4 points ahead/);
+  assert.match(verdictText(1.4), /injuries and line-ups/);
+  assert.match(verdictText(0), /level with the bookmakers/);
+  assert.match(verdictText(0.03), /level with the bookmakers/);
+  const behind = verdictText(-1.2);
+  assert.match(behind, /about 1\.2 points ahead of the bookmakers/);
+  assert.doesNotMatch(behind, /That is expected/);
+});

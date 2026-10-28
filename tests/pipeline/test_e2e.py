@@ -129,7 +129,24 @@ def test_daily_publishes_even_when_the_odds_feed_fails(world):
 def test_daily_includes_the_benchmark_reference_when_the_file_exists(world, tmp_path):
     seed_champion(world)
     ref = tmp_path / "ref.json"
-    ref.write_text('{"holdout_season": "2025-26", "holdout": null, "development": null}')
+    ref.write_text('{"holdout_season": "2025-26", "development": null, "holdout": {"n": 5, "model": {"accuracy": 0.5, "log_loss": 1.0, "rps": 0.2}, "bookmaker": {"accuracy": 0.55, "log_loss": 0.97, "rps": 0.19}}}')
     run_daily(world["data_dir"], world["site"], world["client"], TODAY, registry_dir=world["registry"],
               aliases_path=world["aliases"], sleep=NO_SLEEP, reference_path=ref)
     assert json.loads((world["site"] / "track_record.json").read_text())["benchmark"]["holdout_season"] == "2025-26"
+
+
+def test_malformed_benchmark_reference_is_ignored_with_a_warning(world, tmp_path):
+    seed_champion(world)
+    ref = tmp_path / "ref.json"
+    ref.write_text('{"holdout_season": "2025-26", "holdout": {"n": 5, "model": {"accuracy": NaN}}, "development": null}')
+    result = run_daily(world["data_dir"], world["site"], world["client"], TODAY, registry_dir=world["registry"],
+                       aliases_path=world["aliases"], sleep=NO_SLEEP, reference_path=ref)
+    assert result.published and any("benchmark reference" in w for w in result.warnings)
+    assert "benchmark" not in json.loads((world["site"] / "track_record.json").read_text())
+
+
+def test_missing_benchmark_reference_file_is_warned_about(world, tmp_path):
+    seed_champion(world)
+    result = run_daily(world["data_dir"], world["site"], world["client"], TODAY, registry_dir=world["registry"],
+                       aliases_path=world["aliases"], sleep=NO_SLEEP, reference_path=tmp_path / "nope.json")
+    assert any("benchmark reference" in w for w in result.warnings)

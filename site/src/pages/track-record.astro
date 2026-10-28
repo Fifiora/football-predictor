@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import { trackRecord as t } from "../lib/data.mjs";
-import { leagueName, pct } from "../lib/format.mjs";
+import { leagueName, pct, verdictText } from "../lib/format.mjs";
 const f = (x) => (x == null ? "n/a" : x.toFixed(3));
 const graded = t.n_graded > 0;
 const cal = graded ? t.calibration : [];
@@ -12,7 +12,7 @@ const x = (p) => ML + p * S;
 const y = (p) => MT + (1 - p) * S;
 const ticks = [0, 0.25, 0.5, 0.75, 1];
 const bench = t.benchmark?.holdout ?? t.benchmark?.development ?? null;
-const benchLabel = t.benchmark?.holdout ? `the ${t.benchmark.holdout_season} season, played after the model was built` : "past seasons";
+const benchLabel = t.benchmark?.holdout ? `the ${t.benchmark.holdout_season ?? "latest"} season, played after the model was built` : "past seasons";
 const gap = bench ? (bench.bookmaker.accuracy - bench.model.accuracy) * 100 : 0;
 const rows = bench ? [
   { name: "Right result", note: "higher is better", m: bench.model.accuracy, b: bench.bookmaker.accuracy, show: pct, width: (x) => x },
@@ -94,7 +94,7 @@ const leagues = graded ? Object.entries(t.by_league) : [];
           <div class="pair"><span class="who">Bookmakers</span><div class="track" aria-hidden="true"><span class="them" style={`width:${Math.round(r.width(r.b) * 100)}%`}></span></div><b>{r.show(r.b)}</b></div>
         </div>
       ))}
-      <p class="verdict">The bookmakers are {gap >= 0 ? `about ${gap.toFixed(1)} points ahead` : "behind us"} on picking the right result. That is expected: they know about injuries and line-ups, and we use match results only. They set the bar we are chasing.</p>
+      <p class="verdict">{verdictText(gap)}</p>
     </section>
   )}
 

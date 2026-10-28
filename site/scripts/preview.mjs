@@ -32,6 +32,9 @@ check(await p.locator("[data-scoreboard]").isVisible(), "the live scoreboard is 
 check((await p.locator("[data-bookies]").count()) >= 1, "bookmaker lines are shown on cards that have odds");
 const glass = await p.locator("article.card").first().evaluate((el) => getComputedStyle(el).backdropFilter || getComputedStyle(el).webkitBackdropFilter);
 check(glass && glass !== "none", `cards use a frosted-glass blur (${glass})`);
+await p.waitForTimeout(1700);
+const anim = await p.locator("article.card").first().evaluate((el) => getComputedStyle(el).animationName);
+check(anim === "none", `entrance animation is off after load, so filtering will not replay it (${anim})`);
 await p.click('button[data-league="I1"]');
 check((await visible(p)) === 4, "Serie A chip leaves 4 matches");
 check((await p.textContent("#count")).trim() === "4 of 11 matches", "count reads 4 of 11");

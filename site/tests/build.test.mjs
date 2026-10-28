@@ -123,3 +123,9 @@ test("the bookmaker line keeps its own styling", () => {
   const css = readdirSync(join(dist, "_astro")).filter((n) => n.endsWith(".css")).map((n) => read(dist, `_astro/${n}`)).join("");
   assert.match(css, /\.bookies/);
 });
+
+test("entrance animation is switched off after the first render so filtering does not replay it", () => {
+  const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
+  const assets = readdirSync(join(dist, "_astro")).map((n) => read(dist, `_astro/${n}`)).join("");
+  assert.match(read(dist, "index.html") + assets, /data-ready/);
+});

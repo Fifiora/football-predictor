@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -40,6 +41,34 @@ def _fixture_rows(upcoming: pd.DataFrame) -> pd.DataFrame:
         if col not in rows.columns:
             rows[col] = np.nan
     return rows[MATCH_COLUMNS]
+
+
+def _finite(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+
+
+def _valid_block(block) -> bool:
+    if block is None:
+        return True
+    try:
+        return _finite(block["n"]) and all(_finite(block[who][k]) for who in ("model", "bookmaker") for k in ("accuracy", "log_loss", "rps"))
+    except (KeyError, TypeError):
+        return False
+
+
+def _load_reference(path: Path) -> dict | None:
+    """The benchmark's bookmaker comparison, or None unless every number is present and finite."""
+    try:
+        ref = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    if not isinstance(ref, dict) or not (_valid_block(ref.get("development")) and _valid_block(ref.get("holdout"))):
+        return None
+    if ref.get("development") is None and ref.get("holdout") is None:
+        return None
+    if ref.get("holdout") is not None and not ref.get("holdout_season"):
+        return None
+    return ref
 
 
 def run_daily(
@@ -164,11 +193,10 @@ def run_daily(
             warnings.append(f"bookmaker odds unavailable: {type(err).__name__}: {err}")
 
     reference = None
-    if reference_path is not None and Path(reference_path).exists():
-        try:
-            reference = json.loads(Path(reference_path).read_text())
-        except (OSError, ValueError):
-            warnings.append("benchmark reference file could not be read")
+    if reference_path is not None:
+        reference = _load_reference(Path(reference_path))
+        if reference is None:
+            warnings.append("benchmark reference missing or unusable: the bookmaker comparison is left out of the site")
 
     active = set(played.loc[played["date"] >= today - pd.Timedelta(days=400), ["home", "away"]].to_numpy().ravel())
     export_site_data(

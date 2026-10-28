@@ -151,6 +151,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
 
       $("#filters").hidden = false;
       render();
+      setTimeout(() => list.setAttribute("data-ready", ""), 1400);  // entrance animation plays once, never on re-filtering
     }
   </script>
 </Base>
@@ -165,7 +166,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   .filters .grow { flex: 1 1 14rem; }
   .group { display: grid; gap: 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--edge); background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--edge); background: var(--surface);
     color: var(--ink); font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background .15s, border-color .15s; }
   .chip:hover { border-color: var(--brand); }
   .chip[aria-pressed="true"] { background: var(--home); border-color: var(--home); color: var(--on-home); }
@@ -178,6 +179,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   .empty { text-align: center; color: var(--muted); }
   .count { flex: 1; text-align: center; }
   .item .meta time { display: none; }
+  .list[data-ready] .card { animation: none; }
   @media (max-width: 640px) {
     .chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; }
     .chip { flex: none; white-space: nowrap; }

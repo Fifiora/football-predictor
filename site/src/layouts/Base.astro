@@ -56,12 +56,17 @@ const nav = [
       <p>Last updated {formatUpdated(meta.updated_at)}. Model {meta.model_version}. Made for fans, not for betting.</p>
     </footer>
     <script>
+      let spotlight = null;
       document.addEventListener("pointermove", (e) => {
         const t = e.target instanceof Element ? e.target.closest(".card, .glow") : null;
         if (!t) return;
-        const r = t.getBoundingClientRect();
-        t.style.setProperty("--mx", `${e.clientX - r.left}px`);
-        t.style.setProperty("--my", `${e.clientY - r.top}px`);
+        const x = e.clientX, y = e.clientY;
+        if (spotlight) cancelAnimationFrame(spotlight);
+        spotlight = requestAnimationFrame(() => {
+          const r = t.getBoundingClientRect();
+          t.style.setProperty("--mx", `${x - r.left}px`);
+          t.style.setProperty("--my", `${y - r.top}px`);
+        });
       }, { passive: true });
       const btn = document.getElementById("theme-toggle");
       btn?.addEventListener("click", () => {
@@ -117,7 +122,8 @@ const nav = [
       }
       * { box-sizing: border-box; }
       .aurora { position: fixed; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
-      .aurora i { position: absolute; width: 44rem; height: 44rem; border-radius: 50%; filter: blur(80px); will-change: transform; animation: drift 32s ease-in-out infinite alternate; }
+      .aurora i { position: absolute; width: 44rem; height: 44rem; border-radius: 50%; filter: blur(80px); }
+      @media (hover: hover) and (pointer: fine) { .aurora i { will-change: transform; animation: drift 32s ease-in-out infinite alternate; } }
       .aurora i:nth-child(1) { background: var(--orb1); top: -16rem; left: -12rem; }
       .aurora i:nth-child(2) { background: var(--orb2); top: -10rem; right: -16rem; animation-duration: 40s; animation-delay: -9s; }
       .aurora i:nth-child(3) { background: var(--orb3); bottom: -20rem; left: 30%; animation-duration: 46s; animation-delay: -18s; }

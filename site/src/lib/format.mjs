@@ -73,3 +73,12 @@ export function bookieView(fixture) {
   if (b.bet365) return { label: "Bet365", ...b.bet365 };
   return null;
 }
+
+/** One honest sentence about how our right-result rate compares with the bookmakers. ``gap`` is bookmakers minus us, in points. */
+export function verdictText(gap) {
+  if (Math.abs(gap) < 0.05) return "We are level with the bookmakers on picking the right result.";
+  if (gap > 0) {
+    return `The bookmakers are about ${gap.toFixed(1)} points ahead on picking the right result. That is expected: they know about injuries and line-ups, and we use match results only. They set the bar we are chasing.`;
+  }
+  return `We are about ${Math.abs(gap).toFixed(1)} points ahead of the bookmakers on picking the right result, on these matches.`;
+}
