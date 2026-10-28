@@ -136,3 +136,10 @@ test("cards carry the kickoff instant with a UTC fallback that the page localize
   assert.match(card, /data-kickoff="2025-10-30T19:45:00Z"/);
   assert.match(card, />19:45 UTC</);
 });
+
+test("the localizing script only targets time elements, never the card wrappers", () => {
+  const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
+  const assets = readdirSync(join(dist, "_astro")).filter((n) => n.endsWith(".js")).map((n) => read(dist, `_astro/${n}`)).join("") + read(dist, "index.html");
+  assert.match(assets, /time\[data-kickoff\]/);
+  assert.doesNotMatch(assets, /querySelectorAll\(["']\[data-kickoff\]["']\)/);
+});

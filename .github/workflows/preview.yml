@@ -29,7 +29,6 @@ jobs:
           /tmp/pw/node_modules/.bin/playwright install --with-deps chromium
           cd site
           OUT_DIR=/tmp/shots node scripts/preview.mjs 2>&1 | tee /tmp/preview.log
-        continue-on-error: true
       - name: Publish screenshots and log
         if: always()
         run: |

@@ -57,7 +57,7 @@ const nav = [
     </footer>
     <script>
       import { formatDay, localParts } from "../lib/format.mjs";
-      document.querySelectorAll("[data-kickoff]").forEach((el) => {
+      document.querySelectorAll("time[data-kickoff]").forEach((el) => {
         const p = localParts(el.getAttribute("data-kickoff"));
         if (p) { el.textContent = `${p.time} ${p.zone}`.trim(); el.title = "Shown in your timezone";
           const day = el.parentElement?.querySelector("time.day");
