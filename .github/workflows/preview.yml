@@ -24,6 +24,7 @@ jobs:
           fi
           (python3 -m http.server 4321 --directory dist >/dev/null 2>&1 &)
       - name: Browser checks and screenshots
+        shell: bash
         run: |
           npm install --prefix /tmp/pw playwright@1.49.1
           /tmp/pw/node_modules/.bin/playwright install --with-deps chromium
