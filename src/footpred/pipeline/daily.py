@@ -132,7 +132,10 @@ def run_daily(
         future = scored[scored["date"] > today].assign(kickoff_date=lambda df: df["date"])
         if len(future) < len(scored):
             warnings.append(f"{len(scored) - len(future)} same-day fixtures shown but not logged (no kickoff times)")
-        log_predictions(data_dir / "prediction_log.csv", future, version, logged_at=today)
+        is_cl = future["league"] == "CL"
+        for part, logged_version in ((future[~is_cl], version), (future[is_cl], f"european/{euro.version}" if euro and euro.version else "european")):
+            if len(part):
+                log_predictions(data_dir / "prediction_log.csv", part, logged_version, logged_at=today)
 
     graded_inputs = played[played["result"].isin(PLAYED)]
     if european_results is not None and len(european_results):
@@ -141,7 +144,9 @@ def run_daily(
     metadata_path = registry_dir / version / "metadata.json"
     baseline = json.loads(metadata_path.read_text()).get("metrics", {}).get("log_loss") if metadata_path.exists() else None
     if len(graded):
-        warnings += check_drift(graded, baseline_log_loss=baseline)
+        league_graded = graded[graded["league"] != "CL"]  # the league champion's baseline does not apply to the Champions League
+        if len(league_graded):
+            warnings += check_drift(league_graded, baseline_log_loss=baseline)
 
     odds: dict = {}
     if fetch_odds is not None:  # bookmaker odds are display-only extras; a failure only adds a warning

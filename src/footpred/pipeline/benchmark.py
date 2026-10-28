@@ -1,7 +1,7 @@
 """Baseline-versus-hybrid benchmark with a protected hold-out season.
 
 Development seasons (everything before the most recent full season) are used for all
-comparison and tuning. The most recent full season is evaluated once, and only if the hybrid
+comparison and tuning. The most recent full season is evaluated only after a model is chosen on the development seasons, and only if the hybrid
 beats both Elo-only and Dixon-Coles-only on the development seasons.
 """
 from __future__ import annotations
@@ -209,9 +209,8 @@ def run_benchmark(
     if held_out is None:
         text.append(f"Not evaluated: the hybrid did not beat both Elo-only and Dixon-Coles-only on the development seasons, so {holdout} stays untouched.")
     else:
-        text += [f"{holdout} was evaluated once, after the hybrid beat Elo-only and Dixon-Coles-only on the development seasons. "
-                 f"Only the chosen variant ({chosen}) was evaluated, shown as Hybrid. It is not used for tuning; "
-                 "this is the first release candidate.", "", _table(held_out), "", _accuracy_table(held_out), "",
+        text += [f"{holdout} was evaluated after the hybrid beat Elo-only and Dixon-Coles-only on the development seasons. "
+                 f"Only the chosen variant ({chosen}) was evaluated, shown as Hybrid. It is not used for tuning, though it has been looked at on more than one benchmark run while the project was built.", "", _table(held_out), "", _accuracy_table(held_out), "",
                  "Against the bookmakers on the held-out season (reference only):", "", _bookmaker_table(book_held)]
     Path(out_path).write_text("\n".join(text) + "\n")
     (Path(out_path).parent / "benchmark-reference.json").write_text(json.dumps(

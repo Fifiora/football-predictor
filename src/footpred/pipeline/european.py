@@ -54,6 +54,7 @@ class EuropeanScores:
     warnings: list[str] = field(default_factory=list)
     published: bool = False
     new_results: int = 0
+    version: str = ""  # the European champion that priced these fixtures
 
     @property
     def nothing_new(self) -> bool:
@@ -233,4 +234,4 @@ def score_european(
     fixtures = upcoming.assign(p_home=probs[:, 0], p_draw=probs[:, 1], p_away=probs[:, 2],
                                low_confidence=[h in unknown or a in unknown for h, a in zip(upcoming['home'], upcoming['away'])])
     drivers = {r.match_id: top_drivers(model, X.loc[r.match_id], home=r.home, away=r.away) for r in fixtures.itertuples(index=False)}
-    return EuropeanScores(fixtures, drivers, {}, results, warnings, True, new_results)
+    return EuropeanScores(fixtures, drivers, {}, results, warnings, True, new_results, version)

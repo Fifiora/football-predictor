@@ -1,7 +1,7 @@
 """Walk-forward benchmark for the Champions League model, with a protected hold-out season.
 
 Every choice is made on development seasons (before ``HOLDOUT_SEASON``). The hold-out season is
-evaluated once, and only if the publish gate passes on the development seasons. Models are
+evaluated only after the model is chosen on the development seasons, and only if the publish gate passes on the development seasons. Models are
 trained on every European competition but scored on Champions League matches, the only
 competition that is published.
 """
@@ -155,7 +155,7 @@ def run_european_benchmark(
     elif held_out is None:
         text.append(f"The gate passed, but there are no Champions League results for {HOLDOUT_SEASON} yet.")
     else:
-        text += [f"{HOLDOUT_SEASON} was evaluated once, after the model passed the publish gate. It is not used for tuning.", "", _table(held_out)]
+        text += [f"{HOLDOUT_SEASON} was evaluated after the model was chosen and passed the publish gate. It is not used for tuning, though it has been looked at on more than one benchmark run while the project was built.", "", _table(held_out)]
     Path(out_path).write_text("\n".join(text) + "\n")
     return {"development": development, "holdout": held_out, "holdout_season": HOLDOUT_SEASON,
             "publish_ok": publish_ok, "reason": reason, "offsets": offsets}

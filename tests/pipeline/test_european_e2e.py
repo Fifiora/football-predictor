@@ -8,6 +8,7 @@ from world import write_openfootball
 
 from footpred.models.registry import load_champion
 from footpred.pipeline import european as euro_mod
+from footpred.pipeline import daily as daily_mod
 from footpred.pipeline.daily import run_daily
 from footpred.pipeline.european import run_european_retrain
 from footpred.pipeline.retrain import run_retrain
@@ -176,3 +177,24 @@ def test_stored_feed_rows_follow_later_alias_fixes(w):
     append_european_results(w["data_dir"], pd.DataFrame([row]))
     df = load_european_matches(w["data_dir"], EuropeanNames(league_aliases_path=w["aliases"]))
     assert "Q1 FC" not in set(df["home"]) and "Q1" in set(df["home"])
+
+
+def test_champions_league_predictions_are_logged_under_the_european_model_version(w):
+    seed(w)
+    daily(w, client_with(w, cl("2025-10-30", "A FC", "Q1")))
+    log = pd.read_csv(w["data_dir"] / "prediction_log.csv").set_index("match_id")
+    euro_version = load_champion(w["registry_euro"])[0]
+    league_version = load_champion(w["registry"])[0]
+    assert log.loc["CL-20251030-A-Q1", "model_version"] == f"european/{euro_version}"
+    assert log.loc["E0-20251030-A-B", "model_version"] == league_version
+
+
+def test_league_drift_check_ignores_champions_league_grades(w, monkeypatch):
+    seen = []
+    graded = pd.DataFrame({"match_id": ["a", "b"], "league": ["E0", "CL"], "home": ["x", "y"], "away": ["p", "q"], "outcome": [0.0, 1.0], "kickoff_date": ["2025-10-01"] * 2,
+                           "p_home": [.5, .4], "p_draw": [.3, .3], "p_away": [.2, .3]})
+    monkeypatch.setattr(daily_mod, "grade_predictions", lambda *a, **k: graded)
+    monkeypatch.setattr(daily_mod, "check_drift", lambda g, **kw: seen.append(set(g["league"])) or [])
+    seed(w)
+    daily(w, client_with(w, cl("2025-10-30", "A FC", "Q1")))
+    assert seen == [{"E0"}]
