@@ -1,0 +1,69 @@
+name: live
+# Polls football-data.org every couple of minutes while matches are on, publishes live scores to the
+# `live` branch (the site reads it in the browser), and starts the daily refresh as soon as a match
+# has finished so its result and the next predictions are stored without waiting for a schedule.
+on:
+  schedule:
+    - cron: "7,37 10-23 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency: { group: footpred-live, cancel-in-progress: false }
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load saved state (prediction log)
+        run: |
+          if git ls-remote --exit-code origin state >/dev/null 2>&1; then
+            git fetch -q origin state && git worktree add -q --detach state origin/state
+          else
+            mkdir -p state/data
+          fi
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e .
+      - name: Poll while matches are on
+        shell: bash
+        env:
+          FOOTBALL_DATA_TOKEN: "${{ secrets.FOOTBALL_DATA_TOKEN }}"
+          GH_TOKEN: "${{ github.token }}"
+        run: |
+          set +e
+          start=$(date +%s)
+          seen=""
+          busy="false"
+          while true; do
+            running=$(gh run list --workflow daily.yml --json status --jq '[.[] | select(.status=="in_progress" or .status=="queued")] | length' 2>/dev/null)
+            if [ "${running:-0}" = "0" ]; then
+              # a daily run that just stored results has moved the state branch on
+              if [ -d state/.git ] || [ -f state/.git ]; then (cd state && git fetch -q origin state && git checkout -q --detach FETCH_HEAD); fi
+              rm -rf live-out
+              python -m footpred.pipeline.cli live --data-dir state/data --out-dir live-out
+              if [ "$?" = "0" ]; then
+                rm -rf livepub && mkdir livepub && cp live-out/live.json livepub/live.json
+                (cd livepub && git init -q && git checkout -q -b live && git add live.json \
+                  && git -c user.name=footpred-bot -c user.email=bot@users.noreply.github.com commit -qm "live $(date -u +%FT%TZ)" \
+                  && git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" live) \
+                  || echo "::warning title=live::could not publish the live feed this round"
+                for id in $(jq -r '.unrecorded[]' live-out/status.json); do
+                  case " $seen " in *" $id "*) ;; *) fresh="$fresh $id" ;; esac
+                done
+                if [ -n "$fresh" ]; then
+                  echo "finished and not stored yet:$fresh; starting the daily refresh"
+                  gh workflow run daily.yml --ref main && seen="$seen$fresh"
+                fi
+                fresh=""
+                busy=$(jq -r '.busy' live-out/status.json)
+              fi
+            else
+              busy="true"   # a refresh is running: stay out of the API's rate limit and look again soon
+            fi
+            [ "$busy" = "true" ] || break
+            [ $(( $(date +%s) - start )) -gt 3000 ] && break
+            sleep 90
+          done
+          if [ "$busy" = "true" ]; then gh workflow run live.yml --ref main; fi   # hand over to a fresh job

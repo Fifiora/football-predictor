@@ -21,6 +21,7 @@ from footpred.pipeline.benchmark import run_benchmark
 from footpred.pipeline.tune import tune_league
 from footpred.ingest.odds import fetch_fixture_odds
 from footpred.pipeline.daily import run_daily
+from footpred.pipeline.live import build_live, read_log, recorded_match_ids, still_busy, unrecorded_results, write_outputs
 from footpred.pipeline.european import run_european_retrain
 from footpred.pipeline.retrain import run_retrain
 
@@ -102,13 +103,14 @@ REFERENCE_PATH = Path(__file__).resolve().parents[3] / "docs" / "benchmark-refer
 def _main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="footpred")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("download", "daily", "retrain", "benchmark", "benchmark-european", "tune-european", "tune-league", "teams"):
+    for name in ("download", "daily", "retrain", "benchmark", "benchmark-european", "tune-european", "tune-league", "teams", "live"):
         p = sub.add_parser(name)
         p.add_argument("--data-dir", type=Path, default=Path("state/data"))
         p.add_argument("--registry-dir", type=Path, default=Path("state/registry"))
         p.add_argument("--site-data-dir", type=Path, default=Path("site/data"))
         p.add_argument("--out", type=Path, default=Path("docs/baseline-results.md"))
         p.add_argument("--first-year", type=int, default=2014)
+        p.add_argument("--out-dir", type=Path, default=Path("live-out"))
     args = parser.parse_args(argv)
     today = pd.Timestamp.now().normalize()
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -156,6 +158,21 @@ def _main(argv: list[str] | None = None) -> int:
         if sample:
             print("::notice title=predictions::" + "%0A".join(sample))
         return 0 if result.published else 3  # 3 = nothing new; the workflow skips deployment
+    if args.command == "live":
+        client = FootballDataOrgClient(os.environ["FOOTBALL_DATA_TOKEN"])
+        now = pd.Timestamp.now(tz="UTC").tz_localize(None).floor("s")
+        feed, warnings = build_live(client, covered_leagues() + ["CL"], now, read_log(args.data_dir))
+        for w in warnings:
+            print(f"- warning: {w}")
+        if not feed["complete"]:  # keep the last good feed rather than publish one with competitions missing
+            print("::warning title=live::some competitions could not be read; the previous live feed stays")
+            return 4
+        unrecorded = unrecorded_results(feed, recorded_match_ids(args.data_dir))
+        busy = still_busy(feed, now)
+        write_outputs(args.out_dir, feed, unrecorded, busy)
+        print(f"live: {len(feed['matches'])} matches, {sum(m['state'] == 'live' for m in feed['matches'])} live, "
+              f"{len(unrecorded)} finished and not stored yet, busy={busy}")
+        return 0
     if args.command == "retrain":
         result = run_retrain(args.data_dir, args.registry_dir, today)
         note(f"retrain: promoted={result.promote} ({result.reason})")
