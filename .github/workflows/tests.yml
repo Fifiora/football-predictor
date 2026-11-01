@@ -14,5 +14,14 @@ jobs:
         with: { python-version: "3.12", cache: pip }
       - run: pip install -e ".[dev]"
       - name: Run the Python tests
-        run: python -m pytest -q -x --no-header -p no:cacheprovider 2>&1 | tail -60; exit "${PIPESTATUS[0]}"
         shell: bash
+        run: |
+          set +e
+          python -m pytest -q --no-header -p no:cacheprovider -W ignore > pytest.log 2>&1
+          code=$?
+          tail -5 pytest.log
+          if [ "$code" != "0" ]; then
+            # run logs are not readable from outside, so put the failures in an annotation
+            echo "::error title=pytest failed::$(grep -E '^(FAILED|ERROR)|Error|assert' pytest.log | head -c 3500 | tr '\n' '|')"
+            exit "$code"
+          fi
