@@ -164,3 +164,12 @@ def test_recent_picks_accept_a_log_with_mixed_date_formats(tmp_path):
     export_site_data(tmp_path / "s", fixtures, drivers, grids, graded, ratings, NOW)
     dates = [r["date"] for r in load(tmp_path / "s", "track_record.json")["recent"]]
     assert dates == sorted(dates, reverse=True) and len(dates) == 3
+
+
+def test_track_record_exports_every_graded_pick_compactly_for_the_confidence_filter(tmp_path):
+    out = run(tmp_path / "s")
+    picks = load(out, "track_record.json")["picks"]
+    assert len(picks) == 3  # graded rows only
+    # [league, probability of the pick, 1 if the pick was right]
+    got = {(p[0], round(p[1], 2)): p[2] for p in picks}
+    assert got == {("E0", 0.6): 1, ("E0", 0.5): 1, ("SP1", 0.5): 0}

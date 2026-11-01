@@ -1,0 +1,18 @@
+name: tests
+on:
+  workflow_dispatch:
+  push:
+    paths: ["src/**", "tests/**", "data/**", "pyproject.toml", ".github/workflows/tests.yml"]
+permissions:
+  contents: read
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -e ".[dev]"
+      - name: Run the Python tests
+        run: python -m pytest -q -x --no-header -p no:cacheprovider 2>&1 | tail -60; exit "${PIPESTATUS[0]}"
+        shell: bash
