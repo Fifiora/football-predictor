@@ -82,3 +82,30 @@ test("matches on the same day are ordered by kickoff time", () => {
   const ids = applyFilters([a, c, b], defaultState(), "0000-00-00").map((f) => f.match_id);
   assert.deepEqual(ids, ["a-early", "z-late", "m-unknown"]);
 });
+
+import { accuracyByTier, tierOf } from "../src/lib/filters.mjs";
+
+const PICKS = [["E0", 0.7, 1], ["E0", 0.6, 1], ["E0", 0.5, 0], ["E0", 0.5, 1], ["SP1", 0.4, 0], ["SP1", 0.38, 1], ["SP1", 0.58, 0]];
+
+test("a pick falls in a tier by the chance given to it, with the same cut-offs as the match cards", () => {
+  assert.equal(tierOf(0.55), "confident");
+  assert.equal(tierOf(0.549), "lean");
+  assert.equal(tierOf(0.45), "lean");
+  assert.equal(tierOf(0.449), "toss-up");
+});
+
+test("accuracy by tier counts picks and right calls, and can be limited to one league", () => {
+  const all = accuracyByTier(PICKS);
+  assert.deepEqual(all.all, { n: 7, right: 4, accuracy: 4 / 7 });
+  assert.deepEqual(all.confident, { n: 3, right: 2, accuracy: 2 / 3 });
+  assert.deepEqual(all.lean, { n: 2, right: 1, accuracy: 0.5 });
+  assert.deepEqual(all["toss-up"], { n: 2, right: 1, accuracy: 0.5 });
+  const sp = accuracyByTier(PICKS, "SP1");
+  assert.deepEqual(sp.all, { n: 3, right: 1, accuracy: 1 / 3 });
+  assert.deepEqual(sp.confident, { n: 1, right: 0, accuracy: 0 });
+});
+
+test("a tier with no picks has no accuracy rather than zero", () => {
+  assert.deepEqual(accuracyByTier([["E0", 0.7, 1]]).lean, { n: 0, right: 0, accuracy: null });
+  assert.deepEqual(accuracyByTier(undefined).all, { n: 0, right: 0, accuracy: null });
+});

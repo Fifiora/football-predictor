@@ -2,8 +2,8 @@
 
 export const RANGES = { today: 0, "3d": 2, week: 6 };
 export const SORTS = ["date", "confidence", "close"];
-const CONFIDENT_AT = 0.55;
-const LEAN_AT = 0.45;
+export const CONFIDENT_AT = 0.55;
+export const LEAN_AT = 0.45;
 
 export function defaultState() {
   return { leagues: [], range: "all", q: "", confidentOnly: false, sort: "date" };
@@ -87,4 +87,24 @@ export function parseState(search) {
     confidentOnly: p.get("confident") === "1",
     sort: SORTS.includes(sort) ? sort : d.sort,
   };
+}
+
+/** The confidence tier of a pick, from the chance the model gave it. Same cut-offs as the labels on the match cards. */
+export function tierOf(p) {
+  if (p >= CONFIDENT_AT) return "confident";
+  if (p >= LEAN_AT) return "lean";
+  return "toss-up";
+}
+
+/** Accuracy of graded picks (``[league, chance given to the pick, 1 if right]``) overall and per tier, optionally for one league. */
+export function accuracyByTier(picks, league = null) {
+  const tally = { all: [0, 0], confident: [0, 0], lean: [0, 0], "toss-up": [0, 0] };
+  for (const [lg, p, ok] of picks ?? []) {
+    if (league && lg !== league) continue;
+    for (const key of ["all", tierOf(p)]) {
+      tally[key][0] += 1;
+      tally[key][1] += ok ? 1 : 0;
+    }
+  }
+  return Object.fromEntries(Object.entries(tally).map(([k, [n, right]]) => [k, { n, right, accuracy: n ? right / n : null }]));
 }
