@@ -150,3 +150,29 @@ def test_missing_benchmark_reference_file_is_warned_about(world, tmp_path):
     result = run_daily(world["data_dir"], world["site"], world["client"], TODAY, registry_dir=world["registry"],
                        aliases_path=world["aliases"], sleep=NO_SLEEP, reference_path=tmp_path / "nope.json")
     assert any("benchmark reference" in w for w in result.warnings)
+
+
+def _daily_with_today_match(world, now):
+    from conftest import FakeClient, fx
+
+    today_match = {**fx("2025-10-27", "A FC", "B FC"), "kickoff": "2025-10-27T19:45:00Z"}
+    client = FakeClient([today_match, fx("2025-10-30", "C FC", "D FC")])
+    seed_champion(world)
+    return run_daily(
+        world["data_dir"], world["site"], client, TODAY, registry_dir=world["registry"],
+        aliases_path=world["aliases"], sleep=NO_SLEEP, now=now,
+    )
+
+
+def test_a_match_today_is_predicted_and_logged_while_its_kickoff_is_still_ahead(world):
+    result = _daily_with_today_match(world, now=pd.Timestamp("2025-10-27 10:00"))
+    log = pd.read_csv(world["data_dir"] / "prediction_log.csv")
+    assert "E0-20251027-A-B" in set(log["match_id"])
+    assert not any("same-day" in w for w in result.warnings)
+
+
+def test_a_match_that_has_already_started_is_shown_but_not_logged(world):
+    result = _daily_with_today_match(world, now=pd.Timestamp("2025-10-27 21:00"))
+    log = pd.read_csv(world["data_dir"] / "prediction_log.csv")
+    assert "E0-20251027-A-B" not in set(log["match_id"])
+    assert any("same-day" in w for w in result.warnings)

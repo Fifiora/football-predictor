@@ -83,6 +83,7 @@ def run_daily(
     european: bool = False,
     fetch_odds: Callable[[], tuple[dict, list[str]]] | None = None,
     reference_path: Path | None = None,
+    now: pd.Timestamp | None = None,
 ) -> DailyResult:
     """Refresh predictions. Any failure before the final export leaves ``site_data_dir`` untouched."""
     data_dir = Path(data_dir)
@@ -158,13 +159,22 @@ def run_daily(
             drivers.update(euro.drivers)
             grids.update(euro.grids)
     if not scored.empty:
-        future = scored[scored["date"] > today].assign(kickoff_date=lambda df: df["date"])
-        if len(future) < len(scored):
-            warnings.append(f"{len(scored) - len(future)} same-day fixtures shown but not logged (no kickoff times)")
-        is_cl = future["league"] == "CL"
-        for part, logged_version in ((future[~is_cl], version), (future[is_cl], f"european/{euro.version}" if euro and euro.version else "european")):
+        later = scored[scored["date"] > today].assign(kickoff_date=lambda df: df["date"])
+        # a match today is still predicted before it starts when its kickoff time is known and has not passed
+        same_day = scored[scored["date"] <= today]
+        started = len(same_day)
+        if len(same_day) and "kickoff" in same_day.columns and now is not None:
+            kick = pd.to_datetime(same_day["kickoff"], utc=True, errors="coerce").dt.tz_localize(None)
+            ahead = same_day[(kick > now).to_numpy()].assign(kickoff_date=kick[(kick > now).to_numpy()])
+            later = pd.concat([later, ahead], ignore_index=True)
+            started = len(same_day) - len(ahead)
+        if started:
+            warnings.append(f"{started} same-day fixtures shown but not logged (already started, or no kickoff time)")
+        stamp = now if now is not None else today
+        is_cl = later["league"] == "CL"
+        for part, logged_version in ((later[~is_cl], version), (later[is_cl], f"european/{euro.version}" if euro and euro.version else "european")):
             if len(part):
-                log_predictions(data_dir / "prediction_log.csv", part, logged_version, logged_at=today)
+                log_predictions(data_dir / "prediction_log.csv", part, logged_version, logged_at=stamp)
 
     graded_inputs = played[played["result"].isin(PLAYED)]
     if european_results is not None and len(european_results):

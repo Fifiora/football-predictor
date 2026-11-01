@@ -119,6 +119,14 @@ def _recent_picks(graded: pd.DataFrame) -> list[dict]:
     ]
 
 
+def _all_picks(graded: pd.DataFrame) -> list[list]:
+    """Every graded pick as ``[league, chance given to the pick, 1 if it was right]``, for the confidence filter."""
+    probs = graded[_OUTCOME_COLS].to_numpy(dtype=float)
+    pick = probs.argmax(axis=1)
+    right = pick == graded["outcome"].to_numpy(dtype=int)
+    return [[str(league), round(float(p), 4), int(ok)] for league, p, ok in zip(graded["league"], probs.max(axis=1), right)]
+
+
 def _track_record_payload(graded_log: pd.DataFrame, reference: dict | None = None) -> dict:
     payload = _track_record_core(graded_log)
     if reference:
@@ -130,7 +138,7 @@ def _track_record_core(graded_log: pd.DataFrame) -> dict:
     graded = graded_log.dropna(subset=["outcome"]) if len(graded_log) else graded_log
     if graded.empty:
         return {"n_graded": 0, "log_loss": None, "rps": None, "accuracy": None, "ece": None,
-                "calibration": [], "by_league": {}, "recent": []}
+                "calibration": [], "by_league": {}, "recent": [], "picks": []}
     graded = graded.assign(outcome=graded["outcome"].astype(int))
     overall = _metrics(graded)
     probs = graded[_OUTCOME_COLS].to_numpy(dtype=float)
@@ -143,6 +151,7 @@ def _track_record_core(graded_log: pd.DataFrame) -> dict:
         "calibration": _calibration_table(graded),
         "by_league": {league: _metrics(g) for league, g in graded.groupby("league")},
         "recent": _recent_picks(graded),
+        "picks": _all_picks(graded),
     }
 
 
