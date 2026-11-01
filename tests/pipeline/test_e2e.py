@@ -152,7 +152,7 @@ def test_missing_benchmark_reference_file_is_warned_about(world, tmp_path):
     assert any("benchmark reference" in w for w in result.warnings)
 
 
-def _daily_with_today_match(world, now):
+def _daily_with_today_match(world, now, clock=None):
     from conftest import FakeClient, fx
 
     today_match = {**fx("2025-10-27", "A FC", "B FC"), "kickoff": "2025-10-27T19:45:00Z"}
@@ -160,7 +160,7 @@ def _daily_with_today_match(world, now):
     seed_champion(world)
     return run_daily(
         world["data_dir"], world["site"], client, TODAY, registry_dir=world["registry"],
-        aliases_path=world["aliases"], sleep=NO_SLEEP, now=now,
+        aliases_path=world["aliases"], sleep=NO_SLEEP, now=now, clock=clock,
     )
 
 
@@ -176,3 +176,10 @@ def test_a_match_that_has_already_started_is_shown_but_not_logged(world):
     log = pd.read_csv(world["data_dir"] / "prediction_log.csv")
     assert "E0-20251027-A-B" not in set(log["match_id"])
     assert any("same-day" in w for w in result.warnings)
+
+
+def test_a_slow_run_does_not_log_a_match_that_started_while_it_was_running(world):
+    late = pd.Timestamp("2025-10-27 19:50")  # the clock when logging happens; the run began at 10:00
+    _daily_with_today_match(world, now=pd.Timestamp("2025-10-27 10:00"), clock=lambda: late)
+    log = pd.read_csv(world["data_dir"] / "prediction_log.csv")
+    assert "E0-20251027-A-B" not in set(log["match_id"])

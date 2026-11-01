@@ -92,10 +92,13 @@ def still_busy(feed: dict, now: pd.Timestamp, horizon: timedelta = timedelta(hou
     """True while a match is being played or kicks off soon, so the live workflow should keep polling."""
     now = pd.Timestamp(now)
     for m in feed["matches"]:
+        if not m["kickoff"]:
+            continue
+        kick = pd.to_datetime(m["kickoff"], utc=True).tz_localize(None)
         if m["state"] == "live":
-            return True
-        if m["state"] == "upcoming" and m["kickoff"]:
-            kick = pd.to_datetime(m["kickoff"], utc=True).tz_localize(None)
+            if now - kick < timedelta(hours=3.5):  # a match stuck as live in the feed must not keep the poller running
+                return True
+        elif m["state"] == "upcoming":
             if now - timedelta(hours=1) <= kick <= now + horizon:
                 return True
     return False

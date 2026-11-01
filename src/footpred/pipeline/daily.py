@@ -84,6 +84,7 @@ def run_daily(
     fetch_odds: Callable[[], tuple[dict, list[str]]] | None = None,
     reference_path: Path | None = None,
     now: pd.Timestamp | None = None,
+    clock: Callable[[], pd.Timestamp] | None = None,
 ) -> DailyResult:
     """Refresh predictions. Any failure before the final export leaves ``site_data_dir`` untouched."""
     data_dir = Path(data_dir)
@@ -161,6 +162,8 @@ def run_daily(
     if not scored.empty:
         later = scored[scored["date"] > today].assign(kickoff_date=lambda df: df["date"])
         # a match today is still predicted before it starts when its kickoff time is known and has not passed
+        if clock is not None:  # a slow run must not log a match that has started in the meantime
+            now = pd.Timestamp(clock())
         same_day = scored[scored["date"] <= today]
         started = len(same_day)
         if len(same_day) and "kickoff" in same_day.columns and now is not None:

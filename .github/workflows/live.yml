@@ -35,7 +35,8 @@ jobs:
           set +e
           start=$(date +%s)
           seen=""
-          busy="false"
+          busy="true"   # until a poll says otherwise, so a failed first poll still hands over
+          fails=0
           while true; do
             running=$(gh run list --workflow daily.yml --json status --jq '[.[] | select(.status=="in_progress" or .status=="queued")] | length' 2>/dev/null)
             if [ "${running:-0}" = "0" ]; then
@@ -43,7 +44,10 @@ jobs:
               if [ -d state/.git ] || [ -f state/.git ]; then (cd state && git fetch -q origin state && git checkout -q --detach FETCH_HEAD); fi
               rm -rf live-out
               python -m footpred.pipeline.cli live --data-dir state/data --out-dir live-out
-              if [ "$?" = "0" ]; then
+              pcode=$?
+              if [ "$pcode" != "0" ]; then fails=$((fails+1)); [ "$fails" -ge 5 ] && { busy="false"; break; }; fi
+              if [ "$pcode" = "0" ]; then
+                fails=0
                 rm -rf livepub && mkdir livepub && cp live-out/live.json livepub/live.json
                 (cd livepub && git init -q && git checkout -q -b live && git add live.json \
                   && git -c user.name=footpred-bot -c user.email=bot@users.noreply.github.com commit -qm "live $(date -u +%FT%TZ)" \

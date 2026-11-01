@@ -148,6 +148,7 @@ def _main(argv: list[str] | None = None) -> int:
             updated_at=pd.Timestamp.now().floor("s"), european=True,
             fetch_odds=fetch_fixture_odds, reference_path=REFERENCE_PATH,
             now=pd.Timestamp.now(tz="UTC").tz_localize(None).floor("s"),
+            clock=lambda: pd.Timestamp.now(tz="UTC").tz_localize(None).floor("s"),
         )
         note(f"daily: published={result.published} new_results={result.new_results} scored={result.scored_fixtures}")
         for w in result.warnings:

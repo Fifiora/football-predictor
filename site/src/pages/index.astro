@@ -16,7 +16,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   <section id="live" class="live" aria-label="Live scores" data-url={liveUrl} hidden>
     <div class="live-head">
       <h2 id="live-title">Live now</h2>
-      <p id="live-meta" class="live-meta" role="status"></p>
+      <p id="live-meta" class="live-meta"></p>
     </div>
     <ul id="live-list" class="live-list"></ul>
     <h2 id="results-title" class="results-title" hidden>Today's results</h2>
@@ -120,10 +120,12 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
         return li;
       }
 
+      let lastSig = "";
       function render() {
         // a new day or a finished match takes its fixture off the list, whether or not the page was reloaded
         const today = localToday();
         const pool = fixtures.filter((f) => !fixtureHidden(f, Date.now(), today, liveIds));
+        lastSig = pool.map((f) => f.match_id).join("|");
         const shown = applyFilters(pool, state, today);
         const ids = new Set(shown.map((f) => f.match_id));
         list.querySelectorAll("li.day").forEach((n) => n.remove());
@@ -173,7 +175,12 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
       $("#empty-clear").addEventListener("click", reset);
 
       $("#filters").hidden = false;
-      rerender = render;
+      // the timer and the live feed only redraw when a match has dropped off, so focus and screen readers are left alone
+      rerender = () => {
+        const today = localToday();
+        const sig = fixtures.filter((f) => !fixtureHidden(f, Date.now(), today, liveIds)).map((f) => f.match_id).join("|");
+        if (sig !== lastSig) render();
+      };
       render();
       setTimeout(() => list.setAttribute("data-ready", ""), 1400);  // entrance animation plays once, never on re-filtering
     }

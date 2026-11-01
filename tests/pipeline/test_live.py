@@ -105,3 +105,8 @@ def test_outputs_are_written_as_json(tmp_path, world):
     write_outputs(tmp_path / "out", feed, ["E0-x"], True)
     assert json.loads((tmp_path / "out" / "live.json").read_text())["matches"][0]["state"] == "live"
     assert json.loads((tmp_path / "out" / "status.json").read_text()) == {"unrecorded": ["E0-x"], "busy": True, "live": 1}
+
+
+def test_a_match_stuck_as_live_for_days_does_not_keep_the_poller_running(world):
+    stuck, _ = live(world, {"E0": [row("A FC", "B FC", "PAUSED", 0, 0, "2025-10-25T19:45:00Z")]})
+    assert not still_busy(stuck, NOW)

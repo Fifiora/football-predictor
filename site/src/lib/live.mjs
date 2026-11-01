@@ -10,7 +10,7 @@ const kick = (m) => Date.parse(m.kickoff);
 
 /** Split the feed into matches being played and today's results; ``ids`` is every match the live section will show. */
 export function liveView(feed, nowMs, timeZone) {
-  const matches = Array.isArray(feed?.matches) ? feed.matches : [];
+  const matches = Array.isArray(feed?.matches) ? feed.matches.filter((m) => m && typeof m.match_id === "string") : [];
   const today = localParts(new Date(nowMs).toISOString(), timeZone)?.date;
   const live = matches
     .filter((m) => m.state === "live" && nowMs - kick(m) < STILL_PLAYING_FOR)

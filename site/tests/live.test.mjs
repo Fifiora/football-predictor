@@ -32,7 +32,7 @@ test("a match marked live long after it could still be playing is not shown as l
 });
 
 test("an unreadable feed shows nothing instead of failing", () => {
-  for (const bad of [null, undefined, {}, { matches: "no" }]) {
+  for (const bad of [null, undefined, {}, { matches: "no" }, { matches: [null, 3] }]) {
     const view = liveView(bad, NOW, "UTC");
     assert.deepEqual([view.live, view.results, [...view.ids]], [[], [], []]);
   }
