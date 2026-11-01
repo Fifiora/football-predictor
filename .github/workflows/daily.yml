@@ -47,7 +47,9 @@ jobs:
         with: { node-version: "22" }
       - name: Build site
         if: steps.daily.outputs.code == '0'
-        env: { SITE_BASE: "/${{ github.event.repository.name }}/" }
+        env:
+          SITE_BASE: "/${{ github.event.repository.name }}/"
+          LIVE_URL: "https://raw.githubusercontent.com/${{ github.repository }}/live/live.json"
         run: |
           cd site
           set +e
