@@ -1,0 +1,38 @@
+ok   all 11 matches shown by default
+ok   count reads 11 matches
+ok   the live section shows when the feed has live or finished matches
+ok   one match is live
+ok   the live card shows teams, score and whether our pick is ahead (Premier LeagueLiveEverton1 – 0FulhamOur pick: Everton (52%) ✓ Pick is ahead)
+ok   today's two finished matches are listed
+ok   a finished match says whether our pick missed, and a match without a pick still shows its score
+ok   a match in the live section is taken off the fixtures list
+ok   a match that is over is taken off the fixtures list
+ok   the live section says how fresh it is
+ok   the live scoreboard is visible
+ok   bookmaker lines are shown on cards that have odds
+ok   cards use a frosted-glass blur (blur(18px) saturate(1.7))
+ok   kickoff time is shown in the visitor's timezone (2:45 PM CDT)
+ok   entrance animation is off after load, so filtering will not replay it (none)
+ok   Serie A chip leaves 4 matches
+ok   count reads 4 of 11
+ok   filter is saved in the URL
+ok   Champions League chip narrows the list to its one match
+ok   the Champions League card says it is a 90-minute result
+ok   the Champions League card carries the Experimental tag
+ok   team search 'inter' leaves 1 match
+ok   empty state shows when nothing matches
+ok   clearing restores all matches
+ok   confident-only narrows the list (4)
+ok   no date headings when sorted by closeness
+ok   three days later only the matches still to come are listed
+ok   the live section stays hidden when the feed cannot be read
+ok   the count follows the visible matches
+ok   with every match over, the list says so instead of showing old fixtures
+ok   deep link restores the Bundesliga filter
+ok   no horizontal scroll on a phone
+ok   match page shows goal meters
+ok   team search narrows 20 teams to 1
+ok   accuracy shows for all picks (52%) and for confident picks (60%)
+ok   the chosen confidence level is marked
+ok   limiting to one league narrows the picks (53 to 13)
+ok   all picks and all leagues counts every graded match
