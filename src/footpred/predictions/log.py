@@ -35,7 +35,7 @@ def log_predictions(log_path: Path, preds: pd.DataFrame, model_version: str, log
     that is already in the log keeps its original prediction (the first one before kickoff
     stands), so re-running a daily job never rewrites history.
     """
-    kickoff = pd.to_datetime(preds["kickoff_date"])
+    kickoff = pd.to_datetime(preds["kickoff_date"], format="mixed")
     late = kickoff <= pd.Timestamp(logged_at)
     if late.any():
         raise ValueError(f"refusing to log predictions on or after kickoff: {preds.loc[late, 'match_id'].tolist()}")

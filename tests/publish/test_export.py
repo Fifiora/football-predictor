@@ -156,3 +156,11 @@ def test_kickoff_time_is_exported_when_known(tmp_path):
     first, second = load(tmp_path / "s", "fixtures.json")
     assert first["kickoff"] == "2025-10-30T19:45:00Z"
     assert "kickoff" not in second
+
+
+def test_recent_picks_accept_a_log_with_mixed_date_formats(tmp_path):
+    fixtures, drivers, grids, graded, ratings = make_inputs()
+    graded = graded.assign(kickoff_date=["2025-10-01", "2025-10-02 00:00:00", "2025-10-03", "2025-10-04 00:00:00"])
+    export_site_data(tmp_path / "s", fixtures, drivers, grids, graded, ratings, NOW)
+    dates = [r["date"] for r in load(tmp_path / "s", "track_record.json")["recent"]]
+    assert dates == sorted(dates, reverse=True) and len(dates) == 3

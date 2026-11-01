@@ -108,7 +108,7 @@ def _recent_picks(graded: pd.DataFrame) -> list[dict]:
         return []
     probs = graded[_OUTCOME_COLS].to_numpy(dtype=float)
     pick = probs.argmax(axis=1)
-    frame = graded.assign(pick_idx=pick, p_pick=probs.max(axis=1), date_ts=pd.to_datetime(graded["kickoff_date"]))
+    frame = graded.assign(pick_idx=pick, p_pick=probs.max(axis=1), date_ts=pd.to_datetime(graded["kickoff_date"], format="mixed"))
     frame = frame.sort_values("date_ts", ascending=False, kind="stable").head(RECENT_LIMIT)
     return [
         {"match_id": r["match_id"], "league": r["league"], "home": r["home"], "away": r["away"],
