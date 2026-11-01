@@ -369,10 +369,10 @@
   "kickoff": "2026-10-29T19:45:00Z"
  },
  {
-  "match_id": "D1-20261031-K\u00f6ln-Mainz",
+  "match_id": "D1-20261031-Köln-Mainz",
   "league": "D1",
   "date": "2026-10-31",
-  "home": "K\u00f6ln",
+  "home": "Köln",
   "away": "Mainz",
   "p_home": 0.4,
   "p_draw": 0.3,
@@ -402,19 +402,19 @@
     "feature": "elo_diff",
     "direction": "home",
     "strength": 0.3,
-    "text": "The model weighted K\u00f6ln being rated 150 Elo points above Mainz, which points to K\u00f6ln."
+    "text": "The model weighted Köln being rated 150 Elo points above Mainz, which points to Köln."
    },
    {
     "feature": "dc_exp_home",
     "direction": "home",
     "strength": 0.2,
-    "text": "The model weighted the goals model expecting K\u00f6ln to score 1.8 goals, which points to K\u00f6ln."
+    "text": "The model weighted the goals model expecting Köln to score 1.8 goals, which points to Köln."
    },
    {
     "feature": "form_shots_diff",
     "direction": "home",
     "strength": 0.1,
-    "text": "The model weighted K\u00f6ln out-shooting opponents by 3.2 shots a match lately, which points to K\u00f6ln."
+    "text": "The model weighted Köln out-shooting opponents by 3.2 shots a match lately, which points to Köln."
    }
   ],
   "kickoff": "2026-10-31T19:45:00Z"
@@ -539,5 +539,107 @@
    }
   ],
   "kickoff": "2026-10-28T19:45:00Z"
+ },
+ {
+  "match_id": "E0-20261027-Everton-Fulham",
+  "league": "E0",
+  "date": "2026-10-27",
+  "home": "Everton",
+  "away": "Fulham",
+  "p_home": 0.52,
+  "p_draw": 0.26,
+  "p_away": 0.22,
+  "btts": 0.56,
+  "over_2_5": 0.6,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Arsenal being rated 150 Elo points above Chelsea, which points to Arsenal."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Arsenal to score 1.8 goals, which points to Arsenal."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Arsenal out-shooting opponents by 3.2 shots a match lately, which points to Arsenal."
+   }
+  ],
+  "kickoff": "2026-10-27T11:30:00Z"
+ },
+ {
+  "match_id": "SP1-20261027-Getafe-Betis",
+  "league": "SP1",
+  "date": "2026-10-27",
+  "home": "Getafe",
+  "away": "Betis",
+  "p_home": 0.25,
+  "p_draw": 0.27,
+  "p_away": 0.48,
+  "btts": 0.56,
+  "over_2_5": 0.6,
+  "top_scorelines": [
+   {
+    "score": "1-1",
+    "p": 0.12
+   },
+   {
+    "score": "2-1",
+    "p": 0.1
+   },
+   {
+    "score": "1-0",
+    "p": 0.1
+   },
+   {
+    "score": "2-0",
+    "p": 0.08
+   }
+  ],
+  "drivers": [
+   {
+    "feature": "elo_diff",
+    "direction": "home",
+    "strength": 0.3,
+    "text": "The model weighted Arsenal being rated 150 Elo points above Chelsea, which points to Arsenal."
+   },
+   {
+    "feature": "dc_exp_home",
+    "direction": "home",
+    "strength": 0.2,
+    "text": "The model weighted the goals model expecting Arsenal to score 1.8 goals, which points to Arsenal."
+   },
+   {
+    "feature": "form_shots_diff",
+    "direction": "home",
+    "strength": 0.1,
+    "text": "The model weighted Arsenal out-shooting opponents by 3.2 shots a match lately, which points to Arsenal."
+   }
+  ],
+  "kickoff": "2026-10-27T07:00:00Z"
  }
 ]

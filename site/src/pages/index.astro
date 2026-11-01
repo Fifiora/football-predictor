@@ -2,7 +2,7 @@
 import Base from "../layouts/Base.astro";
 import MatchCard from "../components/MatchCard.astro";
 import Scoreboard from "../components/Scoreboard.astro";
-import { fixtures, meta, trackRecord } from "../lib/data.mjs";
+import { fixtures, liveUrl, meta, trackRecord } from "../lib/data.mjs";
 import { formatDay, formatUpdated, isExperimental, leagueName } from "../lib/format.mjs";
 import { applyFilters, defaultState, leagueCounts } from "../lib/filters.mjs";
 const sorted = applyFilters(fixtures, defaultState(), "0000-00-00");
@@ -13,6 +13,15 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
 <Base title="Fixtures">
   <h1>Upcoming matches</h1>
   <p class="lede">Chances of a home win, draw and away win for the big five leagues and the Champions League. Last updated {formatUpdated(meta.updated_at)}.</p>
+  <section id="live" class="live" aria-label="Live scores" data-url={liveUrl} hidden>
+    <div class="live-head">
+      <h2 id="live-title">Live now</h2>
+      <p id="live-meta" class="live-meta" role="status"></p>
+    </div>
+    <ul id="live-list" class="live-list"></ul>
+    <h2 id="results-title" class="results-title" hidden>Today's results</h2>
+    <ul id="results-list" class="live-list"></ul>
+  </section>
   <Scoreboard recent={trackRecord.recent} />
   {sorted.length === 0
     ? <p>No fixtures are scheduled in the next two weeks. Check back after the next update.</p>
@@ -55,6 +64,7 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
           <button type="button" id="clear" class="clear" disabled>Clear filters</button>
         </div>
       </div>
+      <p id="none" class="empty panel" hidden>Today's matches are done. The next fixtures appear after the next update.</p>
       <p id="empty" class="empty panel" hidden>
         No matches fit these filters. <button type="button" class="linklike" id="empty-clear">Clear filters</button>
       </p>
@@ -75,9 +85,16 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   )}
   <script>
     import { applyFilters, defaultState, parseState, serializeState } from "../lib/filters.mjs";
-    import { formatDay, localParts } from "../lib/format.mjs";
+    import { formatDay, leagueName, localParts, pct } from "../lib/format.mjs";
+    import { feedAgeMinutes, fixtureHidden, liveView, scoreLine } from "../lib/live.mjs";
 
     const root = document.getElementById("fixtures");
+    let liveIds = new Set();   // matches the live section is showing, so their fixture cards step aside
+    let rerender = null;
+    const localToday = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
     if (root) {
       const $ = (sel) => root.querySelector(sel);
       const list = $("#list");
@@ -90,9 +107,6 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
         home: li.dataset.home, away: li.dataset.away,
         p_home: Number(li.dataset.ph), p_draw: Number(li.dataset.pd), p_away: Number(li.dataset.pa),
       }));
-      const d = new Date();
-      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-
       let state = parseState(location.search);
       const q = $("#q"), sort = $("#sort"), confident = $("#confident"), clear = $("#clear");
 
@@ -107,7 +121,10 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
       }
 
       function render() {
-        const shown = applyFilters(fixtures, state, today);
+        // a new day or a finished match takes its fixture off the list, whether or not the page was reloaded
+        const today = localToday();
+        const pool = fixtures.filter((f) => !fixtureHidden(f, Date.now(), today, liveIds));
+        const shown = applyFilters(pool, state, today);
         const ids = new Set(shown.map((f) => f.match_id));
         list.querySelectorAll("li.day").forEach((n) => n.remove());
         const frag = document.createDocumentFragment();
@@ -128,9 +145,13 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
         if (q.value !== state.q) q.value = state.q;
         sort.value = state.sort;
         confident.checked = state.confidentOnly;
-        const total = fixtures.length;
+        const total = pool.length;
+        root.querySelectorAll("button[data-league] .n").forEach((n) => {
+          n.textContent = String(pool.filter((f) => f.league === n.parentElement.dataset.league).length);
+        });
+        $("#none").hidden = total > 0;
         $("#count").textContent = shown.length === total ? `${total} matches` : `${shown.length} of ${total} matches`;
-        $("#empty").hidden = shown.length > 0;
+        $("#empty").hidden = shown.length > 0 || total === 0;
         const isDefault = serializeState(state) === "";
         clear.disabled = isDefault;
         try { history.replaceState(null, "", location.pathname + serializeState(state)); } catch (e) {}
@@ -152,8 +173,77 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
       $("#empty-clear").addEventListener("click", reset);
 
       $("#filters").hidden = false;
+      rerender = render;
       render();
       setTimeout(() => list.setAttribute("data-ready", ""), 1400);  // entrance animation plays once, never on re-filtering
+    }
+
+    // ---- live scores: read in the browser from the branch the live workflow publishes to ----
+    const liveBox = document.getElementById("live");
+    const liveUrl = liveBox?.dataset.url;
+    const word = { H: "home win", D: "draw", A: "away win" };
+    const el = (tag, cls, text) => {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    };
+
+    function liveCard(m) {
+      const li = el("li", `lcard ${m.state}`);
+      li.dataset.id = m.match_id;
+      const meta = el("p", "lmeta");
+      meta.append(el("span", "lleague", leagueName(m.league)));
+      if (m.state === "live") meta.append(el("span", "lstate", "Live"));
+      else meta.append(el("span", "lstate done", "Full time"));
+      const row = el("div", "lrow");
+      row.append(el("span", "lteam", m.home), el("b", "lscore", scoreLine(m)), el("span", "lteam away", m.away));
+      li.append(meta, row);
+      if (m.pick) {
+        const who = m.pick === "H" ? m.home : m.pick === "A" ? m.away : "a draw";
+        const chance = pct(Math.max(m.p_home, m.p_draw, m.p_away));
+        const line = el("p", "lpick");
+        line.append(`Our pick: ${who} (${chance}) `);
+        if (m.pick_ok != null) {
+          const ok = m.pick_ok;
+          const text = m.state === "finished" ? (ok ? "✓ Right" : "✗ Missed") : (ok ? "✓ Pick is ahead" : "Pick is behind");
+          line.append(el("b", ok ? "ok" : "bad", text));
+        }
+        li.append(line);
+      }
+      return li;
+    }
+
+    function renderLive(feed) {
+      const view = liveView(feed, Date.now());
+      liveIds = view.ids;
+      const fill = (id, matches) => { const ul = document.getElementById(id); ul.replaceChildren(...matches.map(liveCard)); };
+      fill("live-list", view.live);
+      fill("results-list", view.results);
+      document.getElementById("live-title").hidden = view.live.length === 0;
+      document.getElementById("results-title").hidden = view.results.length === 0;
+      const age = feedAgeMinutes(feed, Date.now());
+      const meta = document.getElementById("live-meta");
+      meta.textContent = age == null ? "" : age <= 1 ? "Updated just now" : age > 20 ? `Last update ${age} minutes ago, scores may be behind` : `Updated ${age} minutes ago`;
+      liveBox.hidden = view.ids.size === 0;
+      if (rerender) rerender();
+    }
+
+    if (liveBox && liveUrl) {
+      let feed = null;
+      const poll = async () => {
+        if (document.hidden) return;
+        try {
+          const res = await fetch(`${liveUrl}?t=${Math.floor(Date.now() / 60000)}`, { cache: "no-store" });
+          if (res.ok) feed = await res.json();
+        } catch (e) { /* offline or blocked: keep what we have */ }
+        renderLive(feed);
+      };
+      poll();
+      setInterval(poll, 60000);
+      document.addEventListener("visibilitychange", poll);
+    } else if (rerender) {
+      setInterval(rerender, 60000);
     }
   </script>
 </Base>
@@ -181,6 +271,26 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
   .empty { text-align: center; color: var(--muted); }
   .count { flex: 1; text-align: center; }
   .item .meta time.day { display: none; }
+  .live { margin: 0 0 22px; }
+  .live-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
+  .live h2 { margin: 0 0 8px; font-size: 1.15rem; }
+  .live .results-title { margin-top: 18px; }
+  .live-meta { margin: 0; color: var(--muted); font-size: 0.88rem; }
+  .live-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  @media (min-width: 720px) { .live-list { grid-template-columns: 1fr 1fr; } }
+  .lcard { max-width: none; padding: 12px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--shadow); }
+  .lmeta { display: flex; justify-content: space-between; margin: 0 0 6px; max-width: none; font-size: 0.8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .lstate { color: var(--warn); display: inline-flex; align-items: center; gap: 6px; }
+  .lstate::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: livepulse 1.6s ease-in-out infinite; }
+  .lstate.done { color: var(--muted); } .lstate.done::before { animation: none; background: transparent; width: 0; height: 0; }
+  @keyframes livepulse { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .lstate::before { animation: none; } }
+  .lrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+  .lteam { font-weight: 700; overflow-wrap: anywhere; } .lteam.away { text-align: right; }
+  .lscore { font-size: 1.7rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .lpick { margin: 8px 0 0; max-width: none; color: var(--muted); font-size: 0.92rem; }
+  .lpick .ok { color: var(--good); } .lpick .bad { color: var(--warn); }
   .list[data-ready] .card { animation: none; }
   @media (max-width: 640px) {
     .chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; }

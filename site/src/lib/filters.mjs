@@ -96,15 +96,16 @@ export function tierOf(p) {
   return "toss-up";
 }
 
-/** Accuracy of graded picks (``[league, chance given to the pick, 1 if right]``) overall and per tier, optionally for one league. */
+/** Accuracy of graded picks (``[league, chance given to the pick, 1 if right]``) overall and per tier, optionally for one league. ``said`` is the average chance the model gave those picks. */
 export function accuracyByTier(picks, league = null) {
-  const tally = { all: [0, 0], confident: [0, 0], lean: [0, 0], "toss-up": [0, 0] };
+  const tally = { all: [0, 0, 0], confident: [0, 0, 0], lean: [0, 0, 0], "toss-up": [0, 0, 0] };
   for (const [lg, p, ok] of picks ?? []) {
     if (league && lg !== league) continue;
     for (const key of ["all", tierOf(p)]) {
       tally[key][0] += 1;
       tally[key][1] += ok ? 1 : 0;
+      tally[key][2] += p;
     }
   }
-  return Object.fromEntries(Object.entries(tally).map(([k, [n, right]]) => [k, { n, right, accuracy: n ? right / n : null }]));
+  return Object.fromEntries(Object.entries(tally).map(([k, [n, right, said]]) => [k, { n, right, accuracy: n ? right / n : null, said: n ? said / n : null }]));
 }

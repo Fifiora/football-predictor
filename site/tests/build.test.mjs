@@ -143,3 +143,17 @@ test("the localizing script only targets time elements, never the card wrappers"
   assert.match(assets, /time\[data-kickoff\]/);
   assert.doesNotMatch(assets, /querySelectorAll\(["']\[data-kickoff\]["']\)/);
 });
+
+test("the track record page offers an accuracy-by-confidence filter that works without scripts too", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "track-record/index.html");
+  assert.match(html, /How accurate is it when it is sure\?/);
+  for (const tier of ["all", "confident", "lean", "toss-up"]) assert.match(html, new RegExp(`data-tier="${tier}"`));
+  assert.match(html, /data-row="confident"/);
+  assert.match(html, /id="picks-data"/);
+});
+
+test("the fixtures page has a live scores section that stays hidden until the browser has a feed", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "index.html");
+  assert.match(html, /<section[^>]*id="live"[^>]*hidden/);
+  assert.match(html, /id="none"/);
+});

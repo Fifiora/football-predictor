@@ -1,0 +1,56 @@
+{
+ "updated_at": "2026-10-27T11:58:00Z",
+ "complete": true,
+ "matches": [
+  {
+   "match_id": "SP1-20261027-Getafe-Betis",
+   "league": "SP1",
+   "home": "Getafe",
+   "away": "Betis",
+   "kickoff": "2026-10-27T07:00:00Z",
+   "state": "finished",
+   "home_goals": 2,
+   "away_goals": 1,
+   "p_home": 0.25,
+   "p_draw": 0.27,
+   "p_away": 0.48,
+   "pick": "A",
+   "pick_ok": false
+  },
+  {
+   "match_id": "F1-20261027-Lens-Brest",
+   "league": "F1",
+   "home": "Lens",
+   "away": "Brest",
+   "kickoff": "2026-10-27T08:00:00Z",
+   "state": "finished",
+   "home_goals": 0,
+   "away_goals": 0
+  },
+  {
+   "match_id": "E0-20261027-Everton-Fulham",
+   "league": "E0",
+   "home": "Everton",
+   "away": "Fulham",
+   "kickoff": "2026-10-27T11:30:00Z",
+   "state": "live",
+   "home_goals": 1,
+   "away_goals": 0,
+   "p_home": 0.52,
+   "p_draw": 0.26,
+   "p_away": 0.22,
+   "pick": "H",
+   "pick_ok": true
+  },
+  {
+   "match_id": "I1-20261027-Roma-Cagliari",
+   "league": "I1",
+   "home": "Roma",
+   "away": "Cagliari",
+   "kickoff": "2026-10-27T19:45:00Z",
+   "state": "upcoming",
+   "home_goals": null,
+   "away_goals": null
+  }
+ ]
+}

@@ -9,3 +9,6 @@ export const trackRecord = load("track_record.json");
 export const teams = load("teams.json");
 export const meta = load("meta.json");
 export const now = process.env.SITE_NOW ? new Date(process.env.SITE_NOW) : new Date();
+
+// Where the browser reads live scores from (the branch the live workflow publishes to). Empty turns the feature off.
+export const liveUrl = process.env.LIVE_URL ?? "";

@@ -16,7 +16,7 @@ jobs:
         run: |
           cd site
           set +e
-          (npm install && npm test && SITE_DATA_DIR=tests/preview-data SITE_NOW=2026-10-27T12:00:00Z npm run build) > ../site-build.log 2>&1
+          (npm install && npm test && LIVE_URL=https://live.test/live.json SITE_DATA_DIR=tests/preview-data SITE_NOW=2026-10-27T12:00:00Z npm run build) > ../site-build.log 2>&1
           code=$?
           if [ "$code" != "0" ]; then
             echo "::error title=site build failed::$(grep -v '^$' ../site-build.log | tail -c 3500 | tr '\n' '|')"

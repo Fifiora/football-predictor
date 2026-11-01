@@ -95,17 +95,21 @@ test("a pick falls in a tier by the chance given to it, with the same cut-offs a
 });
 
 test("accuracy by tier counts picks and right calls, and can be limited to one league", () => {
+  const near = (got, want) => {
+    assert.equal(got.n, want.n); assert.equal(got.right, want.right);
+    assert.ok(Math.abs(got.accuracy - want.accuracy) < 1e-9 && Math.abs(got.said - want.said) < 1e-9, JSON.stringify(got));
+  };
   const all = accuracyByTier(PICKS);
-  assert.deepEqual(all.all, { n: 7, right: 4, accuracy: 4 / 7 });
-  assert.deepEqual(all.confident, { n: 3, right: 2, accuracy: 2 / 3 });
-  assert.deepEqual(all.lean, { n: 2, right: 1, accuracy: 0.5 });
-  assert.deepEqual(all["toss-up"], { n: 2, right: 1, accuracy: 0.5 });
+  near(all.all, { n: 7, right: 4, accuracy: 4 / 7, said: (0.7 + 0.6 + 0.5 + 0.5 + 0.4 + 0.38 + 0.58) / 7 });
+  near(all.confident, { n: 3, right: 2, accuracy: 2 / 3, said: (0.7 + 0.6 + 0.58) / 3 });
+  near(all.lean, { n: 2, right: 1, accuracy: 0.5, said: 0.5 });
+  near(all["toss-up"], { n: 2, right: 1, accuracy: 0.5, said: 0.39 });
   const sp = accuracyByTier(PICKS, "SP1");
-  assert.deepEqual(sp.all, { n: 3, right: 1, accuracy: 1 / 3 });
-  assert.deepEqual(sp.confident, { n: 1, right: 0, accuracy: 0 });
+  near(sp.all, { n: 3, right: 1, accuracy: 1 / 3, said: (0.4 + 0.38 + 0.58) / 3 });
+  near(sp.confident, { n: 1, right: 0, accuracy: 0, said: 0.58 });
 });
 
 test("a tier with no picks has no accuracy rather than zero", () => {
-  assert.deepEqual(accuracyByTier([["E0", 0.7, 1]]).lean, { n: 0, right: 0, accuracy: null });
-  assert.deepEqual(accuracyByTier(undefined).all, { n: 0, right: 0, accuracy: null });
+  assert.deepEqual(accuracyByTier([["E0", 0.7, 1]]).lean, { n: 0, right: 0, accuracy: null, said: null });
+  assert.deepEqual(accuracyByTier(undefined).all, { n: 0, right: 0, accuracy: null, said: null });
 });

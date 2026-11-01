@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { trackRecord as t } from "../lib/data.mjs";
 import { leagueName, pct, verdictText } from "../lib/format.mjs";
+import { accuracyByTier } from "../lib/filters.mjs";
 const f = (x) => (x == null ? "n/a" : x.toFixed(3));
 const graded = t.n_graded > 0;
 const cal = graded ? t.calibration : [];
@@ -19,6 +20,9 @@ const rows = bench ? [
   { name: "Log loss", note: "lower is better", m: bench.model.log_loss, b: bench.bookmaker.log_loss, show: (x) => x.toFixed(3), width: (x) => Math.min(1, x / 1.1) },
 ] : [];
 const leagues = graded ? Object.entries(t.by_league) : [];
+const picks = graded ? (t.picks ?? []) : [];
+const tiers = [["all", "All picks", ""], ["confident", "Confident", "55% or more"], ["lean", "Lean", "45% to 55%"], ["toss-up", "Toss-up", "under 45%"]];
+const tally = accuracyByTier(picks);
 ---
 <Base title="Track record">
   <h1>How the predictions have done</h1>
@@ -35,6 +39,43 @@ const leagues = graded ? Object.entries(t.by_league) : [];
         <div class="panel tile"><span class="k">Log loss</span><b>{f(t.log_loss)}</b><span class="d">Lower is better. A model with no skill scores about 1.07.</span></div>
         <div class="panel tile"><span class="k">Ranked score</span><b>{f(t.rps)}</b><span class="d">Lower is better. Counts a near miss as better than a far miss.</span></div>
       </div>
+
+      {picks.length > 0 && (
+        <section class="panel conf" aria-labelledby="conf-title" data-confidence>
+          <h2 id="conf-title">How accurate is it when it is sure?</h2>
+          <p class="sub">Every pick has a chance attached. Choose how sure the model was, and a league, to see how often those picks were right.</p>
+          <div class="group" role="group" aria-label="How sure the model was">
+            <span class="lab">How sure</span>
+            <div class="chips">
+              {tiers.map(([id, label, hint]) => (
+                <button type="button" class="chip" data-tier={id} aria-pressed={id === "all" ? "true" : "false"}>{label}{hint && <span class="hint"> {hint}</span>}</button>
+              ))}
+            </div>
+          </div>
+          <div class="group" role="group" aria-label="League">
+            <span class="lab">League</span>
+            <div class="chips">
+              <button type="button" class="chip" data-lg="" aria-pressed="true">All</button>
+              {leagues.map(([l]) => <button type="button" class="chip" data-lg={l} aria-pressed="false">{leagueName(l)}</button>)}
+            </div>
+          </div>
+          <div class="result" role="status" aria-live="polite">
+            <p class="big"><b id="conf-pct">{tally.all.accuracy == null ? "n/a" : pct(tally.all.accuracy)}</b> <span id="conf-of">right: {tally.all.right} of {tally.all.n} picks</span></p>
+            <div class="track" aria-hidden="true"><span id="conf-bar" style={`width:${Math.round((tally.all.accuracy ?? 0) * 100)}%`}></span></div>
+            <p class="note" id="conf-said">The model gave these picks {tally.all.said == null ? "n/a" : pct(tally.all.said)} on average.</p>
+            <p class="note" id="conf-small" hidden>Only a few picks so far, so treat this as a rough guide.</p>
+          </div>
+          <table class="tiers">
+            <thead><tr><th>How sure</th><th>Picks</th><th>Right</th></tr></thead>
+            <tbody>
+              {tiers.slice(1).map(([id, label, hint]) => (
+                <tr data-row={id}><td>{label} <span class="hint">{hint}</span></td><td data-n>{tally[id].n}</td><td data-acc>{tally[id].accuracy == null ? "n/a" : pct(tally[id].accuracy)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <script id="picks-data" type="application/json" is:inline set:html={JSON.stringify(picks)}></script>
+        </section>
+      )}
 
       <h2>Are the percentages honest?</h2>
       <p>When the model says 30%, that should happen about 30% of the time. Dots on the dashed line mean the model is honest. Bigger dots mean more matches.</p>
@@ -101,7 +142,60 @@ const leagues = graded ? Object.entries(t.by_league) : [];
   <h2>Back-test on past seasons</h2>
   <p>Before going live, the model was tested the way it is used: predicting each match using only earlier matches. On 5,330 matches from the three seasons before 2025-26 it picked the right result 53% of the time, against 44% for always picking the home team. Football keeps most models in the 50 to 55% range. These live results are the stricter test, and this page will fill in as matches finish.</p>
 </Base>
+<script>
+  import { accuracyByTier } from "../lib/filters.mjs";
+  import { pct } from "../lib/format.mjs";
+
+  const box = document.querySelector("[data-confidence]");
+  if (box) {
+    let picks = [];
+    try { picks = JSON.parse(document.getElementById("picks-data").textContent); } catch (e) {}
+    let tier = "all", league = "";
+    const paint = () => {
+      const tally = accuracyByTier(picks, league || null);
+      const cur = tally[tier];
+      const text = (id, v) => { document.getElementById(id).textContent = v; };
+      text("conf-pct", cur.accuracy == null ? "n/a" : pct(cur.accuracy));
+      text("conf-of", cur.n ? `right: ${cur.right} of ${cur.n} picks` : "no picks in this group yet");
+      document.getElementById("conf-bar").style.width = `${Math.round((cur.accuracy ?? 0) * 100)}%`;
+      text("conf-said", cur.n ? `The model gave these picks ${pct(cur.said)} on average.` : "");
+      document.getElementById("conf-small").hidden = !(cur.n > 0 && cur.n < 30);
+      for (const row of box.querySelectorAll("tr[data-row]")) {
+        const t = tally[row.dataset.row];
+        row.querySelector("[data-n]").textContent = String(t.n);
+        row.querySelector("[data-acc]").textContent = t.accuracy == null ? "n/a" : pct(t.accuracy);
+      }
+      box.querySelectorAll("[data-tier]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tier === tier)));
+      box.querySelectorAll("[data-lg]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lg === league)));
+    };
+    box.querySelectorAll("[data-tier]").forEach((b) => b.addEventListener("click", () => { tier = b.dataset.tier; paint(); }));
+    box.querySelectorAll("[data-lg]").forEach((b) => b.addEventListener("click", () => { league = b.dataset.lg; paint(); }));
+    paint();
+  }
+</script>
 <style>
+  .conf { margin: 0 0 28px; max-width: 40rem; display: grid; gap: 12px; }
+  .conf h2 { margin: 0; }
+  .conf .sub { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .group { display: grid; gap: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--edge); background: var(--surface);
+    color: var(--ink); font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background .15s, border-color .15s; }
+  .chip:hover { border-color: var(--brand); }
+  .chip[aria-pressed="true"] { background: var(--home); border-color: var(--home); color: var(--on-home); }
+  .chip .hint { font-weight: 500; opacity: .8; font-size: .85rem; }
+  .result { display: grid; gap: 6px; padding-top: 6px; border-top: 1px solid var(--rule); }
+  .big { margin: 0; max-width: none; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+  .big b { font-size: 2.4rem; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--brand); }
+  .note { margin: 0; color: var(--muted); font-size: 0.9rem; max-width: none; }
+  .tiers { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .tiers th, .tiers td { text-align: left; padding: 6px 4px; border-top: 1px solid var(--rule); }
+  .tiers .hint { color: var(--muted); font-size: .85rem; }
+  @media (max-width: 640px) {
+    .chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -18px; padding: 2px 18px 6px; scrollbar-width: none; }
+    .chip { flex: none; white-space: nowrap; }
+  }
+
   .bm { margin: 28px 0 0; max-width: 40rem; }
   .bm h2 { margin: 0 0 4px; }
   .bm .sub { margin: 0 0 12px; color: var(--muted); font-size: 0.95rem; }
