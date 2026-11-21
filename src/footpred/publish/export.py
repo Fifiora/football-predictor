@@ -120,11 +120,15 @@ def _recent_picks(graded: pd.DataFrame) -> list[dict]:
 
 
 def _all_picks(graded: pd.DataFrame) -> list[list]:
-    """Every graded pick as ``[league, chance given to the pick, 1 if it was right]``, for the confidence filter."""
+    """Every graded pick as ``[league, chance given to the pick, 1 if it was right, match id]``, for the confidence filter.
+
+    The id lets the page add matches that finished a moment ago without counting one twice.
+    """
     probs = graded[_OUTCOME_COLS].to_numpy(dtype=float)
     pick = probs.argmax(axis=1)
     right = pick == graded["outcome"].to_numpy(dtype=int)
-    return [[str(league), round(float(p), 4), int(ok)] for league, p, ok in zip(graded["league"], probs.max(axis=1), right)]
+    return [[str(league), round(float(p), 4), int(ok), str(mid)]
+            for league, p, ok, mid in zip(graded["league"], probs.max(axis=1), right, graded["match_id"])]
 
 
 def _track_record_payload(graded_log: pd.DataFrame, reference: dict | None = None) -> dict:

@@ -133,7 +133,10 @@ const nE0 = Number((await p.textContent("#conf-of")).match(/of (\d+) picks/)[1])
 check(nE0 < nAll && nE0 > 0, `limiting to one league narrows the picks (${nAll} to ${nE0})`);
 await p.click('button[data-tier="all"]');
 await p.click('button[data-lg=""]');
-check(Number((await p.textContent("#conf-of")).match(/of (\d+) picks/)[1]) === 120, "all picks and all leagues counts every graded match");
+await p.waitForFunction(() => !document.getElementById("conf-live").hidden, null, { timeout: 5000 }).catch(() => {});
+check(Number((await p.textContent("#conf-of")).match(/of (\d+) picks/)[1]) === 121, "a match finished today in the live feed is counted with the 120 saved picks");
+check((await p.textContent("#conf-live")).includes("1 match that finished today"), "the page says it includes a match finished today");
+check((await p.textContent("#t-n")).trim() === "121", "the matches-graded tile counts it too");
 check(await p.locator("[data-bankroll-link]").isVisible(), "the track record page links to the paper bankroll");
 await shot(p, "track-confidence");
 await p.close();

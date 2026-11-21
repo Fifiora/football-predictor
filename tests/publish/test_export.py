@@ -173,3 +173,4 @@ def test_track_record_exports_every_graded_pick_compactly_for_the_confidence_fil
     # [league, probability of the pick, 1 if the pick was right]
     got = {(p[0], round(p[1], 2)): p[2] for p in picks}
     assert got == {("E0", 0.6): 1, ("E0", 0.5): 1, ("SP1", 0.5): 0}
+    assert all(isinstance(p[3], str) and p[3] for p in picks) and len({p[3] for p in picks}) == 3  # match ids, to avoid double counting

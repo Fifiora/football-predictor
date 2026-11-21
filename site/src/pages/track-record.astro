@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import { simulation as sim, trackRecord as t } from "../lib/data.mjs";
 import { leagueName, money, pct, verdictText } from "../lib/format.mjs";
 import { accuracyByTier } from "../lib/filters.mjs";
+import { liveUrl } from "../lib/data.mjs";
 const f = (x) => (x == null ? "n/a" : x.toFixed(3));
 const graded = t.n_graded > 0;
 const cal = graded ? t.calibration : [];
@@ -33,16 +34,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <p>Every prediction is saved before kickoff and is never edited afterwards. Results appear here after the first predicted matches finish: how often the top pick was right, and whether a "60%" really happens about 60% of the time.</p>
       </section>
     : <>
-      <p class="lede">{t.n_graded} predicted matches graded. Every prediction was logged before kickoff and is never edited afterwards.</p>
+      <p class="lede"><span id="lede-n">{t.n_graded}</span> predicted matches graded. Every prediction was logged before kickoff and is never edited afterwards.</p>
       <div class="tiles">
-        <div class="panel tile"><span class="k">Right result</span><b>{pct(t.accuracy)}</b><span class="d">How often the most likely outcome happened. Always picking the home team gets about 44%.</span></div>
-        <div class="panel tile"><span class="k">Matches graded</span><b>{t.n_graded}</b><span class="d">Only matches predicted before kickoff count.</span></div>
+        <div class="panel tile"><span class="k">Right result</span><b id="t-acc" data-base={t.accuracy} data-n={t.n_graded}>{pct(t.accuracy)}</b><span class="d">How often the most likely outcome happened. Always picking the home team gets about 44%.</span></div>
+        <div class="panel tile"><span class="k">Matches graded</span><b id="t-n">{t.n_graded}</b><span class="d">Only matches predicted before kickoff count.</span></div>
         <div class="panel tile"><span class="k">Log loss</span><b>{f(t.log_loss)}</b><span class="d">Lower is better. A model with no skill scores about 1.07.</span></div>
         <div class="panel tile"><span class="k">Ranked score</span><b>{f(t.rps)}</b><span class="d">Lower is better. Counts a near miss as better than a far miss.</span></div>
       </div>
 
       {picks.length > 0 && (
-        <section class="panel conf" aria-labelledby="conf-title" data-confidence>
+        <section class="panel conf" aria-labelledby="conf-title" data-confidence data-url={liveUrl}>
           <h2 id="conf-title">How accurate is it when it is sure?</h2>
           <p class="sub">Every pick has a chance attached. Choose how sure the model was, and a league, to see how often those picks were right.</p>
           <div class="group" role="group" aria-label="How sure the model was">
@@ -64,6 +65,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             <p class="big"><b id="conf-pct">{tally.all.accuracy == null ? "n/a" : pct(tally.all.accuracy)}</b> <span id="conf-of">right: {tally.all.right} of {tally.all.n} picks</span></p>
             <div class="track" aria-hidden="true"><span id="conf-bar" style={`width:${Math.round((tally.all.accuracy ?? 0) * 100)}%`}></span></div>
             <p class="note" id="conf-said">The model gave these picks {tally.all.said == null ? "n/a" : pct(tally.all.said)} on average.</p>
+            <p class="note" id="conf-live" hidden></p>
             <p class="note" id="conf-small" hidden>Only a few picks so far, so treat this as a rough guide.</p>
           </div>
           <table class="tiers">
@@ -155,11 +157,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 <script>
   import { accuracyByTier } from "../lib/filters.mjs";
   import { pct } from "../lib/format.mjs";
+  import { extraPicks } from "../lib/live.mjs";
 
   const box = document.querySelector("[data-confidence]");
   if (box) {
-    let picks = [];
-    try { picks = JSON.parse(document.getElementById("picks-data").textContent); } catch (e) {}
+    let saved = [], picks = [], extra = 0;
+    try { saved = JSON.parse(document.getElementById("picks-data").textContent); } catch (e) {}
+    picks = saved;
+    const known = new Set(saved.map((p) => p[3]));
     let tier = "all", league = "";
     const paint = () => {
       const tally = accuracyByTier(picks, league || null);
@@ -175,12 +180,37 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         row.querySelector("[data-n]").textContent = String(t.n);
         row.querySelector("[data-acc]").textContent = t.accuracy == null ? "n/a" : pct(t.accuracy);
       }
+      const note = document.getElementById("conf-live");
+      note.hidden = extra === 0;
+      note.textContent = extra ? `Includes ${extra} ${extra === 1 ? "match" : "matches"} that finished today and ${extra === 1 ? "is" : "are"} not in the full record yet.` : "";
       box.querySelectorAll("[data-tier]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tier === tier)));
       box.querySelectorAll("[data-lg]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lg === league)));
     };
     box.querySelectorAll("[data-tier]").forEach((b) => b.addEventListener("click", () => { tier = b.dataset.tier; paint(); }));
     box.querySelectorAll("[data-lg]").forEach((b) => b.addEventListener("click", () => { league = b.dataset.lg; paint(); }));
     paint();
+    const url = box.dataset.url;
+    if (url) {
+      const poll = async () => {
+        if (document.hidden) return;
+        try {
+          const res = await fetch(`${url}?t=${Math.floor(Date.now() / 60000)}`, { cache: "no-store" });
+          if (!res.ok) return;
+          const more = extraPicks(await res.json(), known);
+          if (more.length === extra) return;
+          extra = more.length;
+          picks = saved.concat(more);
+          paint();
+          const acc = document.getElementById("t-acc"), n0 = Number(acc.dataset.n), right = more.reduce((a, p) => a + p[2], 0);
+          acc.textContent = pct((Number(acc.dataset.base) * n0 + right) / (n0 + extra));
+          document.getElementById("t-n").textContent = String(n0 + extra);
+          document.getElementById("lede-n").textContent = String(n0 + extra);
+        } catch (e) { /* offline: keep the saved record */ }
+      };
+      poll();
+      setInterval(poll, 60000);
+      document.addEventListener("visibilitychange", poll);
+    }
   }
 </script>
 <style>

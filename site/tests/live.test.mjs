@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fixtureHidden, liveView, feedAgeMinutes, scoreLine } from "../src/lib/live.mjs";
+import { extraPicks, fixtureHidden, liveView, feedAgeMinutes, scoreLine } from "../src/lib/live.mjs";
 
 const HOUR = 3600 * 1000;
 const NOW = Date.parse("2026-11-01T20:30:00Z");
@@ -64,4 +64,16 @@ test("feed age in minutes, unknown when unreadable", () => {
 test("score line", () => {
   assert.equal(scoreLine({ home_goals: 2, away_goals: 1 }), "2 – 1");
   assert.equal(scoreLine({ home_goals: null, away_goals: null }), "–");
+});
+
+test("finished matches missing from the saved record become extra picks, and recorded or unpicked ones do not", () => {
+  const f = feed(
+    m("new-right", "finished", "2026-11-01T14:00:00Z", { pick: "H", pick_ok: true, p_home: 0.6, p_draw: 0.25, p_away: 0.15 }),
+    m("new-wrong", "finished", "2026-11-01T15:00:00Z", { pick: "A", pick_ok: false, p_home: 0.2, p_draw: 0.3, p_away: 0.5 }),
+    m("saved", "finished", "2026-11-01T16:00:00Z", { pick: "H", pick_ok: true, p_home: 0.5, p_draw: 0.3, p_away: 0.2 }),
+    m("no-pick", "finished", "2026-11-01T17:00:00Z"),
+    m("playing", "live", "2026-11-01T19:00:00Z", { pick: "H", pick_ok: true, p_home: 0.5, p_draw: 0.3, p_away: 0.2 }),
+  );
+  assert.deepEqual(extraPicks(f, new Set(["saved"])), [["E0", 0.6, 1, "new-right"], ["E0", 0.5, 0, "new-wrong"]]);
+  assert.deepEqual(extraPicks(null, new Set()), []);
 });

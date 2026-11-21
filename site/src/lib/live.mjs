@@ -41,3 +41,16 @@ export function scoreLine(m) {
   if (m.home_goals == null || m.away_goals == null) return "–";
   return `${m.home_goals} – ${m.away_goals}`;
 }
+
+/** Picks for matches that have finished in the live feed but are not in the saved track record yet, as ``[league, chance, 1 if right, id]``. */
+export function extraPicks(feed, knownIds) {
+  const out = [];
+  for (const m of Array.isArray(feed?.matches) ? feed.matches : []) {
+    if (!m || m.state !== "finished" || typeof m.match_id !== "string" || knownIds.has(m.match_id)) continue;
+    if (typeof m.pick_ok !== "boolean" || !["H", "D", "A"].includes(m.pick)) continue;
+    const p = { H: m.p_home, D: m.p_draw, A: m.p_away }[m.pick];
+    if (!Number.isFinite(p)) continue;
+    out.push([m.league, Math.round(p * 1e4) / 1e4, m.pick_ok ? 1 : 0, m.match_id]);
+  }
+  return out;
+}
