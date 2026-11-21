@@ -168,7 +168,7 @@ def _main(argv: list[str] | None = None) -> int:
         if not feed["complete"]:  # keep the last good feed rather than publish one with competitions missing
             print("::warning title=live::some competitions could not be read; the previous live feed stays")
             return 4
-        unrecorded = unrecorded_results(feed, recorded_match_ids(args.data_dir))
+        unrecorded = unrecorded_results(feed, recorded_match_ids(args.data_dir), now)
         busy = still_busy(feed, now)
         write_outputs(args.out_dir, feed, unrecorded, busy)
         print(f"live: {len(feed['matches'])} matches, {sum(m['state'] == 'live' for m in feed['matches'])} live, "

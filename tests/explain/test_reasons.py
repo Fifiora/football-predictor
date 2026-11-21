@@ -50,7 +50,10 @@ def test_direction_follows_sign(model):
     assert away[0].feature == "elo_diff" and away[0].direction == "away"
 
 
-def test_min_strength_filters_noise(model):
+def test_min_strength_filters_noise(model, monkeypatch):
+    # SHAP values at the median row are not zero (SHAP's reference is the mean prediction), so pin the
+    # occlusion path, where a row equal to the training medians genuinely has nothing to explain.
+    monkeypatch.setattr("footpred.explain.reasons._shap_scores", lambda m, x: None)
     assert top_drivers(model, row(model), 3) == []  # a baseline row has nothing to explain
 
 

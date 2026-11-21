@@ -110,3 +110,9 @@ def test_outputs_are_written_as_json(tmp_path, world):
 def test_a_match_stuck_as_live_for_days_does_not_keep_the_poller_running(world):
     stuck, _ = live(world, {"E0": [row("A FC", "B FC", "PAUSED", 0, 0, "2025-10-25T19:45:00Z")]})
     assert not still_busy(stuck, NOW)
+
+
+def test_a_result_that_never_gets_stored_stops_asking_for_a_refresh_after_six_hours(world):
+    feed, _ = live(world, {"E0": [row("A FC", "B FC", "FINISHED", 1, 0, "2025-10-27T09:00:00Z"), row("C FC", "D FC", "FINISHED", 1, 0, "2025-10-27T17:00:00Z")]})
+    assert unrecorded_results(feed, set(), NOW) == ["E0-20251027-C-D"]
+    assert unrecorded_results(feed, set()) == ["E0-20251027-A-B", "E0-20251027-C-D"]

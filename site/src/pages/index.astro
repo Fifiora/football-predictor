@@ -213,7 +213,9 @@ const ranges = [["all", "All"], ["today", "Today"], ["3d", "Next 3 days"], ["wee
         line.append(`Our pick: ${who} (${chance}) `);
         if (m.pick_ok != null) {
           const ok = m.pick_ok;
-          const text = m.state === "finished" ? (ok ? "✓ Right" : "✗ Missed") : (ok ? "✓ Pick is ahead" : "Pick is behind");
+          const text = m.state === "finished" ? (ok ? "✓ Right" : "✗ Missed")
+            : m.pick === "D" ? (ok ? "✓ Level so far" : "Not level now")
+            : (ok ? "✓ Pick is ahead" : "Pick is behind");
           line.append(el("b", ok ? "ok" : "bad", text));
         }
         li.append(line);

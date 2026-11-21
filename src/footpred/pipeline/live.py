@@ -83,9 +83,20 @@ def build_live(client, leagues: list[str], now: pd.Timestamp, log: pd.DataFrame,
     return {"updated_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "complete": complete, "matches": matches}, warnings
 
 
-def unrecorded_results(feed: dict, recorded_ids: set[str]) -> list[str]:
-    """Finished matches whose result the daily refresh has not stored yet; seeing any means it should run now."""
-    return sorted(m["match_id"] for m in feed["matches"] if m["state"] == "finished" and m["match_id"] not in recorded_ids)
+def unrecorded_results(feed: dict, recorded_ids: set[str], now: pd.Timestamp | None = None, within: timedelta = timedelta(hours=6)) -> list[str]:
+    """Finished matches whose result the daily refresh has not stored yet; seeing any means it should run now.
+
+    With ``now``, only matches that kicked off within ``within`` count, so one that can never be stored
+    (an unmapped club, say) stops asking for refreshes after a few hours instead of every half hour all day.
+    """
+    out = []
+    for m in feed["matches"]:
+        if m["state"] != "finished" or m["match_id"] in recorded_ids:
+            continue
+        if now is not None and m.get("kickoff") and pd.to_datetime(m["kickoff"], utc=True).tz_localize(None) < pd.Timestamp(now) - within:
+            continue
+        out.append(m["match_id"])
+    return sorted(out)
 
 
 def still_busy(feed: dict, now: pd.Timestamp, horizon: timedelta = timedelta(hours=3)) -> bool:
