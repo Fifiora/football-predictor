@@ -63,5 +63,6 @@
   }
  ],
  "stake_fraction": 0.05,
- "confident_at": 0.55
+ "confident_at": 0.55,
+ "open_stake": 4.8
 }

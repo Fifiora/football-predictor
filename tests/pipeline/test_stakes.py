@@ -62,6 +62,7 @@ def test_summary_shows_bankroll_record_curve_and_open_bets(tmp_path):
     assert s["profit"] == pytest.approx(5.0 - 4.75)
     assert s["bankroll"] == pytest.approx(100.25)  # open stakes count at cost
     assert [p["bankroll"] for p in s["curve"]] == [pytest.approx(105.0), pytest.approx(100.25)]
+    assert s["open_stake"] == pytest.approx(4.51)
     assert s["recent"][0]["status"] == "open" and s["since"] == "2026-11-20"
     assert s["roi"] == pytest.approx(0.25 / 9.75)
 

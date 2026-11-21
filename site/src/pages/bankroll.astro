@@ -1,0 +1,172 @@
+---
+import Base from "../layouts/Base.astro";
+import { simulation as sim } from "../lib/data.mjs";
+import { betText, curveGeometry, money } from "../lib/format.mjs";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const W = 640, H = 220, PAD = 18;
+const geo = sim ? curveGeometry(sim.curve, sim.start, W, H, PAD) : null;
+const settled = sim ? sim.won + sim.lost : 0;
+const up = sim ? sim.profit >= 0 : true;
+const area = geo && sim.curve.length ? `M${geo.points.split(" ").join(" L")} L${geo.last.x.toFixed(1)},${H} L${PAD},${H} Z` : "";
+const steps = sim ? [
+  ["1", "Pick", `Only matches the model rates Confident, ${Math.round(sim.confident_at * 100)}% or more, in the five leagues.`],
+  ["2", "Stake", `${Math.round(sim.stake_fraction * 100)}% of the cash on hand, so stakes shrink after losses and grow after wins.`],
+  ["3", "Price", "Bet365's price as it stood before kickoff. It is saved with the bet and never changed."],
+  ["4", "Settle", "A right pick pays stake times price. A wrong one loses the stake."],
+] : [];
+const chips = [["all", "All"], ["open", "Open"], ["won", "Won"], ["lost", "Lost"]];
+const mark = { open: "○", won: "✓", lost: "✗" };
+const label = { open: "Open", won: "Won", lost: "Lost" };
+---
+<Base title="Paper bankroll">
+  <p class="eyebrow">Pretend money · not betting advice</p>
+  <h1>Paper bankroll</h1>
+  <p class="lede">What if someone followed only the model's confident picks with {sim ? money(sim.start) : "$100"}? It acts like a careful person: one fixed rule, real prices, no peeking, and no topping up.</p>
+
+  {!sim || sim.bets === 0
+    ? <section class="panel empty" data-simulation>
+        <h2>No bets yet</h2>
+        <p>The first bet goes in when the model is confident about an upcoming league match that has a Bet365 price. Check back after the next update.</p>
+      </section>
+    : <>
+      <section class="panel glow hero" data-simulation aria-labelledby="bal-title">
+        <div class="hero-top">
+          <div>
+            <h2 id="bal-title" class="k">Bankroll now</h2>
+            <p class="balance">{money(sim.bankroll)}</p>
+          </div>
+          <p class={`delta ${up ? "up" : "down"}`}>
+            <span aria-hidden="true">{up ? "▲" : "▼"}</span>
+            <span>{money(sim.profit, true)} <span class="since">since {sim.since}</span></span>
+          </p>
+        </div>
+        {sim.curve.length > 0
+          ? <figure class="curve">
+              <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Bankroll after each finished bet, from ${money(sim.start)} to ${money(sim.bankroll)}`}>
+                <defs>
+                  <linearGradient id="fill" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="var(--home)" stop-opacity="0.35" />
+                    <stop offset="100%" stop-color="var(--home)" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <line x1="0" x2={W} y1={geo.startY} y2={geo.startY} class="base" />
+                <text x="8" y={Math.max(12, geo.startY - 6)} class="tick">{money(sim.start)} start</text>
+                <path d={area} class="area" />
+                <polyline points={geo.points} class="line" />
+                <circle cx={geo.last.x} cy={geo.last.y} r="5" class="end" />
+              </svg>
+              <figcaption>Balance after each finished bet. Low {money(geo.lo)}, high {money(geo.hi)}.</figcaption>
+              <details>
+                <summary>See the numbers</summary>
+                <table>
+                  <thead><tr><th>Match day</th><th>Balance</th></tr></thead>
+                  <tbody>{sim.curve.map((c) => <tr><td>{c.date}</td><td>{money(c.bankroll)}</td></tr>)}</tbody>
+                </table>
+              </details>
+            </figure>
+          : <p class="n">No bet has finished yet. The line appears after the first result.</p>}
+      </section>
+
+      <div class="tiles">
+        <div class="panel stat"><span class="k">Return on stakes</span><b>{sim.roi == null ? "n/a" : `${sim.roi >= 0 ? "+" : ""}${(sim.roi * 100).toFixed(1)}%`}</b><span class="d">Profit divided by the {money(sim.staked)} staked on finished bets.</span></div>
+        <div class="panel stat"><span class="k">Record</span><b>{sim.won}–{sim.lost}</b><span class="d">{settled ? `${Math.round((sim.won / settled) * 100)}% of finished bets won.` : "Nothing finished yet."}</span></div>
+        <div class="panel stat"><span class="k">Still waiting</span><b>{sim.open}</b><span class="d">{money(sim.open_stake ?? 0)} staked on matches not played yet.</span></div>
+        <div class="panel stat"><span class="k">Cash on hand</span><b>{money(sim.cash)}</b><span class="d">What is left to stake on new bets.</span></div>
+      </div>
+      {settled > 0 && settled < 30 && <p class="note">Only {settled} finished {settled === 1 ? "bet" : "bets"} so far. A few results can swing this a lot, so treat it as a rough guide.</p>}
+
+      <section class="bets-box" aria-labelledby="bets-title">
+        <div class="bets-head">
+          <h2 id="bets-title">Latest bets</h2>
+          <div class="chips" role="group" aria-label="Show bets">
+            {chips.map(([v, l]) => <button type="button" class="chip" data-show={v} aria-pressed={v === "all" ? "true" : "false"}>{l}</button>)}
+          </div>
+        </div>
+        <ul class="bets" id="bets">
+          {sim.recent.map((b) => (
+            <li class={`bet ${b.status}`} data-status={b.status}>
+              <span class="pill"><span aria-hidden="true">{mark[b.status]}</span> {label[b.status]}</span>
+              <span class="what">
+                <b>{b.home} v {b.away}</b>
+                <span class="n">{betText(b)}</span>
+              </span>
+              <span class="amt">{b.profit == null ? money(b.stake) : money(b.profit, true)}</span>
+            </li>
+          ))}
+        </ul>
+        <p id="bets-empty" class="n" hidden>No bets in this group yet.</p>
+      </section>
+    </>}
+
+  <section aria-labelledby="how-title" class="how">
+    <h2 id="how-title">The rules it plays by</h2>
+    <ol class="steps">
+      {(steps.length ? steps : [["1", "Pick", "Only matches the model rates Confident, 55% or more, in the five leagues."], ["2", "Stake", "5% of the cash on hand."], ["3", "Price", "Bet365's price before kickoff, saved with the bet."], ["4", "Settle", "A right pick pays stake times price. A wrong one loses the stake."]]).map(([n, t, d]) => (
+        <li class="panel step"><span class="num" aria-hidden="true">{n}</span><b>{t}</b><span class="d">{d}</span></li>
+      ))}
+    </ol>
+    <p class="fine">Odds are used only to score picks after the fact. They never feed the model. Real bookmakers limit winners and prices move, so real results would differ. It starts from the day the feature launched and only counts bets placed before kickoff. <a href={`${base}/track-record/`}>See how accurate the picks are</a>.</p>
+  </section>
+</Base>
+<script>
+  const list = document.getElementById("bets");
+  if (list) {
+    const chips = document.querySelectorAll("[data-show]");
+    const apply = (v) => {
+      let shown = 0;
+      list.querySelectorAll("li").forEach((li) => { const on = v === "all" || li.dataset.status === v; li.hidden = !on; if (on) shown += 1; });
+      document.getElementById("bets-empty").hidden = shown > 0;
+      chips.forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.show === v)));
+    };
+    chips.forEach((c) => c.addEventListener("click", () => apply(c.dataset.show)));
+  }
+</script>
+<style>
+  .eyebrow { margin: 28px 0 0; font-size: 0.8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .eyebrow + h1 { margin-top: 6px; }
+  .empty { max-width: 40rem; } .empty h2 { margin-top: 0; }
+  .hero { display: grid; gap: 14px; max-width: none; }
+  .hero-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
+  .k { margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .balance { margin: 0; font-size: clamp(2.6rem, 9vw, 4rem); line-height: 1; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .delta { margin: 0; display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-variant-numeric: tabular-nums;
+    border: 1.5px solid currentColor; max-width: none; }
+  .delta.up { color: var(--good); } .delta.down { color: var(--warn); }
+  .delta .since { color: var(--muted); font-weight: 500; font-size: .85rem; }
+  .curve { margin: 0; }
+  .curve svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .curve .base { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 5; }
+  .curve .tick { fill: var(--muted); font-size: 11px; }
+  .curve .area { fill: url(#fill); }
+  .curve .line { fill: none; stroke: var(--home); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+  .curve .end { fill: var(--home); stroke: var(--paper); stroke-width: 3; }
+  figcaption { color: var(--muted); font-size: .88rem; margin-top: 4px; }
+  details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--brand); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 4px; border-top: 1px solid var(--rule); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr)); gap: 12px; margin-top: 14px; }
+  .stat { display: grid; gap: 4px; align-content: start; }
+  .stat b { font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--brand); }
+  .d, .n { color: var(--muted); font-size: .9rem; }
+  .note { color: var(--muted); font-size: .92rem; max-width: 40rem; }
+  .bets-box { margin-top: 26px; }
+  .bets-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .bets-head h2 { margin: 0; }
+  .chips { display: flex; gap: 8px; }
+  .chip { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--edge); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+  .chip:hover { border-color: var(--brand); }
+  .chip[aria-pressed="true"] { background: var(--home); border-color: var(--home); color: var(--on-home); }
+  .bets { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+  .bet { max-width: none; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 16px;
+    background: var(--surface); border: 1px solid var(--line); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--shadow); }
+  .pill { font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1.5px solid currentColor; white-space: nowrap; }
+  .bet.won .pill, .bet.won .amt { color: var(--good); } .bet.lost .pill, .bet.lost .amt { color: var(--warn); } .bet.open .pill { color: var(--muted); }
+  .what { display: grid; gap: 2px; min-width: 0; } .what b { overflow-wrap: anywhere; }
+  .amt { font-weight: 800; font-variant-numeric: tabular-nums; }
+  @media (max-width: 520px) { .bet { grid-template-columns: 1fr auto; } .pill { justify-self: start; grid-column: 1; } .amt { grid-row: 1; grid-column: 2; } .what { grid-column: 1 / -1; } }
+  .how { margin-top: 30px; }
+  .steps { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 12px; }
+  .step { max-width: none; display: grid; gap: 4px; align-content: start; }
+  .num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--home); color: var(--on-home); font-weight: 800; font-size: .9rem; }
+  .fine { color: var(--muted); font-size: .92rem; margin-top: 14px; }
+</style>

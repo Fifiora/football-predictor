@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import { simulation as sim, trackRecord as t } from "../lib/data.mjs";
-import { betText, curveGeometry, leagueName, money, pct, verdictText } from "../lib/format.mjs";
+import { leagueName, money, pct, verdictText } from "../lib/format.mjs";
 import { accuracyByTier } from "../lib/filters.mjs";
 const f = (x) => (x == null ? "n/a" : x.toFixed(3));
 const graded = t.n_graded > 0;
@@ -23,9 +23,7 @@ const leagues = graded ? Object.entries(t.by_league) : [];
 const picks = graded ? (t.picks ?? []) : [];
 const tiers = [["all", "All picks", ""], ["confident", "Confident", "55% or more"], ["lean", "Lean", "45% to 55%"], ["toss-up", "Toss-up", "under 45%"]];
 const tally = accuracyByTier(picks);
-const W = 320, H = 120;
-const geo = sim ? curveGeometry(sim.curve, sim.start, W, H) : null;
-const settledN = sim ? sim.won + sim.lost : 0;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 <Base title="Track record">
   <h1>How the predictions have done</h1>
@@ -143,32 +141,12 @@ const settledN = sim ? sim.won + sim.lost : 0;
   )}
 
   {sim && (
-    <section class="panel glow sim" aria-labelledby="sim-title" data-simulation>
-      <h2 id="sim-title">What if we had backed the confident picks?</h2>
-      <p class="sub">A pretend bankroll that starts at {money(sim.start)}. It backs only picks rated Confident ({Math.round(sim.confident_at * 100)}% or more), stakes {Math.round(sim.stake_fraction * 100)}% of the cash it has on each, takes Bet365's price as it stood before kickoff, and settles when the match ends. League matches only, from the day it started{sim.since ? ` (${sim.since})` : ""}. Pretend money for fun, not betting advice.</p>
-      <div class="tiles">
-        <div class="tile"><span class="k">Bankroll</span><b>{money(sim.bankroll)}</b><span class="d">{money(sim.profit, true)} since the start</span></div>
-        <div class="tile"><span class="k">Return on stakes</span><b>{sim.roi == null ? "n/a" : `${sim.roi >= 0 ? "+" : ""}${(sim.roi * 100).toFixed(1)}%`}</b><span class="d">Profit divided by money staked on finished bets ({money(sim.staked)}).</span></div>
-        <div class="tile"><span class="k">Record</span><b>{sim.won}–{sim.lost}</b><span class="d">Bets won and lost. {sim.open} still waiting.</span></div>
-      </div>
-      {sim.curve.length > 0
-        ? <figure class="curve">
-            <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Bankroll over time, from ${money(sim.start)} to ${money(sim.bankroll)}`}>
-              <line x1="0" x2={W} y1={geo.startY} y2={geo.startY} class="base" />
-              <polyline points={geo.points} class="line" />
-              <circle cx={geo.last.x} cy={geo.last.y} r="4" class="end" />
-            </svg>
-            <figcaption class="n">Dashed line: the {money(sim.start)} start. Low {money(geo.lo)}, high {money(geo.hi)}.</figcaption>
-          </figure>
-        : <p class="n">{sim.bets === 0 ? "No bets yet. The first goes in when the model is confident about an upcoming league match that has a Bet365 price." : "No bets have finished yet."}</p>}
-      {settledN > 0 && settledN < 30 && <p class="n">Only {settledN} finished bets so far. A few results can swing this a lot, so treat it as a rough guide.</p>}
-      {sim.recent.length > 0 && (
-        <details>
-          <summary>See the latest bets</summary>
-          <ul class="bets">{sim.recent.map((b) => <li class={b.status}><span class="who">{betText(b)}</span> <span class="n">{b.home} v {b.away}</span></li>)}</ul>
-        </details>
-      )}
-    </section>
+    <a class="panel glow teaser" href={`${base}/bankroll/`} data-bankroll-link>
+      <span class="k">New</span>
+      <b>Paper bankroll: {money(sim.bankroll)}</b>
+      <span class="d">What would $100 have done backing only the confident picks? {sim.bets === 0 ? "The first bets go in with the next update." : `${money(sim.profit, true)} so far after ${sim.won + sim.lost} finished ${sim.won + sim.lost === 1 ? "bet" : "bets"}.`}</span>
+      <span class="go" aria-hidden="true">See it →</span>
+    </a>
   )}
 
   <h2>Back-test on past seasons</h2>
@@ -206,18 +184,9 @@ const settledN = sim ? sim.won + sim.lost : 0;
   }
 </script>
 <style>
-  .sim { margin: 28px 0 0; max-width: 40rem; display: grid; gap: 12px; }
-  .sim h2 { margin: 0; }
-  .sim .sub { margin: 0; color: var(--muted); font-size: 0.95rem; }
-  .sim .tile { padding: 0; }
-  .curve { margin: 0; }
-  .curve svg { width: 100%; height: auto; display: block; }
-  .curve .base { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
-  .curve .line { fill: none; stroke: var(--home); stroke-width: 2.5; stroke-linejoin: round; }
-  .curve .end { fill: var(--home); stroke: var(--surface); stroke-width: 2; }
-  .bets { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  .bets li { max-width: none; display: grid; gap: 0; padding: 6px 0; border-top: 1px solid var(--rule); }
-  .bets li.won .who { color: var(--good); } .bets li.lost .who { color: var(--warn); }
+  .teaser { display: grid; gap: 4px; margin: 28px 0 0; max-width: 40rem; text-decoration: none; color: var(--ink); }
+  .teaser b { font-size: 1.3rem; }
+  .teaser .go { color: var(--brand); font-weight: 700; }
   .conf { margin: 0 0 28px; max-width: 40rem; display: grid; gap: 12px; }
   .conf h2 { margin: 0; }
   .conf .sub { margin: 0; color: var(--muted); font-size: 0.95rem; }

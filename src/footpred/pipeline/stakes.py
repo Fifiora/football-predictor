@@ -95,7 +95,7 @@ def settle_bets(path: Path, graded: pd.DataFrame) -> int:
 def summarize(ledger: pd.DataFrame, recent: int = 30) -> dict:
     """What the page shows: money now, record, the line of profit over time and the latest bets."""
     if ledger.empty:
-        return {"start": START, "cash": START, "bankroll": START, "profit": 0.0, "roi": None, "bets": 0, "open": 0,
+        return {"start": START, "cash": START, "bankroll": START, "profit": 0.0, "roi": None, "bets": 0, "open": 0, "open_stake": 0.0,
                 "won": 0, "lost": 0, "staked": 0.0, "since": None, "curve": [], "recent": [],
                 "stake_fraction": STAKE_FRACTION, "confident_at": CONFIDENT_AT}
     settled = ledger[ledger["outcome"].notna()].copy()
@@ -118,6 +118,6 @@ def summarize(ledger: pd.DataFrame, recent: int = 30) -> dict:
                      "status": status, "profit": None if status == "open" else round(float(r["payout"]) - float(r["stake"]), 2)})
     return {"start": START, "cash": money, "bankroll": round(money + float(open_["stake"].sum()), 2),
             "profit": round(running - START, 2), "roi": (float(settled["profit"].sum()) / staked) if staked else None,
-            "bets": int(len(ledger)), "open": int(len(open_)), "won": won, "lost": int(len(settled)) - won,
+            "bets": int(len(ledger)), "open": int(len(open_)), "open_stake": round(float(open_["stake"].sum()), 2), "won": won, "lost": int(len(settled)) - won,
             "staked": round(staked, 2), "since": pd.to_datetime(ledger["placed_at"], format="mixed").min().strftime("%Y-%m-%d"),
             "curve": curve, "recent": bets, "stake_fraction": STAKE_FRACTION, "confident_at": CONFIDENT_AT}

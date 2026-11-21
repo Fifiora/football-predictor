@@ -134,13 +134,37 @@ check(nE0 < nAll && nE0 > 0, `limiting to one league narrows the picks (${nAll} 
 await p.click('button[data-tier="all"]');
 await p.click('button[data-lg=""]');
 check(Number((await p.textContent("#conf-of")).match(/of (\d+) picks/)[1]) === 120, "all picks and all leagues counts every graded match");
-check(await p.locator("[data-simulation]").isVisible(), "the paper bankroll panel is shown");
-check((await p.locator("[data-simulation] svg polyline").count()) === 1, "the bankroll line is drawn");
-check((await p.locator("[data-simulation]").textContent()).includes("$101.30"), "the bankroll shows its balance");
+check(await p.locator("[data-bankroll-link]").isVisible(), "the track record page links to the paper bankroll");
 await shot(p, "track-confidence");
 await p.close();
 p = await open("/track-record/", { width: 390, height: 844, dark: true });
 await shot(p, "track-dark-mobile");
+await p.close();
+
+// Paper bankroll page, and the mobile tab bar
+p = await open("/bankroll/", { width: 1000, height: 900 });
+await shot(p, "bankroll-desktop");
+check(await p.locator("[data-simulation]").isVisible(), "the bankroll page shows its main panel");
+check((await p.locator(".balance").textContent()).includes("$101.30"), "the balance is shown large");
+check((await p.locator(".delta").textContent()).includes("+$1.30"), "the change since the start is shown with a sign");
+check((await p.locator("[data-simulation] svg polyline").count()) === 1, "the bankroll line is drawn");
+check((await p.locator("li.bet").count()) === 3, "the latest bets are listed");
+await p.click('button[data-show="won"]');
+check((await p.locator("li.bet:not([hidden])").count()) === 1, "the Won filter leaves one bet");
+await p.click('button[data-show="all"]');
+check((await p.locator("nav a[aria-current=page]").textContent()).includes("Bankroll"), "the nav marks Bankroll as the current page");
+await p.close();
+p = await open("/bankroll/", { width: 390, height: 844 });
+await shot(p, "bankroll-mobile");
+check(!(await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)), "no horizontal scroll on the bankroll page on a phone");
+const bar = await p.locator("nav").evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, pos: getComputedStyle(el).position }; });
+check(bar.pos === "fixed" && Math.abs(bar.bottom - 844) < 2, `on a phone the main navigation is a tab bar at the bottom (${bar.pos})`);
+check((await p.locator("nav a").count()) === 5, "the tab bar has five items");
+const small = await p.locator("nav a").evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height < 44).length);
+check(small === 0, "every tab is at least 44px tall");
+await p.close();
+p = await open("/bankroll/", { width: 390, height: 844, dark: true });
+await shot(p, "bankroll-dark-mobile");
 await p.close();
 
 await browser.close();

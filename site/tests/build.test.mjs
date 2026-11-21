@@ -159,12 +159,19 @@ test("the fixtures page has a live scores section that stays hidden until the br
 });
 
 
-test("the track record page shows the paper bankroll with its rules and says it is not betting advice", () => {
-  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "track-record/index.html");
+test("the paper bankroll has its own page with its rules, bets and a not-betting-advice label", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "bankroll/index.html");
   assert.match(html, /data-simulation/);
-  assert.match(html, /What if we had backed the confident picks\?/);
   assert.match(html, /\$101\.30/);
   assert.match(html, /not betting advice/);
   assert.match(html, /Bet365/);
   assert.match(html, /Arsenal \(home win\) at 1\.90, stake \$4\.80: waiting for the result/);
+  for (const v of ["all", "open", "won", "lost"]) assert.match(html, new RegExp(`data-show="${v}"`));
+});
+
+test("every page links to the bankroll in its main navigation, and the track record page points to it", () => {
+  const dist = build("dist-test-fresh", "2025-10-27T12:00:00Z");
+  for (const page of ["index.html", "track-record/index.html", "bankroll/index.html"]) assert.match(read(dist, page), /<nav[\s\S]*href="[^"]*\/bankroll\/"/);
+  assert.match(read(dist, "track-record/index.html"), /data-bankroll-link/);
+  assert.doesNotMatch(read(dist, "track-record/index.html"), /data-simulation/);
 });
