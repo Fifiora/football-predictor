@@ -95,44 +95,44 @@ const nav = [
     </script>
     <style is:global>
       :root {
-        --paper: #eaf3ee; --surface: rgb(255 255 255 / 0.58); --field: rgb(255 255 255 / 0.7); --ink: #10201a; --muted: #43544a; --line: rgb(255 255 255 / 0.65);
-        --edge: rgb(16 32 26 / 0.45); --rule: rgb(16 32 26 / 0.2); --on-warn: #ffffff; --orb1: rgb(70 200 140 / 0.5); --orb2: rgb(80 120 240 / 0.42); --orb3: rgb(245 190 80 / 0.4); --glass-blur: blur(18px) saturate(170%);
-        --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(95 207 151 / 0.45), transparent 60%),
-          radial-gradient(50rem 36rem at 100% 0%, rgb(86 130 230 / 0.38), transparent 60%),
-          radial-gradient(46rem 34rem at 60% 110%, rgb(240 190 90 / 0.34), transparent 60%);
-        --brand: #17623d; --focus: #b87500;
-        --home: #1b6b43; --on-home: #ffffff;
-        --draw: #e3b04b; --on-draw: #2b1d00;
-        --away: #3556a0; --on-away: #ffffff;
-        --warn: #8a2d1f; --shadow: 0 8px 30px rgb(19 34 26 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.8);
-        --good: #17623d; --lean: #8a5a00; --toss: #4b5b51;
+        --paper: #f4eefd; --surface: rgb(255 255 255 / 0.58); --field: rgb(255 255 255 / 0.7); --ink: #1f2552; --muted: #4f5585; --line: rgb(255 255 255 / 0.65);
+        --edge: rgb(31 37 82 / 0.45); --rule: rgb(31 37 82 / 0.2); --on-warn: #ffffff; --orb1: rgb(139 124 246 / 0.5); --orb2: rgb(230 150 245 / 0.42); --orb3: rgb(124 200 238 / 0.4); --glass-blur: blur(18px) saturate(170%);
+        --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(160 140 250 / 0.45), transparent 60%),
+          radial-gradient(50rem 36rem at 100% 0%, rgb(235 160 245 / 0.38), transparent 60%),
+          radial-gradient(46rem 34rem at 60% 110%, rgb(130 205 240 / 0.34), transparent 60%);
+        --brand: #4a3fc0; --focus: #c0148a;
+        --home: #5445d1; --on-home: #ffffff;
+        --draw: #e7a3f2; --on-draw: #3a0f4a;
+        --away: #1f6f9f; --on-away: #ffffff;
+        --warn: #a3264f; --shadow: 0 8px 30px rgb(70 55 150 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.8);
+        --good: #1d7a50; --lean: #8a5a00; --toss: #565b86;
         --radius: 18px;
       }
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
-          --paper: #07100c; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #eef5f0; --muted: #b3c4b8; --line: rgb(255 255 255 / 0.14);
-          --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(40 170 110 / 0.5); --orb2: rgb(70 100 230 / 0.34); --orb3: rgb(224 150 50 / 0.22);
-          --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(63 174 119 / 0.38), transparent 60%),
-            radial-gradient(50rem 36rem at 100% 0%, rgb(86 120 220 / 0.34), transparent 60%),
-            radial-gradient(46rem 34rem at 60% 110%, rgb(224 176 74 / 0.2), transparent 60%);
-          --brand: #5fcf97; --focus: #f0c060;
-          --home: #3fae77; --on-home: #06150d;
-          --draw: #e0b04a; --on-draw: #241900;
-          --away: #86a2e6; --on-away: #0b1430;
-          --shadow: 0 8px 32px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.08); --good: #6ad9a0; --lean: #f0c060; --toss: #b3c4b8; --warn: #ff9b86;
+          --paper: #12113a; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #f1eeff; --muted: #bcb8e6; --line: rgb(255 255 255 / 0.14);
+          --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(110 90 235 / 0.5); --orb2: rgb(200 110 225 / 0.3); --orb3: rgb(80 170 225 / 0.25);
+          --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(120 100 240 / 0.38), transparent 60%),
+            radial-gradient(50rem 36rem at 100% 0%, rgb(210 120 235 / 0.28), transparent 60%),
+            radial-gradient(46rem 34rem at 60% 110%, rgb(90 180 230 / 0.2), transparent 60%);
+          --brand: #b4a8ff; --focus: #7fd6f5;
+          --home: #8b7cf6; --on-home: #120a3a;
+          --draw: #e9a8f5; --on-draw: #2a0838;
+          --away: #7cc8ee; --on-away: #082033;
+          --shadow: 0 8px 32px rgb(5 3 40 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.08); --good: #6ad9a0; --lean: #f0c060; --toss: #bcb8e6; --warn: #ff9bb0;
         }
       }
       :root[data-theme="dark"] {
-        --paper: #07100c; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #eef5f0; --muted: #b3c4b8; --line: rgb(255 255 255 / 0.14);
-        --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(40 170 110 / 0.5); --orb2: rgb(70 100 230 / 0.34); --orb3: rgb(224 150 50 / 0.22);
-        --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(63 174 119 / 0.38), transparent 60%),
-          radial-gradient(50rem 36rem at 100% 0%, rgb(86 120 220 / 0.34), transparent 60%),
-          radial-gradient(46rem 34rem at 60% 110%, rgb(224 176 74 / 0.2), transparent 60%);
-        --brand: #5fcf97; --focus: #f0c060;
-        --home: #3fae77; --on-home: #06150d;
-        --draw: #e0b04a; --on-draw: #241900;
-        --away: #86a2e6; --on-away: #0b1430;
-        --shadow: 0 8px 32px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.08); --good: #6ad9a0; --lean: #f0c060; --toss: #b3c4b8; --warn: #ff9b86;
+        --paper: #12113a; --surface: rgb(255 255 255 / 0.07); --field: rgb(255 255 255 / 0.09); --ink: #f1eeff; --muted: #bcb8e6; --line: rgb(255 255 255 / 0.14);
+        --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(110 90 235 / 0.5); --orb2: rgb(200 110 225 / 0.3); --orb3: rgb(80 170 225 / 0.25);
+        --mesh: radial-gradient(60rem 40rem at 8% -10%, rgb(120 100 240 / 0.38), transparent 60%),
+          radial-gradient(50rem 36rem at 100% 0%, rgb(210 120 235 / 0.28), transparent 60%),
+          radial-gradient(46rem 34rem at 60% 110%, rgb(90 180 230 / 0.2), transparent 60%);
+        --brand: #b4a8ff; --focus: #7fd6f5;
+        --home: #8b7cf6; --on-home: #120a3a;
+        --draw: #e9a8f5; --on-draw: #2a0838;
+        --away: #7cc8ee; --on-away: #082033;
+        --shadow: 0 8px 32px rgb(5 3 40 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.08); --good: #6ad9a0; --lean: #f0c060; --toss: #bcb8e6; --warn: #ff9bb0;
       }
       * { box-sizing: border-box; }
       .aurora { position: fixed; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
@@ -202,9 +202,9 @@ const nav = [
       .panel { background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--line);
         border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
       @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-        :root { --surface: #ffffff; --field: #ffffff; --line: #d6ded7; }
-        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --surface: #15211b; --field: #15211b; --line: #27382d; } }
-        :root[data-theme="dark"] { --surface: #15211b; --field: #15211b; --line: #27382d; }
+        :root { --surface: #ffffff; --field: #ffffff; --line: #ddd5f3; }
+        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --surface: #1d1c4a; --field: #1d1c4a; --line: #34336a; } }
+        :root[data-theme="dark"] { --surface: #1d1c4a; --field: #1d1c4a; --line: #34336a; }
       }
       @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
     </style>
