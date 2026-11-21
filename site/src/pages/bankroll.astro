@@ -50,12 +50,11 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
                   </linearGradient>
                 </defs>
                 <line x1="0" x2={W} y1={geo.startY} y2={geo.startY} class="base" />
-                <text x="8" y={Math.max(12, geo.startY - 6)} class="tick">{money(sim.start)} start</text>
                 <path d={area} class="area" />
                 <polyline points={geo.points} class="line" />
                 <circle cx={geo.last.x} cy={geo.last.y} r="5" class="end" />
               </svg>
-              <figcaption>Balance after each finished bet. Low {money(geo.lo)}, high {money(geo.hi)}.</figcaption>
+              <figcaption>Balance after each finished bet. The dashed line is the {money(sim.start)} start. Low {money(geo.lo)}, high {money(geo.hi)}.</figcaption>
               <details>
                 <summary>See the numbers</summary>
                 <table>
@@ -136,7 +135,6 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
   .curve { margin: 0; }
   .curve svg { width: 100%; height: auto; display: block; overflow: visible; }
   .curve .base { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 5; }
-  .curve .tick { fill: var(--muted); font-size: 11px; }
   .curve .area { fill: url(#fill); }
   .curve .line { fill: none; stroke: var(--home); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
   .curve .end { fill: var(--home); stroke: var(--paper); stroke-width: 3; }
