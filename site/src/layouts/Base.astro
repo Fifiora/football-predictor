@@ -185,6 +185,8 @@ const nav = [
       [hidden] { display: none !important; }
       nav a .ico { display: none; }
       @media (max-width: 640px) {
+        /* a blurred ancestor would trap the fixed tab bar inside the header, so the header goes plain here */
+        .topbar { -webkit-backdrop-filter: none; backdrop-filter: none; background: color-mix(in srgb, var(--paper) 90%, transparent); }
         .topbar-inner { gap: 0 12px; }
         /* the main sections become a thumb-reach tab bar; five items at most, each with an icon and a label */
         nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; flex: none; flex-wrap: nowrap; gap: 0; justify-content: space-around;
