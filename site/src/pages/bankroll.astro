@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { simulation as sim } from "../lib/data.mjs";
 import { betText, curveGeometry, money } from "../lib/format.mjs";
+import { liveUrl } from "../lib/data.mjs";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const W = 640, H = 220, PAD = 18;
 const geo = sim ? curveGeometry(sim.curve, sim.start, W, H, PAD) : null;
@@ -40,6 +41,7 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
             <span>{money(sim.profit, true)} <span class="since">since {sim.since}</span></span>
           </p>
         </div>
+        <p id="now-line" class="nowline" hidden><span class="livedot" aria-hidden="true"></span><span id="now-text"></span></p>
         {sim.curve.length > 0
           ? <figure class="curve">
               <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Bankroll after each finished bet, from ${money(sim.start)} to ${money(sim.bankroll)}`}>
@@ -81,15 +83,15 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
             {chips.map(([v, l]) => <button type="button" class="chip" data-show={v} aria-pressed={v === "all" ? "true" : "false"}>{l}</button>)}
           </div>
         </div>
-        <ul class="bets" id="bets">
+        <ul class="bets" id="bets" data-url={liveUrl}>
           {sim.recent.map((b) => (
-            <li class={`bet ${b.status}`} data-status={b.status}>
-              <span class="pill"><span aria-hidden="true">{mark[b.status]}</span> {label[b.status]}</span>
+            <li class={`bet ${b.status}`} data-status={b.status} data-id={b.match_id} data-who={b.pick === "H" ? b.home : b.pick === "A" ? b.away : "Draw"} data-odds={Number(b.odds).toFixed(2)} data-stake={b.stake} data-text={betText(b)}>
+              <span class="pill"><span class="pi" aria-hidden="true">{mark[b.status]}</span> <span class="pt">{label[b.status]}</span></span>
               <span class="what">
                 <b>{b.home} v {b.away}</b>
-                <span class="n">{betText(b)}</span>
+                <span class="n bt">{betText(b)}</span>
               </span>
-              <span class="amt">{b.profit == null ? money(b.stake) : money(b.profit, true)}</span>
+              <span class="amt am">{b.profit == null ? money(b.stake) : money(b.profit, true)}</span>
             </li>
           ))}
         </ul>
@@ -107,6 +109,55 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
     <p class="fine">Odds are used only to score picks after the fact. They never feed the model. Real bookmakers limit winners and prices move, so real results would differ. It starts from the day the feature launched and only counts bets placed before kickoff. <a href={`${base}/track-record/`}>See how accurate the picks are</a>.</p>
   </section>
 </Base>
+<script>
+  import { liveBankroll, statusWord } from "../lib/bankroll.mjs";
+  import { money } from "../lib/format.mjs";
+  const list = document.getElementById("bets");
+  const nowLine = document.getElementById("now-line");
+  const MARK = { winning: "▲", losing: "▼", won: "✓", lost: "✗", open: "○" };
+  function overlay(feed) {
+    const live = liveBankroll(feed, Date.now());
+    if (nowLine) {
+      nowLine.hidden = !live;
+      if (live) {
+        nowLine.classList.toggle("on", live.playing);
+        document.getElementById("now-text").textContent = `${live.playing ? "Live" : "Final scores"}: ${money(live.ifNow)} if matches ended now (${money(live.profitNow, true)} overall)`;
+      }
+    }
+    list?.querySelectorAll("li").forEach((li) => {
+      const b = live?.bets.get(li.dataset.id);
+      const status = b && b.status !== "open" && li.dataset.status === "open" ? b.status : null;
+      const was = li.dataset.live;
+      if (!status && !was) return;
+      li.dataset.live = status ?? "";
+      li.className = `bet ${status ?? li.dataset.status}`;
+      const pill = li.querySelector(".pt"), icon = li.querySelector(".pi"), txt = li.querySelector(".bt"), amt = li.querySelector(".am");
+      if (status) {
+        pill.textContent = statusWord(status); icon.textContent = MARK[status];
+        txt.textContent = `${li.dataset.who} at ${li.dataset.odds}, stake ${money(Number(li.dataset.stake))}: ${b.home_goals} – ${b.away_goals} ${b.status === "won" || b.status === "lost" ? "final" : "now"}`;
+        amt.textContent = money(b.profit, true);
+      } else {
+        pill.textContent = statusWord("open"); icon.textContent = MARK.open;
+        txt.textContent = li.dataset.text; amt.textContent = money(Number(li.dataset.stake));
+      }
+    });
+  }
+  const liveUrl = list?.dataset.url;
+  if (liveUrl) {
+    let feed = null;
+    const poll = async () => {
+      if (document.hidden) return;
+      try {
+        const res = await fetch(`${liveUrl}?t=${Math.floor(Date.now() / 60000)}`, { cache: "no-store" });
+        if (res.ok) feed = await res.json();
+      } catch (e) { /* offline: keep the saved numbers */ }
+      overlay(feed);
+    };
+    poll();
+    setInterval(poll, 60000);
+    document.addEventListener("visibilitychange", poll);
+  }
+</script>
 <script>
   const list = document.getElementById("bets");
   if (list) {
@@ -132,6 +183,11 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
     border: 1.5px solid currentColor; max-width: none; }
   .delta.up { color: var(--good); } .delta.down { color: var(--warn); }
   .delta .since { color: var(--muted); font-weight: 500; font-size: .85rem; }
+  .nowline { margin: 0; display: flex; align-items: center; gap: 8px; font-weight: 600; font-variant-numeric: tabular-nums; max-width: none; }
+  .livedot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .nowline.on .livedot { background: var(--warn); animation: pulse 1.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .nowline.on .livedot { animation: none; } }
+  @keyframes pulse { 50% { opacity: .35; } }
   .curve { margin: 0; }
   .curve svg { width: 100%; height: auto; display: block; overflow: visible; }
   .curve .base { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 5; }
@@ -158,7 +214,7 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
   .bet { max-width: none; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 16px;
     background: var(--surface); border: 1px solid var(--line); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--shadow); }
   .pill { font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1.5px solid currentColor; white-space: nowrap; }
-  .bet.won .pill, .bet.won .amt { color: var(--good); } .bet.lost .pill, .bet.lost .amt { color: var(--warn); } .bet.open .pill { color: var(--muted); }
+  .bet.won .pill, .bet.won .amt, .bet.winning .pill, .bet.winning .amt { color: var(--good); } .bet.lost .pill, .bet.lost .amt, .bet.losing .pill, .bet.losing .amt { color: var(--warn); } .bet.open .pill { color: var(--muted); }
   .what { display: grid; gap: 2px; min-width: 0; } .what b { overflow-wrap: anywhere; }
   .amt { font-weight: 800; font-variant-numeric: tabular-nums; }
   @media (max-width: 520px) { .bet { grid-template-columns: 1fr auto; } .pill { justify-self: start; grid-column: 1; } .amt { grid-row: 1; grid-column: 2; } .what { grid-column: 1 / -1; } }

@@ -70,3 +70,36 @@ def test_summary_shows_bankroll_record_curve_and_open_bets(tmp_path):
 def test_an_empty_ledger_summarizes_to_a_fresh_bankroll(tmp_path):
     s = summarize(read_ledger(tmp_path / "none.csv"))
     assert s["bankroll"] == 100.0 and s["bets"] == 0 and s["curve"] == [] and s["roi"] is None
+
+
+def _ledger(tmp_path, *bets):
+    path = tmp_path / "live.csv"
+    place_bets(path, pd.DataFrame([fx(m, 0.6, 0.25, 0.15) for m in bets]), odds(*bets), NOW)
+    return read_ledger(path)
+
+
+def _m(mid, state, hg=None, ag=None):
+    return {"match_id": mid, "state": state, "home_goals": hg, "away_goals": ag}
+
+
+def test_live_bankroll_values_open_bets_by_the_score_right_now(tmp_path):
+    from footpred.pipeline.stakes import live_bankroll
+    led = _ledger(tmp_path, "E0-1", "E0-2", "E0-3", "E0-4")  # stakes 5.0, 4.75, 4.51, 4.29 at price 2.0 on a home win
+    out = live_bankroll(led, [_m("E0-1", "live", 1, 0), _m("E0-2", "live", 0, 1), _m("E0-3", "finished", 2, 0), _m("E0-4", "upcoming")])
+    by = {b["match_id"]: b for b in out["bets"]}
+    assert [by[k]["status"] for k in ("E0-1", "E0-2", "E0-3", "E0-4")] == ["winning", "losing", "won", "open"]
+    assert by["E0-1"]["profit"] == 5.0 and by["E0-2"]["profit"] == -4.75 and by["E0-4"]["profit"] is None
+    assert out["bankroll"] == 100.0  # settled view: cash plus stakes still out
+    cash_now = cash(led)
+    assert out["if_now"] == round(cash_now + 10.0 + 0.0 + 9.02 + 4.29, 2)
+    assert out["profit_now"] == round(out["if_now"] - START, 2)
+
+
+def test_live_bankroll_ignores_settled_bets_and_missing_matches(tmp_path):
+    from footpred.pipeline.stakes import live_bankroll
+    path = tmp_path / "live.csv"
+    place_bets(path, pd.DataFrame([fx("E0-1", 0.6, 0.25, 0.15), fx("E0-2", 0.6, 0.25, 0.15)]), odds("E0-1", "E0-2"), NOW)
+    settle_bets(path, pd.DataFrame({"match_id": ["E0-1"], "outcome": [0]}))
+    out = live_bankroll(read_ledger(path), [_m("E0-1", "finished", 1, 0)])
+    assert [b["match_id"] for b in out["bets"]] == ["E0-2"] and out["bets"][0]["status"] == "open"
+    assert live_bankroll(pd.DataFrame(columns=read_ledger(tmp_path / "none.csv").columns), [])["if_now"] == START

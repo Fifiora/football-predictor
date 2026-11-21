@@ -52,5 +52,20 @@
    "home_goals": null,
    "away_goals": null
   }
- ]
+ ],
+ "bankroll": {
+  "cash": 96.8,
+  "bankroll": 101.3,
+  "if_now": 106.0,
+  "profit_now": 6.0,
+  "bets": [
+   {
+    "match_id": "E0-4",
+    "status": "winning",
+    "home_goals": 1,
+    "away_goals": 0,
+    "profit": 4.32
+   }
+  ]
+ }
 }

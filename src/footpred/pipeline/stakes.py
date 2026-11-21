@@ -121,3 +121,33 @@ def summarize(ledger: pd.DataFrame, recent: int = 30) -> dict:
             "bets": int(len(ledger)), "open": int(len(open_)), "open_stake": round(float(open_["stake"].sum()), 2), "won": won, "lost": int(len(settled)) - won,
             "staked": round(staked, 2), "since": pd.to_datetime(ledger["placed_at"], format="mixed").min().strftime("%Y-%m-%d"),
             "curve": curve, "recent": bets, "stake_fraction": STAKE_FRACTION, "confident_at": CONFIDENT_AT}
+
+
+def live_bankroll(ledger: pd.DataFrame, matches: list[dict]) -> dict:
+    """The bankroll while matches are on: each open bet is valued by the score right now.
+
+    ``bankroll`` is the settled view (cash plus stakes still out); ``if_now`` is what the money would be if every match
+    ended at its current score. Bets already settled in the ledger are left out.
+    """
+    by_id = {m["match_id"]: m for m in matches or []}
+    open_ = ledger[ledger["outcome"].isna()] if len(ledger) else ledger
+    bets, in_play = [], 0.0
+    for r in open_.to_dict("records"):
+        m = by_id.get(r["match_id"])
+        stake, win = float(r["stake"]), round(float(r["stake"]) * float(r["odds"]), 2)
+        hg, ag = (m or {}).get("home_goals"), (m or {}).get("away_goals")
+        state = (m or {}).get("state")
+        if m is None or state == "upcoming" or hg is None or ag is None:
+            bets.append({"match_id": r["match_id"], "status": "open", "home_goals": None, "away_goals": None, "profit": None})
+            in_play += stake
+            continue
+        right = _LETTERS[0 if hg > ag else 2 if ag > hg else 1] == r["pick"]
+        status = ("won" if right else "lost") if state == "finished" else ("winning" if right else "losing")
+        in_play += win if right else 0.0
+        bets.append({"match_id": r["match_id"], "status": status, "home_goals": int(hg), "away_goals": int(ag),
+                     "profit": round(win - stake, 2) if right else round(-stake, 2)})
+    money = cash(ledger)
+    out_stakes = float(open_["stake"].sum()) if len(open_) else 0.0
+    if_now = round(money + in_play, 2)
+    return {"cash": money, "bankroll": round(money + out_stakes, 2), "if_now": if_now,
+            "profit_now": round(if_now - START, 2), "bets": bets}

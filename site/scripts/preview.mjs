@@ -149,6 +149,9 @@ check((await p.locator(".balance").textContent()).includes("$101.30"), "the bala
 check((await p.locator(".delta").textContent()).includes("+$1.30"), "the change since the start is shown with a sign");
 check((await p.locator("[data-simulation] svg polyline").count()) === 1, "the bankroll line is drawn");
 check((await p.locator("li.bet").count()) === 3, "the latest bets are listed");
+await p.waitForFunction(() => !document.getElementById("now-line").hidden, null, { timeout: 5000 }).catch(() => {});
+check((await p.locator("#now-text").textContent()).includes("$106.00"), "the bankroll page shows the live if-ended-now balance");
+check((await p.locator('li.bet[data-id="E0-4"]').textContent()).includes("Winning now"), "an open bet shows it is winning now from the live score");
 await p.click('button[data-show="won"]');
 check((await p.locator("li.bet:not([hidden])").count()) === 1, "the Won filter leaves one bet");
 await p.click('button[data-show="all"]');

@@ -21,6 +21,7 @@ from footpred.pipeline.benchmark import run_benchmark
 from footpred.pipeline.tune import tune_league
 from footpred.ingest.odds import fetch_fixture_odds
 from footpred.pipeline.daily import run_daily
+from footpred.pipeline.stakes import live_bankroll, read_ledger
 from footpred.pipeline.live import build_live, read_log, recorded_match_ids, still_busy, unrecorded_results, write_outputs
 from footpred.pipeline.european import run_european_retrain
 from footpred.pipeline.retrain import run_retrain
@@ -170,6 +171,10 @@ def _main(argv: list[str] | None = None) -> int:
             return 4
         unrecorded = unrecorded_results(feed, recorded_match_ids(args.data_dir), now)
         busy = still_busy(feed, now)
+        try:  # the paper bankroll rides along so the Bankroll page moves with the scores; never fail the scores for it
+            feed["bankroll"] = live_bankroll(read_ledger(args.data_dir / "stake_log.csv"), feed["matches"])
+        except Exception as err:  # noqa: BLE001
+            print(f"- warning: bankroll not added to the live feed ({err})")
         write_outputs(args.out_dir, feed, unrecorded, busy)
         print(f"live: {len(feed['matches'])} matches, {sum(m['state'] == 'live' for m in feed['matches'])} live, "
               f"{len(unrecorded)} finished and not stored yet, busy={busy}")
