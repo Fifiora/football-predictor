@@ -63,7 +63,7 @@ def _fixtures_payload(fixtures, drivers, dc_grids, odds=None) -> list[dict]:
         book = (odds or {}).get(row.match_id)
         if book:  # bookmaker view, shown beside the model and never fed into it
             item["bookies"] = {name: {"p_home": float(p[0]), "p_draw": float(p[1]), "p_away": float(p[2])}
-                               for name, p in book.items()}
+                               for name, p in book.items() if name in ("average", "bet365")}
         if row.match_id in dc_grids:
             item.update(_scoreline_fields(dc_grids[row.match_id]))
         out.append(item)
@@ -166,6 +166,7 @@ def export_site_data(
     model_version: str = "unknown",
     odds: dict | None = None,
     reference: dict | None = None,
+    simulation: dict | None = None,
 ) -> None:
     """Write fixtures/track_record/teams/meta JSON into ``out_dir``, replacing it atomically."""
     out_dir = Path(out_dir)
@@ -178,6 +179,8 @@ def export_site_data(
     try:
         _write_json(tmp / "fixtures.json", _fixtures_payload(fixtures, drivers, dc_grids, odds))
         _write_json(tmp / "track_record.json", _track_record_payload(graded_log, reference))
+        if simulation is not None:
+            _write_json(tmp / "simulation.json", simulation)
         _write_json(tmp / "teams.json", {team: round(float(r), 1) for team, r in sorted(ratings.items())})
         _write_json(tmp / "meta.json", {"updated_at": pd.Timestamp(updated_at).isoformat(), "model_version": model_version})
     except BaseException:

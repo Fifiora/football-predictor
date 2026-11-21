@@ -45,3 +45,10 @@ def test_divisions_without_aliases_are_ignored_quietly(tmp_path):
             "E0,03/11/2026,Arsenal,Chelsea,2.0,3.5,4.0\n")
     frame, warnings = parse_fixture_odds(text, aliases_path=aliases)
     assert len(frame) == 1 and warnings == []
+
+
+def test_raw_bet365_prices_are_kept_for_the_paper_bankroll_and_not_shown_as_a_bookie_view(tmp_path):
+    aliases = tmp_path / "a.csv"
+    aliases.write_text("league,alias,canonical\nE0,Arsenal,Arsenal\nE0,Chelsea,Chelsea\n")
+    frame, _ = parse_fixture_odds(CSV, aliases_path=aliases)
+    assert frame.iloc[0]["bet365_price"] == (2.0, 3.5, 4.0)

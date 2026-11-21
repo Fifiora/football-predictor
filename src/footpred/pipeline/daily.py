@@ -18,6 +18,7 @@ from footpred.ingest.fixtures import FixturesClient, fetch_latest_results, fetch
 from footpred.ingest.historical import season_label
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.models.registry import load_champion
+from footpred.pipeline.stakes import place_bets, read_ledger, settle_bets, summarize
 from footpred.pipeline.european import EuropeanScores, score_european
 from footpred.pipeline.common import PLAYED, append_api_results, load_all_matches, played_before
 from footpred.predictions.log import grade_predictions, log_predictions
@@ -159,6 +160,8 @@ def run_daily(
             scored = pd.concat([scored, euro.fixtures], ignore_index=True)
             drivers.update(euro.drivers)
             grids.update(euro.grids)
+    later = scored.iloc[0:0]
+    stamp = now if now is not None else today
     if not scored.empty:
         later = scored[scored["date"] > today].assign(kickoff_date=lambda df: df["date"])
         # a match today is still predicted before it starts when its kickoff time is known and has not passed
@@ -205,6 +208,20 @@ def run_daily(
         except Exception as err:  # noqa: BLE001
             warnings.append(f"bookmaker odds unavailable: {type(err).__name__}: {err}")
 
+    # paper-money bankroll: back confident league picks at Bet365's price, settle the finished ones
+    stakes_path = data_dir / "stake_log.csv"
+    if odds and len(later):
+        try:
+            place_bets(stakes_path, later, odds, pd.Timestamp(clock()) if clock is not None else stamp)
+        except Exception as err:  # noqa: BLE001  a side feature must never stop the refresh
+            warnings.append(f"paper bankroll could not place bets: {type(err).__name__}: {err}")
+    try:
+        settle_bets(stakes_path, graded)
+        simulation = summarize(read_ledger(stakes_path))
+    except Exception as err:  # noqa: BLE001
+        simulation = None
+        warnings.append(f"paper bankroll unavailable: {type(err).__name__}: {err}")
+
     reference = None
     if reference_path is not None:
         reference = _load_reference(Path(reference_path))
@@ -215,6 +232,6 @@ def run_daily(
     export_site_data(
         site_data_dir, scored, drivers, grids, graded,
         {t: r for t, r in ratings.items() if t in active}, updated_at if updated_at is not None else today,
-        model_version=version, odds=odds, reference=reference,
+        model_version=version, odds=odds, reference=reference, simulation=simulation,
     )
     return DailyResult(len(new) + (euro.new_results if euro is not None else 0), len(scored), True, warnings)

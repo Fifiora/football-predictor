@@ -31,6 +31,15 @@ def devig(home, draw, away) -> tuple[float, float, float] | None:
     return tuple(i / total for i in implied)
 
 
+def _prices(home, draw, away) -> tuple[float, float, float] | None:
+    """Bet365's decimal prices as quoted, for the paper-money simulation only; None unless all three are real prices."""
+    try:
+        odds = tuple(float(x) for x in (home, draw, away))
+    except (TypeError, ValueError):
+        return None
+    return None if any(o != o or o <= 1.0 for o in odds) else odds
+
+
 def parse_fixture_odds(text: str, aliases_path: Path | None = None) -> tuple[pd.DataFrame, list[str]]:
     """Rows with canonical names, ``match_id`` and de-vigged ``average`` / ``bet365`` probabilities."""
     raw = pd.read_csv(io.StringIO(text.lstrip("﻿")))
@@ -52,11 +61,12 @@ def parse_fixture_odds(text: str, aliases_path: Path | None = None) -> tuple[pd.
         probs = {name: devig(*(r.get(c) for c in cols)) for name, cols in _SOURCES.items()}
         if all(p is None for p in probs.values()):
             continue
+        price = _prices(*(r.get(c) for c in _SOURCES["bet365"]))
         date = pd.to_datetime(r["Date"], dayfirst=True)
-        rows.append({"match_id": f"{league}-{date:%Y%m%d}-{home}-{away}", **probs})
+        rows.append({"match_id": f"{league}-{date:%Y%m%d}-{home}-{away}", **probs, "bet365_price": price})
     if unknown:
         warnings.append("bookmaker odds skipped for unmapped clubs: " + "; ".join(sorted(unknown)))
-    return pd.DataFrame(rows, columns=["match_id", "average", "bet365"]), warnings
+    return pd.DataFrame(rows, columns=["match_id", "average", "bet365", "bet365_price"]), warnings
 
 
 def _download(url: str) -> str:
@@ -70,12 +80,12 @@ def _download(url: str) -> str:
 
 def fetch_fixture_odds(aliases_path: Path | None = None, download: Callable[[str], str] = _download,
                        url: str = FIXTURES_URL) -> tuple[dict[str, dict], list[str]]:
-    """``{match_id: {"average": (h, d, a), "bet365": (h, d, a)}}``; failures become warnings."""
+    """``{match_id: {"average": (h, d, a), "bet365": (h, d, a), "bet365_price": (h, d, a)}}`` (probabilities, then raw prices); failures become warnings."""
     try:
         frame, warnings = parse_fixture_odds(download(url), aliases_path)
     except Exception as err:  # noqa: BLE001  odds are optional extras; never stop the daily run
         return {}, [f"bookmaker odds unavailable: {type(err).__name__}: {err}"]
     out = {}
     for row in frame.itertuples(index=False):
-        out[row.match_id] = {k: v for k, v in (("average", row.average), ("bet365", row.bet365)) if v is not None}
+        out[row.match_id] = {k: v for k, v in (("average", row.average), ("bet365", row.bet365), ("bet365_price", row.bet365_price)) if v is not None}
     return out, warnings
