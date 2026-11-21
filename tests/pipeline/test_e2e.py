@@ -183,3 +183,24 @@ def test_a_slow_run_does_not_log_a_match_that_started_while_it_was_running(world
     _daily_with_today_match(world, now=pd.Timestamp("2025-10-27 10:00"), clock=lambda: late)
     log = pd.read_csv(world["data_dir"] / "prediction_log.csv")
     assert "E0-20251027-A-B" not in set(log["match_id"])
+
+
+def test_a_match_that_finished_since_the_fixture_list_was_read_does_not_break_the_run(world):
+    """The fixture list can still show a match as upcoming (a cache, a lagging feed) that the results already say finished."""
+    from conftest import fx
+
+    class Lagging:
+        calls = 0
+
+        def get_fixtures(self, league, date_from, date_to):
+            if league != "E0":
+                return []
+            Lagging.calls += 1
+            if Lagging.calls == 1:  # upcoming read: still scheduled
+                return [fx("2025-10-27", "A FC", "B FC"), fx("2025-10-30", "C FC", "D FC")]
+            return [fx("2025-10-27", "A FC", "B FC", status="FINISHED", hg=2, ag=1)]  # results read: finished
+
+    seed_champion(world)
+    result = run_daily(world["data_dir"], world["site"], Lagging(), TODAY, registry_dir=world["registry"],
+                       aliases_path=world["aliases"], sleep=NO_SLEEP, now=pd.Timestamp("2025-10-27 18:00"))
+    assert result.published

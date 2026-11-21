@@ -124,7 +124,8 @@ def run_daily(
 
     version, model, calibrator = load_champion(registry_dir)
     played = played_before(matches, today + pd.Timedelta(days=1))  # results up to and including today
-    scored = upcoming.reset_index(drop=True)
+    # a match the fixture list still calls upcoming but the results say is played is not predicted again (it was logged earlier)
+    scored = upcoming[~upcoming["match_id"].isin(played["match_id"])].reset_index(drop=True)
 
     drivers: dict[str, list] = {}
     grids: dict[str, np.ndarray] = {}
