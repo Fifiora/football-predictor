@@ -1,0 +1,470 @@
+npm warn deprecated tsconfck@3.1.6: unmaintained
+
+added 328 packages, and audited 329 packages in 12s
+
+151 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (1 moderate, 4 high, 1 critical)
+
+To address all issues, run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: a fresh feed with a scored bet gives the if-ended-now balance and the bets by match
+ok 1 - a fresh feed with a scored bet gives the if-ended-now balance and the bets by match
+  ---
+  duration_ms: 1.488563
+  type: 'test'
+  ...
+# Subtest: a feed older than half an hour, or with nothing scored, or malformed, is ignored
+ok 2 - a feed older than half an hour, or with nothing scored, or malformed, is ignored
+  ---
+  duration_ms: 0.28956
+  type: 'test'
+  ...
+# Subtest: finished matches awaiting the daily run are scored but not counted as playing
+ok 3 - finished matches awaiting the daily run are scored but not counted as playing
+  ---
+  duration_ms: 1.872599
+  type: 'test'
+  ...
+# Subtest: build succeeds and emits all page types
+ok 4 - build succeeds and emits all page types
+  ---
+  duration_ms: 2501.9918
+  type: 'test'
+  ...
+# Subtest: match card shows three probabilities and at most three drivers
+ok 5 - match card shows three probabilities and at most three drivers
+  ---
+  duration_ms: 2410.992286
+  type: 'test'
+  ...
+# Subtest: staleness banner appears after 48 hours and is absent when fresh
+ok 6 - staleness banner appears after 48 hours and is absent when fresh
+  ---
+  duration_ms: 4862.878177
+  type: 'test'
+  ...
+# Subtest: about page says probabilities, not certainties, are the product
+ok 7 - about page says probabilities, not certainties, are the product
+  ---
+  duration_ms: 2420.014186
+  type: 'test'
+  ...
+# Subtest: fixtures page has filters, league chips with counts, and date headings
+ok 8 - fixtures page has filters, league chips with counts, and date headings
+  ---
+  duration_ms: 2410.170525
+  type: 'test'
+  ...
+# Subtest: Champions League fixtures get their own chip, a 90-minute note and an experimental tag
+ok 9 - Champions League fixtures get their own chip, a 90-minute note and an experimental tag
+  ---
+  duration_ms: 2415.733707
+  type: 'test'
+  ...
+# Subtest: teams page lists rated teams and links to team pages
+ok 10 - teams page lists rated teams and links to team pages
+  ---
+  duration_ms: 2524.481592
+  type: 'test'
+  ...
+# Subtest: match page shows goal meters and reason bars
+ok 11 - match page shows goal meters and reason bars
+  ---
+  duration_ms: 2458.299293
+  type: 'test'
+  ...
+# Subtest: track record shows tiles and a calibration chart once matches are graded
+ok 12 - track record shows tiles and a calibration chart once matches are graded
+  ---
+  duration_ms: 2418.664202
+  type: 'test'
+  ...
+# Subtest: cards show what the bookies say, labelled as reference only, and the scoreboard marks right and wrong
+ok 13 - cards show what the bookies say, labelled as reference only, and the scoreboard marks right and wrong
+  ---
+  duration_ms: 2401.456988
+  type: 'test'
+  ...
+# Subtest: track record compares the model with the bookmakers honestly
+ok 14 - track record compares the model with the bookmakers honestly
+  ---
+  duration_ms: 2441.643081
+  type: 'test'
+  ...
+# Subtest: the bookmaker line keeps its own styling
+ok 15 - the bookmaker line keeps its own styling
+  ---
+  duration_ms: 2477.379673
+  type: 'test'
+  ...
+# Subtest: entrance animation is switched off after the first render so filtering does not replay it
+ok 16 - entrance animation is switched off after the first render so filtering does not replay it
+  ---
+  duration_ms: 2380.879453
+  type: 'test'
+  ...
+# Subtest: cards carry the kickoff instant with a UTC fallback that the page localizes
+ok 17 - cards carry the kickoff instant with a UTC fallback that the page localizes
+  ---
+  duration_ms: 2410.662133
+  type: 'test'
+  ...
+# Subtest: the localizing script only targets time elements, never the card wrappers
+ok 18 - the localizing script only targets time elements, never the card wrappers
+  ---
+  duration_ms: 2433.676996
+  type: 'test'
+  ...
+# Subtest: the track record page offers an accuracy-by-confidence filter that works without scripts too
+ok 19 - the track record page offers an accuracy-by-confidence filter that works without scripts too
+  ---
+  duration_ms: 2424.001026
+  type: 'test'
+  ...
+# Subtest: the fixtures page has a live scores section that stays hidden until the browser has a feed
+ok 20 - the fixtures page has a live scores section that stays hidden until the browser has a feed
+  ---
+  duration_ms: 2416.708548
+  type: 'test'
+  ...
+# Subtest: the paper bankroll has its own page with its rules, bets and a not-betting-advice label
+ok 21 - the paper bankroll has its own page with its rules, bets and a not-betting-advice label
+  ---
+  duration_ms: 2418.586623
+  type: 'test'
+  ...
+# Subtest: every page links to the bankroll in its main navigation, and the track record page points to it
+ok 22 - every page links to the bankroll in its main navigation, and the track record page points to it
+  ---
+  duration_ms: 2398.912219
+  type: 'test'
+  ...
+# Subtest: pick names the most likely side and its team
+ok 23 - pick names the most likely side and its team
+  ---
+  duration_ms: 2.698779
+  type: 'test'
+  ...
+# Subtest: confidence label has three levels
+ok 24 - confidence label has three levels
+  ---
+  duration_ms: 0.283688
+  type: 'test'
+  ...
+# Subtest: default state shows everything in date order
+ok 25 - default state shows everything in date order
+  ---
+  duration_ms: 8.586871
+  type: 'test'
+  ...
+# Subtest: league filter keeps only chosen leagues
+ok 26 - league filter keeps only chosen leagues
+  ---
+  duration_ms: 0.317421
+  type: 'test'
+  ...
+# Subtest: date ranges are relative to today
+ok 27 - date ranges are relative to today
+  ---
+  duration_ms: 0.837621
+  type: 'test'
+  ...
+# Subtest: team search ignores case and accents
+ok 28 - team search ignores case and accents
+  ---
+  duration_ms: 0.536629
+  type: 'test'
+  ...
+# Subtest: confident-only keeps only Confident picks
+ok 29 - confident-only keeps only Confident picks
+  ---
+  duration_ms: 0.379036
+  type: 'test'
+  ...
+# Subtest: sorting by confidence and by closeness
+ok 30 - sorting by confidence and by closeness
+  ---
+  duration_ms: 0.437696
+  type: 'test'
+  ...
+# Subtest: league counts feed the chips
+ok 31 - league counts feed the chips
+  ---
+  duration_ms: 0.631978
+  type: 'test'
+  ...
+# Subtest: state round-trips through the URL and ignores junk
+ok 32 - state round-trips through the URL and ignores junk
+  ---
+  duration_ms: 0.962563
+  type: 'test'
+  ...
+# Subtest: matches on the same day are ordered by kickoff time
+ok 33 - matches on the same day are ordered by kickoff time
+  ---
+  duration_ms: 0.282256
+  type: 'test'
+  ...
+# Subtest: a pick falls in a tier by the chance given to it, with the same cut-offs as the match cards
+ok 34 - a pick falls in a tier by the chance given to it, with the same cut-offs as the match cards
+  ---
+  duration_ms: 0.212125
+  type: 'test'
+  ...
+# Subtest: accuracy by tier counts picks and right calls, and can be limited to one league
+ok 35 - accuracy by tier counts picks and right calls, and can be limited to one league
+  ---
+  duration_ms: 0.646785
+  type: 'test'
+  ...
+# Subtest: a tier with no picks has no accuracy rather than zero
+ok 36 - a tier with no picks has no accuracy rather than zero
+  ---
+  duration_ms: 0.178954
+  type: 'test'
+  ...
+# Subtest: stale after 48 hours, fresh before
+ok 37 - stale after 48 hours, fresh before
+  ---
+  duration_ms: 2.149756
+  type: 'test'
+  ...
+# Subtest: unparseable update time counts as stale
+ok 38 - unparseable update time counts as stale
+  ---
+  duration_ms: 0.247551
+  type: 'test'
+  ...
+# Subtest: at most three drivers, strongest first
+ok 39 - at most three drivers, strongest first
+  ---
+  duration_ms: 0.767641
+  type: 'test'
+  ...
+# Subtest: pct and slug
+ok 40 - pct and slug
+  ---
+  duration_ms: 0.323383
+  type: 'test'
+  ...
+# Subtest: league codes show as names, unknown codes pass through
+ok 41 - league codes show as names, unknown codes pass through
+  ---
+  duration_ms: 0.223065
+  type: 'test'
+  ...
+# Subtest: the Champions League is experimental until 30 of its predictions are graded
+ok 42 - the Champions League is experimental until 30 of its predictions are graded
+  ---
+  duration_ms: 0.192849
+  type: 'test'
+  ...
+# Subtest: day labels read like a fixture list
+ok 43 - day labels read like a fixture list
+  ---
+  duration_ms: 0.389355
+  type: 'test'
+  ...
+# Subtest: scoreboard counts hits over the latest picks and tolerates missing data
+ok 44 - scoreboard counts hits over the latest picks and tolerates missing data
+  ---
+  duration_ms: 0.222485
+  type: 'test'
+  ...
+# Subtest: bookieView prefers the market average and falls back to Bet365
+ok 45 - bookieView prefers the market average and falls back to Bet365
+  ---
+  duration_ms: 0.406808
+  type: 'test'
+  ...
+# Subtest: verdict wording follows the sign of the gap
+ok 46 - verdict wording follows the sign of the gap
+  ---
+  duration_ms: 0.510381
+  type: 'test'
+  ...
+# Subtest: kickoff is shown in the visitor's timezone, including the local calendar day
+ok 47 - kickoff is shown in the visitor's timezone, including the local calendar day
+  ---
+  duration_ms: 16.954982
+  type: 'test'
+  ...
+# Subtest: bad or missing kickoff values are ignored, and the static fallback names UTC
+ok 48 - bad or missing kickoff values are ignored, and the static fallback names UTC
+  ---
+  duration_ms: 0.175287
+  type: 'test'
+  ...
+# Subtest: money shows pretend dollars with cents and an optional plus
+ok 49 - money shows pretend dollars with cents and an optional plus
+  ---
+  duration_ms: 3.60685
+  type: 'test'
+  ...
+# Subtest: the bankroll curve starts at the opening balance and ends at the latest one
+ok 50 - the bankroll curve starts at the opening balance and ends at the latest one
+  ---
+  duration_ms: 0.344172
+  type: 'test'
+  ...
+# Subtest: a paper bet reads as plain words
+ok 51 - a paper bet reads as plain words
+  ---
+  duration_ms: 0.515881
+  type: 'test'
+  ...
+# Subtest: live matches are listed first and finished ones from today follow, newest first
+ok 52 - live matches are listed first and finished ones from today follow, newest first
+  ---
+  duration_ms: 31.676233
+  type: 'test'
+  ...
+# Subtest: a result from the previous local day is dropped, except a late match that has just ended
+ok 53 - a result from the previous local day is dropped, except a late match that has just ended
+  ---
+  duration_ms: 1.589251
+  type: 'test'
+  ...
+# Subtest: a match marked live long after it could still be playing is not shown as live
+ok 54 - a match marked live long after it could still be playing is not shown as live
+  ---
+  duration_ms: 0.761038
+  type: 'test'
+  ...
+# Subtest: an unreadable feed shows nothing instead of failing
+ok 55 - an unreadable feed shows nothing instead of failing
+  ---
+  duration_ms: 2.805217
+  type: 'test'
+  ...
+# Subtest: a fixture is hidden once its match is over, but not while it may still be playing
+ok 56 - a fixture is hidden once its match is over, but not while it may still be playing
+  ---
+  duration_ms: 0.421065
+  type: 'test'
+  ...
+# Subtest: a fixture without a kickoff time is hidden once its day has passed
+ok 57 - a fixture without a kickoff time is hidden once its day has passed
+  ---
+  duration_ms: 0.205914
+  type: 'test'
+  ...
+# Subtest: a fixture that is in the live feed is hidden because the live section shows it
+ok 58 - a fixture that is in the live feed is hidden because the live section shows it
+  ---
+  duration_ms: 0.264904
+  type: 'test'
+  ...
+# Subtest: feed age in minutes, unknown when unreadable
+ok 59 - feed age in minutes, unknown when unreadable
+  ---
+  duration_ms: 0.17157
+  type: 'test'
+  ...
+# Subtest: score line
+ok 60 - score line
+  ---
+  duration_ms: 0.470316
+  type: 'test'
+  ...
+# Subtest: finished matches missing from the saved record become extra picks, and recorded or unpicked ones do not
+ok 61 - finished matches missing from the saved record become extra picks, and recorded or unpicked ones do not
+  ---
+  duration_ms: 0.8424
+  type: 'test'
+  ...
+1..61
+# tests 61
+# suites 0
+# pass 61
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 48725.115549
+
+> build
+> astro build
+
+17:21:50 [types] Generated 61ms
+17:21:50 [build] output: "static"
+17:21:50 [build] directory: /home/runner/work/football-predictor/football-predictor/site/dist/
+17:21:50 [build] Collecting build info...
+17:21:50 [build] ✓ Completed in 70ms.
+17:21:50 [build] Building static entrypoints...
+17:21:51 [vite] [32m✓ built in 1.08s[39m
+17:21:51 [build] ✓ Completed in 1.12s.
+
+ building client (vite) 
+17:21:51 [vite] transforming...
+17:21:51 [vite] [32m✓[39m 16 modules transformed.
+17:21:51 [vite] rendering chunks...
+17:21:51 [vite] computing gzip size...
+17:21:51 [vite] [2mdist/[22m[2m_astro/[22m[36mhoisted.DWNSkyah.js  [39m[1m[2m0.55 kB[22m[1m[22m[2m │ gzip: 0.37 kB[22m
+17:21:51 [vite] [2mdist/[22m[2m_astro/[22m[36mlive.D0iOtwhr.js     [39m[1m[2m1.24 kB[22m[1m[22m[2m │ gzip: 0.69 kB[22m
+17:21:51 [vite] [2mdist/[22m[2m_astro/[22m[36mfilters.B71blQUm.js  [39m[1m[2m2.13 kB[22m[1m[22m[2m │ gzip: 1.08 kB[22m
+17:21:51 [vite] [2mdist/[22m[2m_astro/[22m[36mhoisted.xXveYj_Q.js  [39m[1m[2m2.17 kB[22m[1m[22m[2m │ gzip: 1.00 kB[22m
+17:21:51 [vite] [2mdist/[22m[2m_astro/[22m[36mhoisted.C66WX9Ka.js  [39m[1m[2m2.28 kB[22m[1m[22m[2m │ gzip: 1.20 kB[22m
+17:21:51 [vite] [2mdist/[22m[2m_astro/[22m[36mhoisted.YxZpePSo.js  [39m[1m[2m2.39 kB[22m[1m[22m[2m │ gzip: 1.17 kB[22m
+17:21:51 [vite] [2mdist/[22m[2m_astro/[22m[36mhoisted.ClQP4oAR.js  [39m[1m[2m4.72 kB[22m[1m[22m[2m │ gzip: 2.03 kB[22m
+17:21:51 [vite] [32m✓ built in 93ms[39m
+
+ generating static routes 
+17:21:51 ▶ src/pages/about.astro
+17:21:51   └─ /about/index.html (+9ms)
+17:21:51 ▶ src/pages/bankroll.astro
+17:21:51   └─ /bankroll/index.html (+6ms)
+17:21:51 ▶ src/pages/index.astro
+17:21:51   └─ /index.html (+9ms)
+17:21:51 ▶ src/pages/match/[id].astro
+17:21:51   ├─ /match/i1-20261027-roma-cagliari/index.html (+6ms)
+17:21:51   ├─ /match/i1-20261027-torino-como/index.html (+2ms)
+17:21:51   ├─ /match/i1-20261028-venezia-inter/index.html (+2ms)
+17:21:51   ├─ /match/i1-20261028-parma-udinese/index.html (+2ms)
+17:21:51   ├─ /match/e0-20261028-arsenal-chelsea/index.html (+2ms)
+17:21:51   ├─ /match/e0-20261029-liverpool-brighton/index.html (+3ms)
+17:21:51   ├─ /match/sp1-20261029-sevilla-valencia/index.html (+2ms)
+17:21:51   ├─ /match/d1-20261031-koln-mainz/index.html (+1ms)
+17:21:51   ├─ /match/f1-20261101-lille-nice/index.html (+1ms)
+17:21:51   ├─ /match/d1-20261103-bayern-munich-dortmund/index.html (+1ms)
+17:21:51   ├─ /match/cl-20261028-roma-benfica/index.html (+1ms)
+17:21:51   ├─ /match/e0-20261027-everton-fulham/index.html (+5ms)
+17:21:51   └─ /match/sp1-20261027-getafe-betis/index.html (+2ms)
+17:21:51 ▶ src/pages/team/[name].astro
+17:21:51   ├─ /team/roma/index.html (+2ms)
+17:21:51   ├─ /team/cagliari/index.html (+1ms)
+17:21:51   ├─ /team/torino/index.html (+2ms)
+17:21:51   ├─ /team/como/index.html (+3ms)
+17:21:51   ├─ /team/venezia/index.html (+2ms)
+17:21:51   ├─ /team/inter/index.html (+3ms)
+17:21:51   ├─ /team/parma/index.html (+2ms)
+17:21:51   ├─ /team/udinese/index.html (+1ms)
+17:21:51   ├─ /team/arsenal/index.html (+1ms)
+17:21:51   ├─ /team/chelsea/index.html (+1ms)
+17:21:51   ├─ /team/liverpool/index.html (+1ms)
+17:21:51   ├─ /team/brighton/index.html (+1ms)
+17:21:51   ├─ /team/sevilla/index.html (+1ms)
+17:21:51   ├─ /team/valencia/index.html (+1ms)
+17:21:51   ├─ /team/koln/index.html (+2ms)
+17:21:51   ├─ /team/mainz/index.html (+1ms)
+17:21:51   ├─ /team/lille/index.html (+1ms)
+17:21:51   ├─ /team/nice/index.html (+1ms)
+17:21:51   ├─ /team/bayern-munich/index.html (+1ms)
+17:21:51   └─ /team/dortmund/index.html (+1ms)
+17:21:51 ▶ src/pages/teams.astro
+17:21:51   └─ /teams/index.html (+1ms)
+17:21:51 ▶ src/pages/track-record.astro
+17:21:51   └─ /track-record/index.html (+5ms)
+17:21:51 ✓ Completed in 105ms.
+
+17:21:51 [build] 38 page(s) built in 1.41s
+17:21:51 [build] Complete!
