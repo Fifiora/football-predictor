@@ -6,6 +6,10 @@ const load = (name) => JSON.parse(readFileSync(join(dir, name), "utf8"));
 
 export const fixtures = load("fixtures.json");
 export const trackRecord = load("track_record.json");
+// Optional: the paper bankroll file only exists once the refresh has written it.
+let sim = null;
+try { sim = load("simulation.json"); } catch (e) { sim = null; }
+export const simulation = sim;
 export const teams = load("teams.json");
 export const meta = load("meta.json");
 export const now = process.env.SITE_NOW ? new Date(process.env.SITE_NOW) : new Date();

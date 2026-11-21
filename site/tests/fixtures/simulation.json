@@ -1,0 +1,67 @@
+{
+ "start": 100.0,
+ "cash": 96.8,
+ "bankroll": 101.3,
+ "profit": 1.3,
+ "roi": 0.067,
+ "bets": 4,
+ "open": 1,
+ "won": 2,
+ "lost": 1,
+ "staked": 14.4,
+ "since": "2026-11-20",
+ "curve": [
+  {
+   "date": "2026-11-21",
+   "bankroll": 105.0
+  },
+  {
+   "date": "2026-11-22",
+   "bankroll": 100.25
+  },
+  {
+   "date": "2026-11-23",
+   "bankroll": 101.3
+  }
+ ],
+ "recent": [
+  {
+   "match_id": "E0-4",
+   "league": "E0",
+   "home": "Arsenal",
+   "away": "Chelsea",
+   "date": "2026-11-24",
+   "pick": "H",
+   "odds": 1.9,
+   "stake": 4.8,
+   "status": "open",
+   "profit": null
+  },
+  {
+   "match_id": "E0-3",
+   "league": "E0",
+   "home": "Fulham",
+   "away": "Everton",
+   "date": "2026-11-23",
+   "pick": "H",
+   "odds": 2.1,
+   "stake": 4.5,
+   "status": "won",
+   "profit": 4.95
+  },
+  {
+   "match_id": "E0-2",
+   "league": "E0",
+   "home": "Getafe",
+   "away": "Betis",
+   "date": "2026-11-22",
+   "pick": "A",
+   "odds": 4.0,
+   "stake": 4.75,
+   "status": "lost",
+   "profit": -4.75
+  }
+ ],
+ "stake_fraction": 0.05,
+ "confident_at": 0.55
+}

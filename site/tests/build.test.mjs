@@ -157,3 +157,14 @@ test("the fixtures page has a live scores section that stays hidden until the br
   assert.match(html, /<section[^>]*id="live"[^>]*hidden/);
   assert.match(html, /id="none"/);
 });
+
+
+test("the track record page shows the paper bankroll with its rules and says it is not betting advice", () => {
+  const html = read(build("dist-test-fresh", "2025-10-27T12:00:00Z"), "track-record/index.html");
+  assert.match(html, /data-simulation/);
+  assert.match(html, /What if we had backed the confident picks\?/);
+  assert.match(html, /\$101\.30/);
+  assert.match(html, /not betting advice/);
+  assert.match(html, /Bet365/);
+  assert.match(html, /Arsenal \(home win\) at 1\.90, stake \$4\.80: waiting for the result/);
+});

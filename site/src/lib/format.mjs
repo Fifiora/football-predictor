@@ -105,3 +105,29 @@ export function utcTime(iso) {
   const d = toDate(iso);
   return d ? `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")} UTC` : "";
 }
+
+/** Pretend dollars, e.g. "$105.25"; ``signed`` adds a plus for gains. */
+export function money(x, signed = false) {
+  const v = Number(x);
+  if (x == null || !Number.isFinite(v)) return "n/a";
+  const text = Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${v < 0 ? "-" : signed && v > 0 ? "+" : ""}$${text}`;
+}
+
+/** Line-chart geometry for the bankroll: the start and then the balance after each settled bet. */
+export function curveGeometry(curve, start, width, height, pad = 12) {
+  const values = [start, ...(curve ?? []).map((c) => c.bankroll)].filter(Number.isFinite);
+  const lo = Math.min(...values), hi = Math.max(...values);
+  const span = hi - lo || 1;
+  const step = values.length > 1 ? (width - 2 * pad) / (values.length - 1) : 0;
+  const pts = values.map((v, i) => ({ x: pad + i * step, y: pad + (1 - (v - lo) / span) * (height - 2 * pad), v }));
+  return { points: pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "), startY: pts[0].y, last: pts[pts.length - 1], lo, hi };
+}
+
+const SIDE = { H: "home win", D: "draw", A: "away win" };
+/** One line describing a paper bet: what was backed, at what price, and how it ended. */
+export function betText(b) {
+  const who = b.pick === "H" ? b.home : b.pick === "A" ? b.away : "Draw";
+  const end = b.status === "open" ? "waiting for the result" : b.status === "won" ? `won ${money(b.profit, true)}` : `lost ${money(Math.abs(b.profit))}`;
+  return `${who} (${SIDE[b.pick]}) at ${Number(b.odds).toFixed(2)}, stake ${money(b.stake)}: ${end}`;
+}

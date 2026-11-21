@@ -97,3 +97,29 @@ test("bad or missing kickoff values are ignored, and the static fallback names U
   assert.equal(utcTime("2026-10-29T19:45:00Z"), "19:45 UTC");
   assert.equal(utcTime(undefined), "");
 });
+
+import { betText, curveGeometry, money } from "../src/lib/format.mjs";
+
+test("money shows pretend dollars with cents and an optional plus", () => {
+  assert.equal(money(105.5), "$105.50");
+  assert.equal(money(-3.2), "-$3.20");
+  assert.equal(money(0.25, true), "+$0.25");
+  assert.equal(money(null), "n/a");
+});
+
+test("the bankroll curve starts at the opening balance and ends at the latest one", () => {
+  const g = curveGeometry([{ bankroll: 110 }, { bankroll: 90 }], 100, 300, 100, 10);
+  assert.equal(g.points.split(" ").length, 3);
+  assert.equal(g.lo, 90); assert.equal(g.hi, 110);
+  assert.equal(g.last.v, 90);
+  assert.ok(g.last.y > g.startY);  // lower balance sits lower on the chart
+  const flat = curveGeometry([], 100, 300, 100);
+  assert.equal(flat.points.split(" ").length, 1);
+});
+
+test("a paper bet reads as plain words", () => {
+  const b = { pick: "H", home: "Arsenal", away: "Chelsea", odds: 2, stake: 5, status: "won", profit: 5 };
+  assert.equal(betText(b), "Arsenal (home win) at 2.00, stake $5.00: won +$5.00");
+  assert.match(betText({ ...b, status: "lost", profit: -5 }), /lost \$5\.00$/);
+  assert.match(betText({ ...b, status: "open", profit: null }), /waiting for the result$/);
+});

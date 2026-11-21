@@ -134,6 +134,9 @@ check(nE0 < nAll && nE0 > 0, `limiting to one league narrows the picks (${nAll} 
 await p.click('button[data-tier="all"]');
 await p.click('button[data-lg=""]');
 check(Number((await p.textContent("#conf-of")).match(/of (\d+) picks/)[1]) === 120, "all picks and all leagues counts every graded match");
+check(await p.locator("[data-simulation]").isVisible(), "the paper bankroll panel is shown");
+check((await p.locator("[data-simulation] svg polyline").count()) === 1, "the bankroll line is drawn");
+check((await p.locator("[data-simulation]").textContent()).includes("$101.30"), "the bankroll shows its balance");
 await shot(p, "track-confidence");
 await p.close();
 p = await open("/track-record/", { width: 390, height: 844, dark: true });
