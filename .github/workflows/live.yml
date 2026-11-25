@@ -6,6 +6,8 @@ on:
   schedule:
     - cron: "7,37 10-23 * * *"
   workflow_dispatch:
+    inputs:
+      seen: { description: "match ids already sent to the daily refresh (set by the previous poller)", required: false, default: "" }
 permissions:
   contents: write
   actions: write
@@ -31,15 +33,20 @@ jobs:
         env:
           FOOTBALL_DATA_TOKEN: "${{ secrets.FOOTBALL_DATA_TOKEN }}"
           GH_TOKEN: "${{ github.token }}"
+          SEEN_IN: "${{ inputs.seen }}"
         run: |
           set +e
           start=$(date +%s)
-          seen=""
+          seen="$SEEN_IN"   # carried over from the previous poller so a result that cannot be stored is not retried every hand-over
           busy="true"   # until a poll says otherwise, so a failed first poll still hands over
           fails=0
           lastbusy="false"   # what the last good poll said, so a run of failures mid-match still hands over
           while true; do
-            running=$(gh run list --workflow daily.yml --json status --jq '[.[] | select(.status=="in_progress" or .status=="queued")] | length' 2>/dev/null)
+            running=0
+            for wf in daily.yml retrain.yml; do   # a queued weekly retrain must not be bumped out by another daily run
+              n=$(gh run list --workflow $wf --json status --jq '[.[] | select(.status=="in_progress" or .status=="queued" or .status=="pending")] | length' 2>/dev/null)
+              running=$(( running + ${n:-0} ))
+            done
             if [ "${running:-0}" = "0" ]; then
               # a daily run that just stored results has moved the state branch on
               if [ -d state/.git ] || [ -f state/.git ]; then (cd state && git fetch -q origin state && git checkout -q --detach FETCH_HEAD); fi
@@ -54,7 +61,7 @@ jobs:
                   && git -c user.name=footpred-bot -c user.email=bot@users.noreply.github.com commit -qm "live $(date -u +%FT%TZ)" \
                   && git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" live) \
                   || echo "::warning title=live::could not publish the live feed this round"
-                for id in $(jq -r '.unrecorded[]' live-out/status.json); do
+                for id in $(jq -r '.unrecorded[] | gsub(" "; "_")' live-out/status.json); do
                   case " $seen " in *" $id "*) ;; *) fresh="$fresh $id" ;; esac
                 done
                 if [ -n "$fresh" ]; then
@@ -72,4 +79,4 @@ jobs:
             [ $(( $(date +%s) - start )) -gt 3000 ] && break
             sleep 90
           done
-          if [ "$busy" = "true" ]; then gh workflow run live.yml --ref main; fi   # hand over to a fresh job
+          if [ "$busy" = "true" ]; then gh workflow run live.yml --ref main -f seen="$seen"; fi   # hand over to a fresh job
