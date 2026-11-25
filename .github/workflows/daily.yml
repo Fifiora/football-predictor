@@ -63,4 +63,11 @@ jobs:
         if: steps.daily.outputs.code == '0'
         with: { path: site/dist }
       - uses: actions/deploy-pages@v4
+        id: deploy
         if: steps.daily.outputs.code == '0'
+        continue-on-error: true   # Pages sometimes cannot read the artifact right after upload; one more try fixes it
+      - name: Wait, then deploy again if the first try failed
+        if: steps.daily.outputs.code == '0' && steps.deploy.outcome == 'failure'
+        run: sleep 45
+      - uses: actions/deploy-pages@v4
+        if: steps.daily.outputs.code == '0' && steps.deploy.outcome == 'failure'
