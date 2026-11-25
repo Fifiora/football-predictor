@@ -175,7 +175,10 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
   .eyebrow { margin: 28px 0 0; font-size: 0.8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .eyebrow + h1 { margin-top: 6px; }
   .empty { max-width: 40rem; } .empty h2 { margin-top: 0; }
-  .hero { display: grid; gap: 14px; max-width: none; }
+  /* the balance sits on the brand navy gradient in both themes */
+  .hero { display: grid; gap: 14px; max-width: none; --ink: #ffffff; --muted: rgb(255 255 255 / 0.82); --rule: rgb(255 255 255 / 0.22); --edge: rgb(255 255 255 / 0.5);
+    --home: #00bfff; --brand: #8fe3ff; --good: #8ff0bd; --warn: #ffc2bb; --paper: #00005c; color: #fff;
+    background: radial-gradient(120% 80% at 100% 0%, rgb(0 191 255 / 0.18), transparent 55%), linear-gradient(160deg, rgb(0 0 92 / 0.92), rgb(0 0 128 / 0.88) 55%, rgb(0 0 92 / 0.92)); }
   .hero-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
   .k { margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .balance { margin: 0; font-size: clamp(2.6rem, 9vw, 4rem); line-height: 1; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--ink); }
