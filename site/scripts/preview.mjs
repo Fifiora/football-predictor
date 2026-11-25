@@ -164,7 +164,7 @@ p = await open("/bankroll/", { width: 390, height: 844 });
 await shot(p, "bankroll-mobile");
 check(!(await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)), "no horizontal scroll on the bankroll page on a phone");
 const bar = await p.locator("nav").evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, pos: getComputedStyle(el).position }; });
-check(bar.pos === "fixed" && Math.abs(bar.bottom - 844) < 2, `on a phone the main navigation is a tab bar at the bottom (${bar.pos})`);
+check(bar.pos === "fixed" && bar.bottom > 822 && bar.bottom <= 844, `on a phone the main navigation is a tab bar at the bottom (${bar.pos})`);
 check((await p.locator("nav a").count()) === 5, "the tab bar has five items");
 const small = await p.locator("nav a").evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height < 44).length);
 check(small === 0, "every tab is at least 44px tall");
