@@ -37,6 +37,7 @@ jobs:
           seen=""
           busy="true"   # until a poll says otherwise, so a failed first poll still hands over
           fails=0
+          lastbusy="false"   # what the last good poll said, so a run of failures mid-match still hands over
           while true; do
             running=$(gh run list --workflow daily.yml --json status --jq '[.[] | select(.status=="in_progress" or .status=="queued")] | length' 2>/dev/null)
             if [ "${running:-0}" = "0" ]; then
@@ -45,7 +46,7 @@ jobs:
               rm -rf live-out
               python -m footpred.pipeline.cli live --data-dir state/data --out-dir live-out
               pcode=$?
-              if [ "$pcode" != "0" ]; then fails=$((fails+1)); [ "$fails" -ge 5 ] && { busy="false"; break; }; fi
+              if [ "$pcode" != "0" ]; then fails=$((fails+1)); [ "$fails" -ge 5 ] && { busy="$lastbusy"; break; }; fi
               if [ "$pcode" = "0" ]; then
                 fails=0
                 rm -rf livepub && mkdir livepub && cp live-out/live.json livepub/live.json
@@ -62,6 +63,7 @@ jobs:
                 fi
                 fresh=""
                 busy=$(jq -r '.busy' live-out/status.json)
+                lastbusy=$busy
               fi
             else
               busy="true"   # a refresh is running: stay out of the API's rate limit and look again soon

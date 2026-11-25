@@ -161,7 +161,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   const box = document.querySelector("[data-confidence]");
   if (box) {
-    let saved = [], picks = [], extra = 0;
+    let saved = [], picks = [], extra = 0, seen = "";
     try { saved = JSON.parse(document.getElementById("picks-data").textContent); } catch (e) {}
     picks = saved;
     const known = new Set(saved.map((p) => p[3]));
@@ -182,7 +182,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       }
       const note = document.getElementById("conf-live");
       note.hidden = extra === 0;
-      note.textContent = extra ? `Includes ${extra} ${extra === 1 ? "match" : "matches"} that finished today and ${extra === 1 ? "is" : "are"} not in the full record yet.` : "";
+      note.textContent = extra ? `Includes ${extra} ${extra === 1 ? "match" : "matches"} that finished recently and ${extra === 1 ? "is" : "are"} not in the full record yet. Log loss, calibration and the league figures update with the daily refresh.` : "";
       box.querySelectorAll("[data-tier]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tier === tier)));
       box.querySelectorAll("[data-lg]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lg === league)));
     };
@@ -196,8 +196,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         try {
           const res = await fetch(`${url}?t=${Math.floor(Date.now() / 60000)}`, { cache: "no-store" });
           if (!res.ok) return;
-          const more = extraPicks(await res.json(), known);
-          if (more.length === extra) return;
+          const more = extraPicks(await res.json(), known, Date.now());
+          const sig = more.map((p) => p[3]).join("|");
+          if (sig === seen) return;
+          seen = sig;
           extra = more.length;
           picks = saved.concat(more);
           paint();

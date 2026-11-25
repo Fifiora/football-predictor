@@ -77,3 +77,9 @@ test("finished matches missing from the saved record become extra picks, and rec
   assert.deepEqual(extraPicks(f, new Set(["saved"])), [["E0", 0.6, 1, "new-right"], ["E0", 0.5, 0, "new-wrong"]]);
   assert.deepEqual(extraPicks(null, new Set()), []);
 });
+
+test("extra picks are ignored when the feed is more than half an hour old", () => {
+  const f = feed(m("x", "finished", "2026-11-01T14:00:00Z", { pick: "H", pick_ok: true, p_home: 0.6, p_draw: 0.25, p_away: 0.15 }));
+  assert.equal(extraPicks(f, new Set(), NOW).length, 1);
+  assert.equal(extraPicks(f, new Set(), NOW + 40 * 60000).length, 0);
+});

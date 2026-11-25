@@ -95,11 +95,46 @@ def test_live_bankroll_values_open_bets_by_the_score_right_now(tmp_path):
     assert out["profit_now"] == round(out["if_now"] - START, 2)
 
 
-def test_live_bankroll_ignores_settled_bets_and_missing_matches(tmp_path):
+def test_live_bankroll_keeps_settled_bets_and_leaves_missing_matches_open(tmp_path):
     from footpred.pipeline.stakes import live_bankroll
     path = tmp_path / "live.csv"
     place_bets(path, pd.DataFrame([fx("E0-1", 0.6, 0.25, 0.15), fx("E0-2", 0.6, 0.25, 0.15)]), odds("E0-1", "E0-2"), NOW)
     settle_bets(path, pd.DataFrame({"match_id": ["E0-1"], "outcome": [0]}))
     out = live_bankroll(read_ledger(path), [_m("E0-1", "finished", 1, 0)])
-    assert [b["match_id"] for b in out["bets"]] == ["E0-2"] and out["bets"][0]["status"] == "open"
+    assert {b["match_id"]: b["status"] for b in out["bets"]} == {"E0-1": "won", "E0-2": "open"}  # settled bets in the feed window keep showing their result
     assert live_bankroll(pd.DataFrame(columns=read_ledger(tmp_path / "none.csv").columns), [])["if_now"] == START
+
+
+def test_bets_follow_the_logged_prediction_not_a_fresh_one(tmp_path):
+    path = tmp_path / "s.csv"
+    fresh = pd.DataFrame([fx("E0-1", 0.6, 0.25, 0.15), fx("E0-2", 0.6, 0.25, 0.15), fx("E0-3", 0.6, 0.25, 0.15)])
+    logged = pd.DataFrame([{"match_id": "E0-1", "p_home": 0.2, "p_draw": 0.2, "p_away": 0.6},   # pick flipped since it was logged
+                           {"match_id": "E0-2", "p_home": 0.5, "p_draw": 0.3, "p_away": 0.2}])  # no longer confident; E0-3 never logged
+    place_bets(path, fresh, odds("E0-1", "E0-2", "E0-3", price=(2.0, 3.5, 4.0)), NOW, logged=logged)
+    ledger = read_ledger(path)
+    assert list(ledger["match_id"]) == ["E0-1"]
+    assert ledger.iloc[0]["pick"] == "A" and ledger.iloc[0]["odds"] == 4.0 and ledger.iloc[0]["p_pick"] == 0.6
+
+
+def test_a_bet_with_no_result_long_after_kickoff_is_voided_and_the_stake_returned(tmp_path):
+    from footpred.pipeline.stakes import void_stale
+    path = tmp_path / "s.csv"
+    place_bets(path, pd.DataFrame([fx("E0-1", 0.6, 0.25, 0.15, kickoff="2026-11-21"), fx("E0-2", 0.6, 0.25, 0.15, kickoff="2026-11-30")]),
+               odds("E0-1", "E0-2"), NOW)
+    assert void_stale(path, pd.Timestamp("2026-11-30"), after_days=10) == 0
+    assert void_stale(path, pd.Timestamp("2026-12-05"), after_days=10) == 1
+    ledger = read_ledger(path)
+    assert cash(ledger) == round(100.0 - 4.75, 2)  # only the second stake is still out
+    s = summarize(ledger)
+    assert s["won"] == 0 and s["lost"] == 0 and s["staked"] == 0.0 and s["open"] == 1
+    assert [b["status"] for b in s["recent"]] == ["open", "void"]
+
+
+def test_live_bankroll_reports_bets_settled_after_the_page_was_built(tmp_path):
+    from footpred.pipeline.stakes import live_bankroll
+    path = tmp_path / "s.csv"
+    place_bets(path, pd.DataFrame([fx("E0-1", 0.6, 0.25, 0.15), fx("E0-2", 0.6, 0.25, 0.15)]), odds("E0-1", "E0-2"), NOW)
+    settle_bets(path, pd.DataFrame({"match_id": ["E0-1"], "outcome": [0]}))  # the daily run stored E0-1 a moment ago
+    out = live_bankroll(read_ledger(path), [_m("E0-1", "finished", 2, 0), _m("E0-2", "upcoming")])
+    by = {b["match_id"]: b for b in out["bets"]}
+    assert by["E0-1"]["status"] == "won" and by["E0-1"]["profit"] == 5.0 and by["E0-2"]["status"] == "open"

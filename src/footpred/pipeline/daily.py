@@ -18,7 +18,8 @@ from footpred.ingest.fixtures import FixturesClient, fetch_latest_results, fetch
 from footpred.ingest.historical import season_label
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.models.registry import load_champion
-from footpred.pipeline.stakes import place_bets, read_ledger, settle_bets, summarize
+from footpred.pipeline.live import read_log
+from footpred.pipeline.stakes import place_bets, read_ledger, settle_bets, summarize, void_stale
 from footpred.pipeline.european import EuropeanScores, score_european
 from footpred.pipeline.common import PLAYED, append_api_results, load_all_matches, played_before
 from footpred.predictions.log import grade_predictions, log_predictions
@@ -213,11 +214,12 @@ def run_daily(
     stakes_path = data_dir / "stake_log.csv"
     if odds and len(later):
         try:
-            place_bets(stakes_path, later, odds, pd.Timestamp(clock()) if clock is not None else stamp)
+            place_bets(stakes_path, later, odds, pd.Timestamp(clock()) if clock is not None else stamp, logged=read_log(data_dir))
         except Exception as err:  # noqa: BLE001  a side feature must never stop the refresh
             warnings.append(f"paper bankroll could not place bets: {type(err).__name__}: {err}")
     try:
         settle_bets(stakes_path, graded)
+        void_stale(stakes_path, stamp)
         simulation = summarize(read_ledger(stakes_path))
     except Exception as err:  # noqa: BLE001
         simulation = None

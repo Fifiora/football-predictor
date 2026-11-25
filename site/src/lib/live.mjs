@@ -43,8 +43,12 @@ export function scoreLine(m) {
 }
 
 /** Picks for matches that have finished in the live feed but are not in the saved track record yet, as ``[league, chance, 1 if right, id]``. */
-export function extraPicks(feed, knownIds) {
+export function extraPicks(feed, knownIds, nowMs = null) {
   const out = [];
+  if (nowMs != null) {  // an old feed is a leftover from an earlier match day
+    const age = feedAgeMinutes(feed, nowMs);
+    if (age == null || age > 30) return out;
+  }
   for (const m of Array.isArray(feed?.matches) ? feed.matches : []) {
     if (!m || m.state !== "finished" || typeof m.match_id !== "string" || knownIds.has(m.match_id)) continue;
     if (typeof m.pick_ok !== "boolean" || !["H", "D", "A"].includes(m.pick)) continue;

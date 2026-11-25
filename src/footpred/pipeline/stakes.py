@@ -40,20 +40,28 @@ def cash(ledger: pd.DataFrame) -> float:
     return round(START - float(ledger["stake"].sum()) + float(ledger["payout"].fillna(0).sum()), 2)
 
 
-def place_bets(path: Path, fixtures: pd.DataFrame, odds: dict, placed_at: pd.Timestamp) -> int:
+def place_bets(path: Path, fixtures: pd.DataFrame, odds: dict, placed_at: pd.Timestamp, logged: pd.DataFrame | None = None) -> int:
     """Stake on each confident league pick that has a Bet365 price and has not kicked off; returns how many were placed.
 
     A match already in the ledger keeps its first bet and price. Bets go in kickoff order, each sized from the cash left.
+    With ``logged`` (the prediction log) the bet follows the prediction that was saved before kickoff, the one the track record
+    grades, and a match that was never logged is not staked.
     """
     ledger = read_ledger(path)
     have = set(ledger["match_id"])
     balance = cash(ledger)
     new = []
+    kept = None if logged is None else logged.drop_duplicates("match_id").set_index("match_id")
     frame = fixtures.sort_values(["kickoff_date", "match_id"]) if len(fixtures) else fixtures
     for r in frame.to_dict("records"):
         if r["match_id"] in have or r["league"] == "CL" or pd.Timestamp(r["kickoff_date"]) <= pd.Timestamp(placed_at):
             continue
-        probs = [float(r["p_home"]), float(r["p_draw"]), float(r["p_away"])]
+        src = r
+        if kept is not None:
+            if r["match_id"] not in kept.index:
+                continue
+            src = kept.loc[r["match_id"]]
+        probs = [float(src["p_home"]), float(src["p_draw"]), float(src["p_away"])]
         idx = int(np.argmax(probs))
         if probs[idx] < CONFIDENT_AT:
             continue
@@ -92,13 +100,31 @@ def settle_bets(path: Path, graded: pd.DataFrame) -> int:
     return int(open_rows.sum())
 
 
+VOID = 3.0  # outcome code for a bet whose match never got a result: the stake is returned
+
+
+def void_stale(path: Path, now: pd.Timestamp, after_days: int = 10) -> int:
+    """Return the stake on any open bet whose match has had no result ``after_days`` after kickoff (postponed or moved)."""
+    ledger = read_ledger(path)
+    if ledger.empty:
+        return 0
+    kick = pd.to_datetime(ledger["kickoff_date"], format="mixed")
+    stale = ledger["outcome"].isna() & (kick < pd.Timestamp(now) - pd.Timedelta(days=after_days))
+    if not stale.any():
+        return 0
+    ledger.loc[stale, "outcome"] = VOID
+    ledger.loc[stale, "payout"] = ledger.loc[stale, "stake"]
+    _write(ledger, path)
+    return int(stale.sum())
+
+
 def summarize(ledger: pd.DataFrame, recent: int = 30) -> dict:
     """What the page shows: money now, record, the line of profit over time and the latest bets."""
     if ledger.empty:
         return {"start": START, "cash": START, "bankroll": START, "profit": 0.0, "roi": None, "bets": 0, "open": 0, "open_stake": 0.0,
                 "won": 0, "lost": 0, "staked": 0.0, "since": None, "curve": [], "recent": [],
                 "stake_fraction": STAKE_FRACTION, "confident_at": CONFIDENT_AT}
-    settled = ledger[ledger["outcome"].notna()].copy()
+    settled = ledger[ledger["outcome"].notna() & (ledger["outcome"] != VOID)].copy()
     open_ = ledger[ledger["outcome"].isna()]
     settled["profit"] = settled["payout"] - settled["stake"]
     settled = settled.assign(_k=pd.to_datetime(settled["kickoff_date"], format="mixed")).sort_values(["_k", "match_id"])
@@ -112,7 +138,7 @@ def summarize(ledger: pd.DataFrame, recent: int = 30) -> dict:
     latest = ledger.assign(_k=pd.to_datetime(ledger["kickoff_date"], format="mixed")).sort_values(["_k", "match_id"], ascending=False).head(recent)
     bets = []
     for r in latest.to_dict("records"):
-        status = "open" if pd.isna(r["outcome"]) else ("won" if r["payout"] > 0 else "lost")
+        status = "open" if pd.isna(r["outcome"]) else "void" if r["outcome"] == VOID else ("won" if r["payout"] > 0 else "lost")
         bets.append({"match_id": r["match_id"], "league": r["league"], "home": r["home"], "away": r["away"],
                      "date": r["_k"].strftime("%Y-%m-%d"), "pick": r["pick"], "odds": float(r["odds"]), "stake": float(r["stake"]),
                      "status": status, "profit": None if status == "open" else round(float(r["payout"]) - float(r["stake"]), 2)})
@@ -132,6 +158,13 @@ def live_bankroll(ledger: pd.DataFrame, matches: list[dict]) -> dict:
     by_id = {m["match_id"]: m for m in matches or []}
     open_ = ledger[ledger["outcome"].isna()] if len(ledger) else ledger
     bets, in_play = [], 0.0
+    if len(ledger):  # bets the daily run settled after the page was built, so the page can still show their result
+        for r in ledger[ledger["outcome"].notna() & (ledger["outcome"] != VOID) & ledger["match_id"].isin(by_id)].to_dict("records"):
+            m = by_id[r["match_id"]]
+            if m.get("home_goals") is None or m.get("away_goals") is None:
+                continue
+            bets.append({"match_id": r["match_id"], "status": "won" if r["payout"] > 0 else "lost", "home_goals": int(m["home_goals"]),
+                         "away_goals": int(m["away_goals"]), "profit": round(float(r["payout"]) - float(r["stake"]), 2)})
     for r in open_.to_dict("records"):
         m = by_id.get(r["match_id"])
         stake, win = float(r["stake"]), round(float(r["stake"]) * float(r["odds"]), 2)

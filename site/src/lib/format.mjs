@@ -128,6 +128,6 @@ const SIDE = { H: "home win", D: "draw", A: "away win" };
 /** One line describing a paper bet: what was backed, at what price, and how it ended. */
 export function betText(b) {
   const who = b.pick === "H" ? b.home : b.pick === "A" ? b.away : "Draw";
-  const end = b.status === "open" ? "waiting for the result" : b.status === "won" ? `won ${money(b.profit, true)}` : `lost ${money(Math.abs(b.profit))}`;
+  const end = b.status === "void" ? "match not played, stake returned" : b.status === "open" ? "waiting for the result" : b.status === "won" ? `won ${money(b.profit, true)}` : `lost ${money(Math.abs(b.profit))}`;
   return `${who} (${SIDE[b.pick]}) at ${Number(b.odds).toFixed(2)}, stake ${money(b.stake)}: ${end}`;
 }

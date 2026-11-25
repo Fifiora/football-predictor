@@ -16,8 +16,8 @@ const steps = sim ? [
   ["4", "Settle", "A right pick pays stake times price. A wrong one loses the stake."],
 ] : [];
 const chips = [["all", "All"], ["open", "Open"], ["won", "Won"], ["lost", "Lost"]];
-const mark = { open: "○", won: "✓", lost: "✗" };
-const label = { open: "Open", won: "Won", lost: "Lost" };
+const mark = { open: "○", won: "✓", lost: "✗", void: "–" };
+const label = { open: "Open", won: "Won", lost: "Lost", void: "Void" };
 ---
 <Base title="Paper bankroll">
   <p class="eyebrow">Pretend money · not betting advice</p>
@@ -177,7 +177,7 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
   .empty { max-width: 40rem; } .empty h2 { margin-top: 0; }
   /* the balance sits on the brand navy gradient in both themes */
   .hero { display: grid; gap: 14px; max-width: none; --ink: #ffffff; --muted: rgb(255 255 255 / 0.82); --rule: rgb(255 255 255 / 0.22); --edge: rgb(255 255 255 / 0.5);
-    --home: #00bfff; --brand: #8fe3ff; --good: #8ff0bd; --warn: #ffc2bb; --paper: #00005c; color: #fff;
+    --home: #00bfff; --brand: #8fe3ff; --focus: #8fe3ff; --good: #8ff0bd; --warn: #ffc2bb; --paper: #00005c; color: #fff;
     background: radial-gradient(120% 80% at 100% 0%, rgb(0 191 255 / 0.18), transparent 55%), linear-gradient(160deg, rgb(0 0 92 / 0.92), rgb(0 0 128 / 0.88) 55%, rgb(0 0 92 / 0.92)); }
   .hero-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
   .k { margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
@@ -217,7 +217,7 @@ const label = { open: "Open", won: "Won", lost: "Lost" };
   .bet { max-width: none; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 16px;
     background: var(--surface); border: 1px solid var(--line); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: var(--shadow); }
   .pill { font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1.5px solid currentColor; white-space: nowrap; }
-  .bet.won .pill, .bet.won .amt, .bet.winning .pill, .bet.winning .amt { color: var(--good); } .bet.lost .pill, .bet.lost .amt, .bet.losing .pill, .bet.losing .amt { color: var(--warn); } .bet.open .pill { color: var(--muted); }
+  .bet.won .pill, .bet.won .amt, .bet.winning .pill, .bet.winning .amt { color: var(--good); } .bet.lost .pill, .bet.lost .amt, .bet.losing .pill, .bet.losing .amt { color: var(--warn); } .bet.open .pill, .bet.void .pill { color: var(--muted); }
   .what { display: grid; gap: 2px; min-width: 0; } .what b { overflow-wrap: anywhere; }
   .amt { font-weight: 800; font-variant-numeric: tabular-nums; }
   @media (max-width: 520px) { .bet { grid-template-columns: 1fr auto; } .pill { justify-self: start; grid-column: 1; } .amt { grid-row: 1; grid-column: 2; } .what { grid-column: 1 / -1; } }
