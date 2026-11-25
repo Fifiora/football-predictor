@@ -80,6 +80,8 @@ const label = { open: "Open", won: "Won", lost: "Lost", void: "Void" };
               <div><dt>Stake</dt><dd>{money(slip.stake)}</dd></div>
               <div><dt>Returns if right</dt><dd>{money(slip.stake * slip.odds)}</dd></div>
               <div><dt>Kickoff day</dt><dd>{slip.date}</dd></div>
+              {slip.p_pick != null && <div><dt>Model chance</dt><dd>{Math.round(slip.p_pick * 100)}%</dd></div>}
+              {slip.edge != null && <div><dt>Model edge</dt><dd>{slip.edge >= 0 ? "+" : ""}{(slip.edge * 100).toFixed(0)}%</dd></div>}
             </dl>
             <p class="t-note" id="slip-status">Waiting for kickoff. Pretend money only.</p>
           </div>
@@ -88,10 +90,16 @@ const label = { open: "Open", won: "Won", lost: "Lost", void: "Void" };
 
       <div class="tiles">
         <div class="panel stat"><span class="k">Return on stakes</span><b>{sim.roi == null ? "n/a" : `${sim.roi >= 0 ? "+" : ""}${(sim.roi * 100).toFixed(1)}%`}</b><span class="d">Profit divided by the {money(sim.staked)} staked on finished bets.</span></div>
+        {sim.expected_roi != null && (
+          <div class="panel stat" data-expected><span class="k">Expected vs real</span>
+            <b>{sim.expected_roi >= 0 ? "+" : ""}{(sim.expected_roi * 100).toFixed(1)}%</b>
+            <span class="d">What the model's own chances predicted on these stakes. Real return so far: {sim.roi == null ? "n/a" : `${sim.roi >= 0 ? "+" : ""}${(sim.roi * 100).toFixed(1)}%`}. Bet365's price includes its margin.</span></div>
+        )}
         <div class="panel stat"><span class="k">Record</span><b>{sim.won}–{sim.lost}</b><span class="d">{settled ? `${Math.round((sim.won / settled) * 100)}% of finished bets won.` : "Nothing finished yet."}</span></div>
         <div class="panel stat"><span class="k">Still waiting</span><b>{sim.open}</b><span class="d">{money(sim.open_stake ?? 0)} staked on matches not played yet.</span></div>
         <div class="panel stat"><span class="k">Cash on hand</span><b>{money(sim.cash)}</b><span class="d">What is left to stake on new bets.</span></div>
       </div>
+      {sim.skipped > 0 && <p class="note" data-skipped>{sim.skipped} confident {sim.skipped === 1 ? "pick" : "picks"} had no Bet365 price in time, so nothing was staked on {sim.skipped === 1 ? "it" : "them"}. They are not counted above.</p>}
       {settled > 0 && settled < 30 && <p class="note">Only {settled} finished {settled === 1 ? "bet" : "bets"} so far. A few results can swing this a lot, so treat it as a rough guide.</p>}
 
       <section class="bets-box" aria-labelledby="bets-title">

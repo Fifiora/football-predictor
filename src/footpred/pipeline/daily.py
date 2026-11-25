@@ -19,7 +19,7 @@ from footpred.ingest.historical import season_label
 from footpred.ingest.schema import MATCH_COLUMNS, validate_matches
 from footpred.models.registry import load_champion
 from footpred.pipeline.live import read_log
-from footpred.pipeline.stakes import place_bets, read_ledger, settle_bets, summarize, void_stale
+from footpred.pipeline.stakes import place_bets, read_ledger, read_skips, settle_bets, summarize, void_stale
 from footpred.pipeline.european import EuropeanScores, score_european
 from footpred.pipeline.common import PLAYED, append_api_results, load_all_matches, played_before
 from footpred.predictions.log import grade_predictions, log_predictions
@@ -220,7 +220,7 @@ def run_daily(
     try:
         settle_bets(stakes_path, graded)
         void_stale(stakes_path, stamp)
-        simulation = summarize(read_ledger(stakes_path))
+        simulation = summarize(read_ledger(stakes_path), read_skips(stakes_path))
     except Exception as err:  # noqa: BLE001
         simulation = None
         warnings.append(f"paper bankroll unavailable: {type(err).__name__}: {err}")

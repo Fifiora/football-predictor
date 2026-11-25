@@ -156,6 +156,8 @@ check((await p.locator("li.bet").count()) === 3, "the latest bets are listed");
 await p.waitForFunction(() => !document.getElementById("now-line").hidden, null, { timeout: 5000 }).catch(() => {});
 check((await p.locator("#now-text").textContent()).includes("$106.00"), "the bankroll page shows the live if-ended-now balance");
 check((await p.locator('li.bet[data-id="E0-4"]').textContent()).includes("Winning now"), "an open bet shows it is winning now from the live score");
+check((await p.locator("[data-skipped]").textContent()).includes("2 confident picks"), "the page says how many confident picks were skipped for lack of a price");
+check((await p.locator("[data-expected]").textContent()).includes("+8.0%"), "the page compares the model's expected return with the real one");
 check(await p.locator("[data-slip]").isVisible(), "the bankroll page shows the latest open bet as a slip");
 check((await p.locator("#slip-status").textContent()).includes("Winning now"), "the slip follows the live score");
 await p.click('button[data-show="won"]');

@@ -138,3 +138,26 @@ def test_live_bankroll_reports_bets_settled_after_the_page_was_built(tmp_path):
     out = live_bankroll(read_ledger(path), [_m("E0-1", "finished", 2, 0), _m("E0-2", "upcoming")])
     by = {b["match_id"]: b for b in out["bets"]}
     assert by["E0-1"]["status"] == "won" and by["E0-1"]["profit"] == 5.0 and by["E0-2"]["status"] == "open"
+
+
+def test_confident_picks_with_no_bet365_price_are_remembered_as_skipped_until_a_bet_is_placed(tmp_path):
+    from footpred.pipeline.stakes import read_skips
+    path = tmp_path / "s.csv"
+    frame = pd.DataFrame([fx("E0-1", 0.6, 0.25, 0.15), fx("E0-2", 0.6, 0.25, 0.15), fx("E0-3", 0.5, 0.3, 0.2)])
+    place_bets(path, frame, odds("E0-1"), NOW)  # E0-2 has no price, E0-3 is not confident
+    place_bets(path, frame, odds("E0-1"), NOW)  # a second run must not duplicate the skip
+    skips = read_skips(path)
+    assert list(skips["match_id"]) == ["E0-2"]
+    assert summarize(read_ledger(path), skips)["skipped"] == 1
+    place_bets(path, frame, odds("E0-1", "E0-2"), NOW)  # the price turned up later, so it is no longer skipped
+    assert summarize(read_ledger(path), read_skips(path))["skipped"] == 0
+
+
+def test_summary_compares_what_the_model_expected_with_what_the_bets_returned(tmp_path):
+    path = tmp_path / "s.csv"
+    place_bets(path, pd.DataFrame([fx("E0-1", 0.6, 0.25, 0.15), fx("E0-2", 0.6, 0.25, 0.15)]), odds("E0-1", "E0-2"), NOW)  # stakes 5.00, 4.75 at 2.0
+    settle_bets(path, pd.DataFrame({"match_id": ["E0-1", "E0-2"], "outcome": [0, 2]}))  # one right, one wrong
+    s = summarize(read_ledger(path))
+    assert s["expected_roi"] == pytest.approx(0.2)         # 0.6 * 2.0 - 1 on every pound staked
+    assert s["roi"] == pytest.approx((5.0 - 4.75) / 9.75)  # what really happened
+    assert s["recent"][0]["edge"] == pytest.approx(0.2)
