@@ -16,6 +16,7 @@ const steps = sim ? [
   ["4", "Settle", "A right pick pays stake times price. A wrong one loses the stake."],
 ] : [];
 const chips = [["all", "All"], ["open", "Open"], ["won", "Won"], ["lost", "Lost"]];
+const slip = sim?.recent?.find((b) => b.status === "open") ?? null;
 const mark = { open: "○", won: "✓", lost: "✗", void: "–" };
 const label = { open: "Open", won: "Won", lost: "Lost", void: "Void" };
 ---
@@ -67,6 +68,23 @@ const label = { open: "Open", won: "Won", lost: "Lost", void: "Void" };
             </figure>
           : <p class="n">No bet has finished yet. The line appears after the first result.</p>}
       </section>
+
+      {slip && (
+        <div class="tkw">
+          <div class="ticket" data-slip data-id={slip.match_id} role="group" aria-label="Latest open paper bet">
+            <div class="t-h"><b>Bet slip</b><span class="stamp">Paper</span></div>
+            <dl class="t-grid">
+              <div><dt>Match</dt><dd>{slip.home} v {slip.away}</dd></div>
+              <div><dt>Pick</dt><dd>{slip.pick === "H" ? slip.home : slip.pick === "A" ? slip.away : "Draw"}</dd></div>
+              <div><dt>Price</dt><dd>{Number(slip.odds).toFixed(2)}</dd></div>
+              <div><dt>Stake</dt><dd>{money(slip.stake)}</dd></div>
+              <div><dt>Returns if right</dt><dd>{money(slip.stake * slip.odds)}</dd></div>
+              <div><dt>Kickoff day</dt><dd>{slip.date}</dd></div>
+            </dl>
+            <p class="t-note" id="slip-status">Waiting for kickoff. Pretend money only.</p>
+          </div>
+        </div>
+      )}
 
       <div class="tiles">
         <div class="panel stat"><span class="k">Return on stakes</span><b>{sim.roi == null ? "n/a" : `${sim.roi >= 0 ? "+" : ""}${(sim.roi * 100).toFixed(1)}%`}</b><span class="d">Profit divided by the {money(sim.staked)} staked on finished bets.</span></div>
@@ -123,6 +141,13 @@ const label = { open: "Open", won: "Won", lost: "Lost", void: "Void" };
         nowLine.classList.toggle("on", live.playing);
         document.getElementById("now-text").textContent = `${live.playing ? "Live" : "Final scores"}: ${money(live.ifNow)} if matches ended now (${money(live.profitNow, true)} overall)`;
       }
+    }
+    const sl = document.querySelector("[data-slip]"), st = document.getElementById("slip-status");
+    if (sl && st) {
+      const b = live?.bets.get(sl.dataset.id);
+      st.textContent = b && b.status !== "open"
+        ? `${statusWord(b.status)}: ${b.home_goals} – ${b.away_goals}${b.status === "won" || b.status === "lost" ? " final" : " now"}, ${money(b.profit, true)} at this score.`
+        : "Waiting for kickoff. Pretend money only.";
     }
     list?.querySelectorAll("li").forEach((li) => {
       const b = live?.bets.get(li.dataset.id);
@@ -221,6 +246,24 @@ const label = { open: "Open", won: "Won", lost: "Lost", void: "Void" };
   .what { display: grid; gap: 2px; min-width: 0; } .what b { overflow-wrap: anywhere; }
   .amt { font-weight: 800; font-variant-numeric: tabular-nums; }
   @media (max-width: 520px) { .bet { grid-template-columns: 1fr auto; } .pill { justify-self: start; grid-column: 1; } .amt { grid-row: 1; grid-column: 2; } .what { grid-column: 1 / -1; } }
+  .tkw { max-width: 520px; margin: 16px 0 0; transition: transform .24s cubic-bezier(.2, .8, .2, 1); filter: drop-shadow(0 1px 1px rgb(0 0 80 / 0.12)) drop-shadow(0 12px 16px rgb(0 0 80 / 0.2)); }
+  .ticket { --tk: rgb(255 255 255 / 0.92); position: relative; isolation: isolate; overflow: hidden; color: #0a0a14; border-radius: 12px; padding: 12px 16px; max-width: none;
+    background: linear-gradient(172deg, rgb(255 255 255 / 0.75) 0, rgb(255 255 255 / 0.2) 30%, transparent 42%), var(--tk);
+    -webkit-mask: radial-gradient(circle 7px at 0 56px, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 7px at 100% 56px, #0000 98%, #000) right / 51% 100% no-repeat;
+    mask: radial-gradient(circle 7px at 0 56px, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 7px at 100% 56px, #0000 98%, #000) right / 51% 100% no-repeat; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ticket { --tk: rgb(241 242 248 / 0.94); } }
+  :root[data-theme="dark"] .ticket { --tk: rgb(241 242 248 / 0.94); }
+  .ticket::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.8) 50%, transparent 62%); transform: translateX(-110%); }
+  @media (prefers-reduced-motion: no-preference) { .ticket::before { animation: sheen 1.4s .5s cubic-bezier(.2, .8, .2, 1) 1 both; } }
+  @keyframes sheen { to { transform: translateX(110%); } }
+  .t-h { display: flex; align-items: center; gap: 8px; height: 32px; margin-bottom: 16px; font-weight: 700; font-family: var(--font-head); }
+  .t-h::after { content: ""; position: absolute; left: 14px; right: 14px; top: 56px; border-top: 1.5px dashed #b9bdcb; }
+  .stamp { margin-left: auto; font: 700 11px/1 var(--font-label); letter-spacing: .16em; text-transform: uppercase; padding: 6px 6px 5px 8px; border: 1.5px solid #000080; color: #000080; border-radius: 3px; transform: rotate(-2deg); }
+  .t-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin: 0; }
+  .t-grid div { display: flex; flex-direction: column; gap: 2px; }
+  .t-grid dt { font: 600 12px/16px var(--font-label); text-transform: uppercase; letter-spacing: .06em; color: #4a4a5a; }
+  .t-grid dd { margin: 0; font: 700 18px/24px var(--font-head); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .t-note { margin: 12px 0 0; padding-top: 8px; border-top: 1px solid #dfe1e8; font-size: .9rem; color: #4a4a5a; max-width: none; }
   .how { margin-top: 30px; }
   .steps { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 12px; }
   .step { max-width: none; display: grid; gap: 4px; align-content: start; }

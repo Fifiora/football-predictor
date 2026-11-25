@@ -52,7 +52,7 @@ const segs = [
 <style>
   .card { position: relative; animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms); background: var(--surface); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--line); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 14px 16px 12px; transition: transform .2s ease, box-shadow .2s ease; }
-  .card:hover { background-image: radial-gradient(22rem circle at var(--mx, 50%) var(--my, 0%), rgb(255 255 255 / 0.16), transparent 60%); transform: translateY(-3px); box-shadow: var(--shadow), 0 14px 40px rgb(0 0 0 / 0.12); }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow), 0 14px 40px rgb(0 0 0 / 0.12); }
   .when { display: inline-flex; gap: 0 8px; }
   .kick { color: var(--ink); font-variant-numeric: tabular-nums; }
   .meta { margin: 0; display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }

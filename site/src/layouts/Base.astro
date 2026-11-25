@@ -22,6 +22,8 @@ const nav = [
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" id="tc-light" content="#fafafb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" id="tc-dark" content="#06060f" media="(prefers-color-scheme: dark)" />
     <title>{title} | Match odds</title>
     <script is:inline>
       try {
@@ -31,7 +33,7 @@ const nav = [
     </script>
   </head>
   <body>
-    <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="orbs" id="orbs" aria-hidden="true"><i class="o o1"></i><i class="o o2"></i><i class="o o3"></i><i class="o o4"></i><i class="orbring r1"></i><i class="orbring r2"></i></div>
     <a class="skip" href="#main">Skip to content</a>
     <StalenessBanner updatedAt={meta.updated_at} now={now.toISOString()} />
     <header class="topbar">
@@ -43,7 +45,8 @@ const nav = [
           </svg>
           <span>Match odds</span>
         </a>
-        <nav aria-label="Main">
+        <nav aria-label="Main" id="tabs">
+          <span class="tabind" id="tabind" aria-hidden="true"></span>
           {nav.map((n) => (
             <a href={n.href} aria-current={n.match(path) ? "page" : undefined} aria-label={n.full ?? undefined}>
               <svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" set:html={icons[n.icon]} />
@@ -51,11 +54,12 @@ const nav = [
             </a>
           ))}
         </nav>
-        <button type="button" class="theme" id="theme-toggle" aria-label="Switch between light and dark theme">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-            <path d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5z" fill="currentColor" />
-          </svg>
+        <button type="button" class="theme" id="theme-toggle" aria-label="Theme: Auto (follows device)" data-tip="Auto">
+          <svg class="ti ti-auto" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 3v18"/><path d="M12 14l7 -7"/><path d="M12 19l8.5 -8.5"/><path d="M12 9l4.5 -4.5"/></svg>
+          <svg class="ti ti-light" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"/></svg>
+          <svg class="ti ti-dark" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"/></svg>
         </button>
+        <span class="sr" id="theme-live" role="status" aria-live="polite"></span>
       </div>
     </header>
     <main id="main" class={wide ? "wide" : undefined}><slot /></main>
@@ -70,34 +74,87 @@ const nav = [
           const day = el.parentElement?.querySelector("time.day");
           if (day) day.textContent = formatDay(p.date); }
       });
-      let spotlight = null;
-      document.addEventListener("pointermove", (e) => {
-        const t = e.target instanceof Element ? e.target.closest(".card, .glow") : null;
-        if (!t) return;
-        const x = e.clientX, y = e.clientY;
-        if (spotlight) cancelAnimationFrame(spotlight);
-        spotlight = requestAnimationFrame(() => {
-          const r = t.getBoundingClientRect();
-          t.style.setProperty("--mx", `${x - r.left}px`);
-          t.style.setProperty("--my", `${y - r.top}px`);
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const raf = window.requestAnimationFrame.bind(window);
+      // pointer specular on panels and cards; a small tilt on the feature panels (fine pointers only)
+      let ev = null, queued = false, hot = [];
+      const tick = () => {
+        queued = false;
+        if (!ev) return;
+        const t = ev.target instanceof Element ? ev.target : null;
+        const els = t ? [t.closest(".panel, .card")].filter(Boolean) : [];
+        hot.forEach((el) => { if (!els.includes(el)) for (const k of ["--tx", "--ty", "--mx", "--my"]) el.style.removeProperty(k); });
+        hot = els;
+        els.forEach((el) => {
+          const r = el.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+          el.style.setProperty("--mx", `${(x * 100).toFixed(1)}%`);
+          el.style.setProperty("--my", `${(y * 100).toFixed(1)}%`);
+          if (!still && el.matches(".glow")) { el.style.setProperty("--tx", `${((0.5 - y) * 4).toFixed(2)}deg`); el.style.setProperty("--ty", `${((x - 0.5) * 5).toFixed(2)}deg`); }
         });
+      };
+      document.addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; ev = e; if (!queued) { queued = true; raf(tick); } }, { passive: true });
+      // ripple from the press point on chips, tabs and buttons
+      document.addEventListener("pointerdown", (e) => {
+        if (still || !(e.target instanceof Element)) return;
+        const t = e.target.closest("nav a, .chip, button.chip, .chips button, .theme");
+        if (!t) return;
+        const r = t.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2.2, sp = document.createElement("span");
+        sp.className = "rip"; sp.setAttribute("aria-hidden", "true");
+        sp.style.width = sp.style.height = `${d}px`; sp.style.left = `${e.clientX - r.left - d / 2}px`; sp.style.top = `${e.clientY - r.top - d / 2}px`;
+        t.appendChild(sp); setTimeout(() => sp.remove(), 600);
       }, { passive: true });
-      const btn = document.getElementById("theme-toggle");
-      btn?.addEventListener("click", () => {
-        const root = document.documentElement;
-        const dark =
-          root.dataset.theme === "dark" ||
-          (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
-        const next = dark ? "light" : "dark";
-        root.dataset.theme = next;
-        try { localStorage.setItem("theme", next); } catch (e) {}
-      });
+      // the sliding highlight behind the current tab (phone tab bar); it starts where the last page's tab was
+      const tabs = document.getElementById("tabs"), ind = document.getElementById("tabind");
+      const placeInd = (animate) => {
+        const cur = tabs?.querySelector('a[aria-current="page"]');
+        if (!cur || !ind || !cur.offsetWidth || getComputedStyle(ind).display === "none") return;
+        const at = (a) => `translate(${a.offsetLeft}px,${a.offsetTop}px)`;
+        ind.style.width = `${cur.offsetWidth}px`; ind.style.height = `${cur.offsetHeight}px`;
+        let from = null;
+        try { const i = Number(sessionStorage.getItem("tabprev")); if (animate && !still && Number.isInteger(i)) from = tabs.querySelectorAll("a")[i] ?? null; sessionStorage.setItem("tabprev", String([...tabs.querySelectorAll("a")].indexOf(cur))); } catch (e) {}
+        if (from && from !== cur) {
+          ind.style.transition = "none"; ind.style.transform = at(from); ind.getBoundingClientRect();
+          ind.style.transition = ""; raf(() => { ind.style.transform = at(cur); });
+        } else { ind.style.transition = "none"; ind.style.transform = at(cur); ind.getBoundingClientRect(); ind.style.transition = ""; }
+        ind.classList.add("on"); tabs.classList.add("ind");
+      };
+      placeInd(true);
+      addEventListener("resize", () => placeInd(false));
+      // reveal blocks once as they scroll into view, then drift the orbs slowly against the scroll
+      if (!still && "IntersectionObserver" in window) {
+        const io = new IntersectionObserver((es) => es.forEach((en, i) => {
+          if (!en.isIntersecting) return;
+          const el = en.target; io.unobserve(el);
+          el.style.setProperty("--d", `${i * 70}ms`); el.classList.add("in");
+          setTimeout(() => { el.classList.remove("rv", "in"); el.style.removeProperty("--d"); }, 1300 + i * 70);
+        }), { rootMargin: "0px 0px -8% 0px" });
+        document.querySelectorAll("main > .panel, main > section, main .tiles > .panel, main .steps > li").forEach((el) => { el.classList.add("rv"); io.observe(el); });
+        const orbs = document.getElementById("orbs"); let sq = false;
+        addEventListener("scroll", () => { if (!sq) { sq = true; raf(() => { sq = false; orbs.style.transform = `translate3d(0,${(Math.min(scrollY, 2400) * -0.05).toFixed(1)}px,0)`; }); } }, { passive: true });
+      }
+      // theme: Auto, then Light, then Dark. Auto leaves data-theme off so the device decides.
+      const modes = ["auto", "light", "dark"], names = { auto: "Auto (follows device)", light: "Light", dark: "Dark" };
+      const btn = document.getElementById("theme-toggle"), root = document.documentElement;
+      let cur = "auto";
+      try { const saved = localStorage.getItem("theme"); if (saved === "light" || saved === "dark") cur = saved; } catch (e) {}
+      const apply = (announce) => {
+        if (cur === "auto") root.removeAttribute("data-theme"); else root.dataset.theme = cur;
+        const tl = document.getElementById("tc-light"), td = document.getElementById("tc-dark"), c = cur === "dark" ? "#06060f" : "#fafafb";
+        if (cur === "auto") { tl.content = "#fafafb"; td.content = "#06060f"; tl.media = "(prefers-color-scheme: light)"; td.media = "(prefers-color-scheme: dark)"; }
+        else { tl.content = td.content = c; tl.media = td.media = "all"; }
+        btn.setAttribute("aria-label", `Theme: ${names[cur]}`); btn.dataset.tip = cur === "auto" ? "Auto" : names[cur]; btn.title = `Theme: ${names[cur]}`;
+        btn.dataset.mode = cur;
+        if (announce) document.getElementById("theme-live").textContent = `Theme set to ${names[cur]}`;
+        try { if (cur === "auto") localStorage.removeItem("theme"); else localStorage.setItem("theme", cur); } catch (e) {}
+      };
+      btn?.addEventListener("click", () => { cur = modes[(modes.indexOf(cur) + 1) % modes.length]; apply(true); });
+      apply(false);
     </script>
     <style is:global>
       /* PharmAnalytics look: navy and electric cyan, milky glass by day, navy-tinted glass by night. Green and coral mean gain and loss only. */
       :root {
         --paper: #fafafb; --surface: rgb(255 255 255 / 0.56); --field: rgb(255 255 255 / 0.72); --ink: #0a0a14; --muted: #55556a; --line: rgb(0 0 60 / 0.1);
-        --edge: rgb(0 0 60 / 0.55); --rule: rgb(0 0 92 / 0.14); --on-warn: #ffffff; --orb1: rgb(0 191 255 / 0.38); --orb2: rgb(61 123 255 / 0.3); --orb3: rgb(0 0 128 / 0.12); --glass-blur: blur(28px) saturate(1.75);
+        --edge: rgb(0 0 60 / 0.55); --rule: rgb(0 0 92 / 0.14); --on-warn: #ffffff; --orb1: rgb(0 191 255 / 0.45); --orb2: rgb(61 123 255 / 0.36); --orb3: rgb(0 0 128 / 0.1); --orb4: rgb(255 246 228 / 0.95); --orb-dot: rgb(0 0 92 / 0.16); --orb-line: rgb(0 0 128 / 0.11); --spec: rgb(255 255 255 / 0.85); --glow-c: 0 110 230; --rip: rgb(0 120 200 / 0.28); --grain: 0.035; --glass-blur: blur(28px) saturate(1.75);
         --mesh: radial-gradient(70% 46% at 12% -4%, rgb(0 0 128 / 0.07), transparent 70%),
           radial-gradient(52% 38% at 96% 6%, rgb(0 0 92 / 0.06), transparent 72%),
           radial-gradient(60% 40% at 70% 108%, rgb(0 191 255 / 0.12), transparent 70%);
@@ -114,7 +171,7 @@ const nav = [
       @media (prefers-color-scheme: dark) {
         :root:not([data-theme="light"]) {
           --paper: #06060f; --surface: rgb(12 12 48 / 0.5); --field: rgb(255 255 255 / 0.09); --ink: #ffffff; --muted: #a9acc9; --line: rgb(160 190 255 / 0.14);
-          --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(0 191 255 / 0.3); --orb2: rgb(61 123 255 / 0.38); --orb3: rgb(0 0 128 / 0.55);
+          --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(0 191 255 / 0.3); --orb2: rgb(61 123 255 / 0.38); --orb3: rgb(0 0 128 / 0.55); --orb4: rgb(255 246 228 / 0.08); --orb-dot: rgb(160 200 255 / 0.2); --orb-line: rgb(120 200 255 / 0.26); --spec: rgb(120 210 255 / 0.22); --glow-c: 0 150 255; --rip: rgb(0 191 255 / 0.35); --grain: 0.06;
           --mesh: radial-gradient(70% 46% at 12% -4%, rgb(0 0 160 / 0.4), transparent 70%),
             radial-gradient(52% 38% at 96% 6%, rgb(0 0 92 / 0.5), transparent 72%),
             radial-gradient(60% 40% at 70% 108%, rgb(0 191 255 / 0.08), transparent 70%);
@@ -129,7 +186,7 @@ const nav = [
       }
       :root[data-theme="dark"] {
         --paper: #06060f; --surface: rgb(12 12 48 / 0.5); --field: rgb(255 255 255 / 0.09); --ink: #ffffff; --muted: #a9acc9; --line: rgb(160 190 255 / 0.14);
-        --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(0 191 255 / 0.3); --orb2: rgb(61 123 255 / 0.38); --orb3: rgb(0 0 128 / 0.55);
+        --edge: rgb(255 255 255 / 0.45); --rule: rgb(255 255 255 / 0.2); --on-warn: #1f0700; --orb1: rgb(0 191 255 / 0.3); --orb2: rgb(61 123 255 / 0.38); --orb3: rgb(0 0 128 / 0.55); --orb4: rgb(255 246 228 / 0.08); --orb-dot: rgb(160 200 255 / 0.2); --orb-line: rgb(120 200 255 / 0.26); --spec: rgb(120 210 255 / 0.22); --glow-c: 0 150 255; --rip: rgb(0 191 255 / 0.35); --grain: 0.06;
         --mesh: radial-gradient(70% 46% at 12% -4%, rgb(0 0 160 / 0.4), transparent 70%),
           radial-gradient(52% 38% at 96% 6%, rgb(0 0 92 / 0.5), transparent 72%),
           radial-gradient(60% 40% at 70% 108%, rgb(0 191 255 / 0.08), transparent 70%);
@@ -142,16 +199,27 @@ const nav = [
         --rim1: rgb(150 225 255 / 0.6); --rim2: rgb(255 255 255 / 0.12); --rim3: rgb(0 191 255 / 0.12); --gloss: rgb(255 255 255 / 0.07);
       }
       * { box-sizing: border-box; }
-      .aurora { position: fixed; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
-      .aurora i { position: absolute; width: 44rem; height: 44rem; border-radius: 50%; filter: blur(80px); }
-      @media (hover: hover) and (pointer: fine) { .aurora i { will-change: transform; animation: drift 32s ease-in-out infinite alternate; } }
-      .aurora i:nth-child(1) { background: var(--orb1); top: -16rem; left: -12rem; }
-      .aurora i:nth-child(2) { background: var(--orb2); top: -10rem; right: -16rem; animation-duration: 40s; animation-delay: -9s; }
-      .aurora i:nth-child(3) { background: var(--orb3); bottom: -20rem; left: 30%; animation-duration: 46s; animation-delay: -18s; }
-      @keyframes drift { to { transform: translate3d(6rem, 4rem, 0) scale(1.12); } }
+      /* orb layer: colour, dots, stripes and rings fixed behind everything, so the glass has something to bend */
+      .orbs { position: fixed; inset: -14vh -12vw; z-index: -2; pointer-events: none; overflow: hidden; will-change: transform; contain: strict; }
+      .orbs::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(var(--orb-dot) 1.1px, transparent 1.6px); background-size: 18px 18px;
+        -webkit-mask: radial-gradient(70% 60% at 50% 40%, #000, transparent); mask: radial-gradient(70% 60% at 50% 40%, #000, transparent); }
+      .orbs::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, transparent 0 62px, var(--orb-line) 62px 63.5px, transparent 63.5px 124px);
+        -webkit-mask: linear-gradient(180deg, #000, rgb(0 0 0 / 0.2) 40%, rgb(0 0 0 / 0.2) 70%, #000); mask: linear-gradient(180deg, #000, rgb(0 0 0 / 0.2) 40%, rgb(0 0 0 / 0.2) 70%, #000); }
+      .o { position: absolute; display: block; border-radius: 50%; aspect-ratio: 1; }
+      .o1 { left: 2vw; top: 8vh; width: min(620px, 96vw); background: radial-gradient(circle, var(--orb1), transparent 66%); }
+      .o2 { left: 52vw; top: 4vh; width: min(560px, 88vw); background: radial-gradient(circle, var(--orb2), transparent 66%); }
+      .o3 { left: 8vw; top: 64vh; width: min(720px, 110vw); background: radial-gradient(circle, var(--orb3), transparent 68%); }
+      .o4 { left: 70vw; top: 0; width: min(260px, 46vw); background: radial-gradient(circle, var(--orb4), transparent 64%); }
+      .orbring { position: absolute; display: block; border-radius: 50%; aspect-ratio: 1; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--orb-line) 160%, transparent), 0 0 0 14px color-mix(in srgb, var(--orb-line) 35%, transparent); }
+      .r1 { left: 30vw; top: 14vh; width: min(420px, 70vw); } .r2 { left: 58vw; top: 50vh; width: min(300px, 56vw); }
+      @media (prefers-reduced-motion: no-preference) {
+        .o1 { animation: d1 34s ease-in-out infinite alternate; } .o2 { animation: d2 28s ease-in-out infinite alternate; } .o3 { animation: d3 40s ease-in-out infinite alternate; }
+        .o4 { animation: d2 22s ease-in-out infinite alternate-reverse; } .r1 { animation: d3 38s ease-in-out infinite alternate; }
+      }
+      @keyframes d1 { to { transform: translate3d(9vw, 7vh, 0) scale(1.08); } } @keyframes d2 { to { transform: translate3d(-10vw, 9vh, 0) scale(.94); } } @keyframes d3 { to { transform: translate3d(7vw, -8vh, 0) scale(1.06); } }
+      body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: var(--grain); mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
       @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
-      .glow { position: relative; }
-      .glow:hover { background-image: radial-gradient(22rem circle at var(--mx, 50%) var(--my, 0%), rgb(255 255 255 / 0.16), transparent 60%); }
       html { color-scheme: light dark; }
       body { margin: 0; background-color: var(--paper); background-image: var(--mesh); background-attachment: fixed; color: var(--ink); min-height: 100vh;
         font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
@@ -170,9 +238,45 @@ const nav = [
         color: var(--muted); text-decoration: none; font-weight: 600; font-size: 0.97rem; }
       nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--line) 55%, transparent); }
       nav a[aria-current="page"] { color: var(--on-home); background: var(--home); }
-      .theme { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--edge); background: transparent;
-        color: var(--ink); display: inline-grid; place-items: center; cursor: pointer; margin-left: auto; }
-      .theme:hover { background: color-mix(in srgb, var(--line) 55%, transparent); }
+      .theme { position: relative; width: 44px; height: 44px; border-radius: 999px; border: 0; color: var(--ink); display: inline-grid; place-items: center; cursor: pointer; margin-left: auto;
+        background: linear-gradient(180deg, var(--gloss), transparent), var(--surface); box-shadow: inset 0 1px 0 var(--rim1), 0 0 0 1px var(--line), 0 4px 12px -8px rgb(0 0 80 / 0.5); }
+      .theme .ti { grid-area: 1 / 1; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; transition: opacity .2s, transform .2s; }
+      .theme .ti-light, .theme .ti-dark { opacity: 0; transform: rotate(-30deg) scale(.8); }
+      .theme[data-mode="auto"] .ti-auto, .theme:not([data-mode]) .ti-auto, .theme[data-mode="light"] .ti-light, .theme[data-mode="dark"] .ti-dark { opacity: 1; transform: none; }
+      .theme[data-mode="light"] .ti-auto, .theme[data-mode="dark"] .ti-auto { opacity: 0; transform: rotate(30deg) scale(.8); }
+      .theme:hover { color: var(--focus); }
+      .theme::after { content: attr(data-tip); position: absolute; top: calc(100% + 6px); right: 0; opacity: 0; pointer-events: none; white-space: nowrap; font: 600 12px/1 var(--font-label); letter-spacing: .06em; text-transform: uppercase;
+        padding: 6px 8px; border-radius: 4px; background: var(--paper); color: var(--ink); box-shadow: 0 0 0 1px var(--line), 0 6px 14px -8px rgb(0 0 80 / 0.5); transition: opacity .15s; }
+      .theme:hover::after, .theme:focus-visible::after { opacity: 1; }
+      .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      .tabind { display: none; }
+      .rip { position: absolute; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, var(--rip) 0, transparent 62%); transform: scale(0); animation: rip 560ms cubic-bezier(.2, .8, .2, 1) forwards; }
+      @keyframes rip { to { transform: scale(1); opacity: 0; } }
+      nav a, .chip, .chips button, .theme { overflow: hidden; }
+      .theme { overflow: visible; }
+      .rv { opacity: 0; transform: translateY(16px) scale(.985); }
+      .rv.in { opacity: 1; transform: none; transition: opacity 520ms ease-out var(--d, 0ms), transform 640ms cubic-bezier(.2, .8, .2, 1) var(--d, 0ms); }
+      @media print { .rv { opacity: 1; transform: none; } }
+      @media (hover: hover) and (pointer: fine) {
+        .panel.glow { transition: transform .24s cubic-bezier(.2, .8, .2, 1), box-shadow .24s cubic-bezier(.2, .8, .2, 1); }
+        .panel.glow:hover { transform: perspective(1100px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateY(-4px) scale(1.005); box-shadow: var(--shadow), 0 34px 64px -26px rgb(var(--glow-c) / 0.5); }
+      }
+      /* accessibility fallbacks: no blur support, reduced transparency, more contrast, forced colours */
+      @media (prefers-reduced-transparency: reduce) {
+        .orbs, body::after { display: none; }
+        .panel, .card, .topbar, nav, .theme { background: var(--paper) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+      }
+      @media (prefers-contrast: more) {
+        .orbs, .panel::before, .panel::after, .card::before, .card::after, body::after { display: none; }
+        .panel, .card, .topbar, nav, .theme { background: var(--paper) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: 0 0 0 1px var(--ink) !important; }
+        :root { --muted: var(--ink); --rule: var(--ink); }
+      }
+      @media (forced-colors: active) {
+        .orbs, body::after, .panel::before, .panel::after, .card::before, .card::after, .tabind, .rip { display: none; }
+        .panel, .card, .topbar, nav, .theme { background: Canvas !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; border: 1px solid CanvasText; }
+        nav a[aria-current="page"] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+        h1 { color: CanvasText; background: none; -webkit-background-clip: border-box; background-clip: border-box; }
+      }
       main, footer { max-width: 60rem; margin: 0 auto; padding: 0 16px; }
       h1 { font-size: clamp(2rem, 6.5vw, 3.2rem); line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; margin: 32px 0 10px;
         background: linear-gradient(100deg, var(--ink) 30%, var(--brand)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -204,11 +308,19 @@ const nav = [
         nav a { flex: 1 1 0; min-width: 0; flex-direction: column; justify-content: center; gap: 2px; min-height: 52px; padding: 4px 2px; border-radius: 20px;
           font-size: 0.72rem; line-height: 1.1; text-align: center; }
         nav a .ico { display: block; }
+        nav a { position: relative; z-index: 1; }
+        .tabind { display: block; position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 20px; pointer-events: none; opacity: 0;
+          background: linear-gradient(180deg, rgb(255 255 255 / 0.28), transparent 60%), color-mix(in srgb, var(--home) 20%, transparent);
+          box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--home) 55%, transparent), 0 6px 16px -8px rgb(var(--glow-c) / 0.6); transition: transform 420ms cubic-bezier(.34, 1.56, .64, 1), opacity .2s; }
+        .tabind.on { opacity: 1; }
+        nav.ind a[aria-current="page"] { background: none; }
         nav a[aria-current="page"] { background: color-mix(in srgb, var(--home) 18%, transparent); color: var(--brand); }
         main { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
         footer { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
       }
       .panel, .card { position: relative; isolation: isolate; }
+      .panel::before, .card::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+        background: radial-gradient(260px circle at var(--mx, 18%) var(--my, -30%), var(--spec), transparent 62%), linear-gradient(172deg, var(--gloss) 0, var(--gloss) 18%, transparent 36%); }
       .panel::after, .card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; padding: 1px;
         background: linear-gradient(135deg, var(--rim1), var(--rim2) 40%, var(--rim3)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
         mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }

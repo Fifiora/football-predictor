@@ -24,6 +24,12 @@ const leagues = graded ? Object.entries(t.by_league) : [];
 const picks = graded ? (t.picks ?? []) : [];
 const tiers = [["all", "All picks", ""], ["confident", "Confident", "55% or more"], ["lean", "Lean", "45% to 55%"], ["toss-up", "Toss-up", "under 45%"]];
 const tally = accuracyByTier(picks);
+const recentPicks = picks.slice(-30);
+const formRight = recentPicks.filter((p) => p[2]).length;
+const dialTicks = recentPicks.map((p, i) => {
+  const a = (i / Math.max(recentPicks.length, 1)) * 2 * Math.PI - Math.PI / 2, r1 = 38, r2 = p[2] ? 47 : 43;
+  return { x1: 50 + r1 * Math.cos(a), y1: 50 + r1 * Math.sin(a), x2: 50 + r2 * Math.cos(a), y2: 50 + r2 * Math.sin(a), ok: !!p[2] };
+});
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 <Base title="Track record">
@@ -35,6 +41,18 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       </section>
     : <>
       <p class="lede"><span id="lede-n">{t.n_graded}</span> predicted matches graded. Every prediction was logged before kickoff and is never edited afterwards.</p>
+      {recentPicks.length > 0 && (
+        <section class="panel form" aria-labelledby="form-title" data-form>
+          <svg class="dial" viewBox="0 0 100 100" role="img" aria-label={`Last ${recentPicks.length} graded picks: ${formRight} right`}>
+            {dialTicks.map((t) => <line x1={t.x1.toFixed(1)} y1={t.y1.toFixed(1)} x2={t.x2.toFixed(1)} y2={t.y2.toFixed(1)} class={t.ok ? "w" : "l"} />)}
+            <text x="50" y="56" text-anchor="middle">{formRight}/{recentPicks.length}</text>
+          </svg>
+          <div>
+            <h2 id="form-title">Recent form</h2>
+            <p class="sub">One tick for each of the last {recentPicks.length} graded picks. Long cyan ticks were right, short coral ticks were wrong.</p>
+          </div>
+        </section>
+      )}
       <div class="tiles">
         <div class="panel tile"><span class="k">Right result</span><b id="t-acc" data-base={t.accuracy} data-n={t.n_graded}>{pct(t.accuracy)}</b><span class="d">How often the most likely outcome happened. Always picking the home team gets about 44%.</span></div>
         <div class="panel tile"><span class="k">Matches graded</span><b id="t-n">{t.n_graded}</b><span class="d">Only matches predicted before kickoff count.</span></div>
@@ -216,6 +234,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   }
 </script>
 <style>
+  .form { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; margin: 0 0 14px; max-width: 40rem; }
+  .form h2 { margin: 0 0 4px; } .form .sub { margin: 0; color: var(--muted); font-size: .95rem; }
+  .dial { width: 104px; height: 104px; display: block; }
+  .dial line { stroke-width: 3; stroke-linecap: round; }
+  .dial .w { stroke: var(--home); } .dial .l { stroke: var(--warn); }
+  .dial text { fill: var(--ink); font: 800 15px var(--font-head); font-variant-numeric: tabular-nums; }
   .teaser { display: grid; gap: 4px; margin: 28px 0 0; max-width: 40rem; text-decoration: none; color: var(--ink); }
   .teaser b { font-size: 1.3rem; }
   .teaser .go { color: var(--brand); font-weight: 700; }

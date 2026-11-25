@@ -14,7 +14,7 @@ const LIVE_FEED = readFileSync(new URL("../tests/preview-data/live.json", import
 const browser = await chromium.launch();
 // The page clock is fixed so the sample data (built for 27 October 2026) behaves the same whenever this runs.
 async function open(path, { width, height, dark = false, at = "2026-10-27T12:00:00Z", live = "feed" }) {
-  const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: dark ? "dark" : "light", timezoneId: "America/Chicago" });
+  const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: dark ? "dark" : "light", reducedMotion: "reduce", timezoneId: "America/Chicago" });
   await ctx.clock.setFixedTime(new Date(at));
   await ctx.route("https://live.test/**", (route) =>
     live === "feed" ? route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: LIVE_FEED }) : route.abort());
@@ -137,6 +137,7 @@ await p.waitForFunction(() => !document.getElementById("conf-live").hidden, null
 check(Number((await p.textContent("#conf-of")).match(/of (\d+) picks/)[1]) === 121, "a match finished today in the live feed is counted with the 120 saved picks");
 check((await p.textContent("#conf-live")).includes("1 match that finished recently"), "the page says it includes a match finished today");
 check((await p.textContent("#t-n")).trim() === "121", "the matches-graded tile counts it too");
+check((await p.locator("[data-form] svg line").count()) === 30, "the recent-form dial draws one tick for each of the last 30 picks");
 check(await p.locator("[data-bankroll-link]").isVisible(), "the track record page links to the paper bankroll");
 await shot(p, "track-confidence");
 await p.close();
@@ -155,6 +156,8 @@ check((await p.locator("li.bet").count()) === 3, "the latest bets are listed");
 await p.waitForFunction(() => !document.getElementById("now-line").hidden, null, { timeout: 5000 }).catch(() => {});
 check((await p.locator("#now-text").textContent()).includes("$106.00"), "the bankroll page shows the live if-ended-now balance");
 check((await p.locator('li.bet[data-id="E0-4"]').textContent()).includes("Winning now"), "an open bet shows it is winning now from the live score");
+check(await p.locator("[data-slip]").isVisible(), "the bankroll page shows the latest open bet as a slip");
+check((await p.locator("#slip-status").textContent()).includes("Winning now"), "the slip follows the live score");
 await p.click('button[data-show="won"]');
 check((await p.locator("li.bet:not([hidden])").count()) === 1, "the Won filter leaves one bet");
 await p.click('button[data-show="all"]');
@@ -166,6 +169,13 @@ check(!(await p.evaluate(() => document.documentElement.scrollWidth > window.inn
 const bar = await p.locator("nav").evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, pos: getComputedStyle(el).position }; });
 check(bar.pos === "fixed" && bar.bottom > 822 && bar.bottom <= 844, `on a phone the main navigation is a tab bar at the bottom (${bar.pos})`);
 check((await p.locator("nav a").count()) === 5, "the tab bar has five items");
+check((await p.locator("#tabind").evaluate((el) => parseFloat(el.style.width))) > 40, "the sliding highlight sits behind the current tab");
+await p.click("#theme-toggle");
+check((await p.locator("html").getAttribute("data-theme")) === "light", "the theme button goes from Auto to Light");
+await p.click("#theme-toggle");
+check((await p.locator("html").getAttribute("data-theme")) === "dark", "then to Dark");
+await p.click("#theme-toggle");
+check((await p.locator("html").getAttribute("data-theme")) === null, "and back to Auto");
 const small = await p.locator("nav a").evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height < 44).length);
 check(small === 0, "every tab is at least 44px tall");
 await p.close();
