@@ -1,0 +1,29 @@
+match_id,league,home,away,kickoff_date,p_pick,reason,seen_at
+E0-20261202-Brentford-Arsenal,E0,Brentford,Arsenal,2026-12-02,0.5509,no Bet365 price,2026-11-27 16:49:01
+E0-20261202-Chelsea-Crystal Palace,E0,Chelsea,Crystal Palace,2026-12-02,0.6629,no Bet365 price,2026-11-27 16:49:01
+E0-20261202-Liverpool-Sunderland,E0,Liverpool,Sunderland,2026-12-02,0.6611,no Bet365 price,2026-11-27 16:49:01
+E0-20261202-Manchester City-Leeds,E0,Manchester City,Leeds,2026-12-02,0.6778,no Bet365 price,2026-11-27 16:49:01
+SP1-20261202-Barcelona-Ath Madrid,SP1,Barcelona,Ath Madrid,2026-12-02,0.6841,no Bet365 price,2026-11-27 16:49:01
+D1-20261204-Bayern Munich-Paderborn,D1,Bayern Munich,Paderborn,2026-12-04,0.848,no Bet365 price,2026-11-27 16:49:01
+F1-20261204-Toulouse-Paris SG,F1,Toulouse,Paris SG,2026-12-04,0.573,no Bet365 price,2026-11-27 16:49:01
+D1-20261205-Leverkusen-M'gladbach,D1,Leverkusen,M'gladbach,2026-12-05,0.6677,no Bet365 price,2026-11-27 16:49:01
+D1-20261205-RB Leipzig-Mainz,D1,RB Leipzig,Mainz,2026-12-05,0.6318,no Bet365 price,2026-11-27 16:49:01
+E0-20261205-Aston Villa-Crystal Palace,E0,Aston Villa,Crystal Palace,2026-12-05,0.6204,no Bet365 price,2026-11-27 16:49:01
+E0-20261205-Bournemouth-Hull,E0,Bournemouth,Hull,2026-12-05,0.5907,no Bet365 price,2026-11-27 16:49:01
+E0-20261205-Brentford-Manchester City,E0,Brentford,Manchester City,2026-12-05,0.5761,no Bet365 price,2026-11-27 16:49:01
+E0-20261205-Leeds-Ipswich,E0,Leeds,Ipswich,2026-12-05,0.5765,no Bet365 price,2026-11-27 16:49:01
+E0-20261205-Manchester United-Coventry,E0,Manchester United,Coventry,2026-12-05,0.6325,no Bet365 price,2026-11-27 16:49:01
+F1-20261205-Lens-Le Havre,F1,Lens,Le Havre,2026-12-05,0.618,no Bet365 price,2026-11-27 16:49:01
+F1-20261205-Lille-Auxerre,F1,Lille,Auxerre,2026-12-05,0.6286,no Bet365 price,2026-11-27 16:49:01
+F1-20261205-Monaco-Angers,F1,Monaco,Angers,2026-12-05,0.7237,no Bet365 price,2026-11-27 16:49:01
+F1-20261205-Paris FC-Le Mans,F1,Paris FC,Le Mans,2026-12-05,0.6658,no Bet365 price,2026-11-27 16:49:01
+I1-20261205-Frosinone-Inter,I1,Frosinone,Inter,2026-12-05,0.6073,no Bet365 price,2026-11-27 16:49:01
+I1-20261205-Monza-Como,I1,Monza,Como,2026-12-05,0.6108,no Bet365 price,2026-11-27 16:49:01
+I1-20261205-Napoli-Lecce,I1,Napoli,Lecce,2026-12-05,0.6529,no Bet365 price,2026-11-27 16:49:01
+SP1-20261205-Barcelona-Celta,SP1,Barcelona,Celta,2026-12-05,0.8385,no Bet365 price,2026-11-27 16:49:01
+SP1-20261205-Villarreal-Sociedad,SP1,Villarreal,Sociedad,2026-12-05,0.5859,no Bet365 price,2026-11-27 16:49:01
+D1-20261206-Schalke 04-Dortmund,D1,Schalke 04,Dortmund,2026-12-06,0.5676,no Bet365 price,2026-11-27 16:49:01
+I1-20261206-Juventus-Udinese,I1,Juventus,Udinese,2026-12-06,0.6228,no Bet365 price,2026-11-27 16:49:01
+I1-20261206-Lazio-Atalanta,I1,Lazio,Atalanta,2026-12-06,0.5593,no Bet365 price,2026-11-27 16:49:01
+I1-20261206-Milan-Parma,I1,Milan,Parma,2026-12-06,0.7093,no Bet365 price,2026-11-27 16:49:01
+SP1-20261207-Sevilla-Malaga,SP1,Sevilla,Malaga,2026-12-07,0.6799,no Bet365 price,2026-11-27 16:49:01
